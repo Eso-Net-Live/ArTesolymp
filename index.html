@@ -1,0 +1,2035 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArTesolymp — Платформа для тестів та олімпіад у реальному часі</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .font-code {
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* Dynamic CSS Theme Variables */
+        :root {
+            --bg-main: #f0f7ff;
+            --bg-card: #ffffff;
+            --border-color: #bae6fd;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --accent-primary: #0284c7;
+            --accent-hover: #0369a1;
+            --accent-light: #e0f2fe;
+            --accent-glow: rgba(2, 132, 199, 0.25);
+            --badge-bg: #dbeafe;
+            --badge-text: #1e40af;
+            --nav-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        [data-theme="dark-blue"] {
+            --bg-main: #0b1329;
+            --bg-card: #111c3a;
+            --border-color: #1e3a8a;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent-primary: #38bdf8;
+            --accent-hover: #0284c7;
+            --accent-light: #1e293b;
+            --accent-glow: rgba(56, 189, 248, 0.25);
+            --badge-bg: #1e3a8a;
+            --badge-text: #93c5fd;
+            --nav-bg: rgba(17, 28, 58, 0.95);
+        }
+
+        [data-theme="dark-red"] {
+            --bg-main: #18080a;
+            --bg-card: #280f12;
+            --border-color: #7f1d1d;
+            --text-primary: #fef2f2;
+            --text-secondary: #fca5a5;
+            --accent-primary: #ef4444;
+            --accent-hover: #dc2626;
+            --accent-light: #450a0a;
+            --accent-glow: rgba(239, 68, 68, 0.25);
+            --badge-bg: #7f1d1d;
+            --badge-text: #fecaca;
+            --nav-bg: rgba(40, 15, 18, 0.95);
+        }
+
+        .theme-bg-main { background-color: var(--bg-main); }
+        .theme-bg-card { background-color: var(--bg-card); }
+        .theme-border { border-color: var(--border-color); }
+        .theme-text-primary { color: var(--text-primary); }
+        .theme-text-secondary { color: var(--text-secondary); }
+        .theme-btn-primary { 
+            background-color: var(--accent-primary); 
+            color: #ffffff;
+            box-shadow: 0 4px 14px var(--accent-glow);
+        }
+        .theme-btn-primary:hover { background-color: var(--accent-hover); }
+        .theme-accent-color { color: var(--accent-primary); }
+        .theme-accent-bg-light { background-color: var(--accent-light); }
+        .theme-badge { background-color: var(--badge-bg); color: var(--badge-text); }
+        .theme-nav { background-color: var(--nav-bg); backdrop-filter: blur(12px); }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-main);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="theme-bg-main theme-text-primary min-h-screen flex flex-col justify-between transition-colors duration-300">
+
+    <!-- HEADER NAVIGATION -->
+    <header class="sticky top-0 z-50 theme-nav border-b theme-border px-4 lg:px-8 py-3.5 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <!-- Logo -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="showSection('landing')">
+                <div class="w-10 h-10 rounded-xl theme-btn-primary flex items-center justify-center font-black text-xl tracking-wider shadow-lg">
+                    <span>AT</span>
+                </div>
+                <div>
+                    <span class="text-2xl font-extrabold tracking-tight theme-text-primary">ArTes<span class="theme-accent-color">olymp</span></span>
+                    <span class="block text-[10px] font-semibold tracking-widest uppercase theme-text-secondary -mt-1">Real-Time Olympiad Platform</span>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex items-center gap-3 md:gap-4">
+                <!-- Theme Switcher Button with Click Menu (No Hover) -->
+                <div class="relative">
+                    <button id="theme-menu-btn" onclick="toggleThemeDropdown(event)" class="flex items-center gap-2 px-3.5 py-2 rounded-xl theme-bg-card border theme-border text-sm font-semibold shadow-sm hover:border-sky-400 transition-all">
+                        <i class="fa-solid fa-palette theme-accent-color"></i>
+                        <span class="hidden sm:inline">Стиль:</span>
+                        <span id="current-theme-label" class="font-bold">Світлий синій</span>
+                        <i class="fa-solid fa-chevron-down text-xs opacity-60 ml-1"></i>
+                    </button>
+                    <!-- Click Dropdown Menu -->
+                    <div id="theme-dropdown-menu" class="absolute right-0 mt-2 w-48 rounded-2xl theme-bg-card border theme-border shadow-2xl p-2 hidden z-50">
+                        <button onclick="setTheme('light-blue'); hideThemeDropdown();" class="w-full text-left px-3 py-2 text-xs font-bold rounded-xl hover:bg-sky-50 dark:hover:bg-slate-800 flex items-center justify-between my-0.5">
+                            <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-sky-500"></span>Світлий синій</span>
+                            <i id="check-light-blue" class="fa-solid fa-check theme-accent-color"></i>
+                        </button>
+                        <button onclick="setTheme('dark-blue'); hideThemeDropdown();" class="w-full text-left px-3 py-2 text-xs font-bold rounded-xl hover:bg-sky-50 dark:hover:bg-slate-800 flex items-center justify-between my-0.5">
+                            <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-blue-900"></span>Темний синій</span>
+                            <i id="check-dark-blue" class="fa-solid fa-check theme-accent-color hidden"></i>
+                        </button>
+                        <button onclick="setTheme('dark-red'); hideThemeDropdown();" class="w-full text-left px-3 py-2 text-xs font-bold rounded-xl hover:bg-sky-50 dark:hover:bg-slate-800 flex items-center justify-between my-0.5">
+                            <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-red-800"></span>Темний червоний</span>
+                            <i id="check-dark-red" class="fa-solid fa-check theme-accent-color hidden"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- User Profile / Auth Button -->
+                <button onclick="showAuthModal()" id="auth-nav-btn" class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold border theme-border theme-bg-card hover:border-sky-400 transition-all shadow-sm">
+                    <i class="fa-solid fa-user-circle theme-accent-color text-base"></i>
+                    <span id="auth-nav-text">Вхід / Реєстрація</span>
+                </button>
+
+                <button onclick="showSection('profile'); loadProfile();" id="profile-nav-btn" class="hidden px-3.5 py-2 rounded-xl text-sm font-semibold border theme-border theme-bg-card hover:border-sky-400 shadow-sm">
+                    <i class="fa-solid fa-id-card theme-accent-color"></i> <span class="hidden sm:inline">Профіль</span>
+                </button>
+
+                <!-- Desktop Client Button (Windows Only) -->
+                <button onclick="showDesktopModal()" class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold border theme-border theme-bg-card hover:border-sky-400 transition-all shadow-sm">
+                    <i class="fa-solid fa-file-code theme-accent-color"></i>
+                    <span class="hidden sm:inline">Клієнт HTML</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 lg:p-8">
+
+        <!-- ================= SECTION 1: LANDING & CATALOG ================= -->
+        <div id="section-landing" class="space-y-8">
+            <!-- Hero Banner -->
+            <div class="relative overflow-hidden rounded-3xl theme-bg-card border theme-border p-8 md:p-12 shadow-xl">
+                <div class="relative z-10 max-w-3xl space-y-6">
+                    <span class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-bold theme-badge">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Платформа ArTesolymp v6.3 • Google Sheets + Apps Script
+                    </span>
+                    <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
+                        Онлайн-тестування та олімпіади <span class="theme-accent-color">в реальному часі</span>
+                    </h1>
+                    <p class="text-base sm:text-lg theme-text-secondary leading-relaxed">
+                        Олімпіадна платформа з кастомними розділами, зображеннями, питаннями з кодом, автоматичним оцінюванням і збереженням у Google Sheets.
+                    </p>
+                    <div class="flex flex-wrap gap-4 pt-2">
+                        <button onclick="openAccessCodeModal()" class="theme-btn-primary px-6 py-3.5 rounded-2xl text-sm font-bold flex items-center gap-2 shadow-lg hover:scale-105 transition-all">
+                            <i class="fa-solid fa-key"></i> Ввести код доступу (напр. w5555w)
+                        </button>
+                        <button onclick="showCreatorModal()" class="px-6 py-3.5 rounded-2xl text-sm font-bold border theme-border theme-bg-card hover:border-sky-400 flex items-center gap-2 transition-all">
+                            <i class="fa-solid fa-plus-circle theme-accent-color"></i> Конструктор тестів
+                        </button>
+                        <button onclick="downloadClientHtml()" class="px-6 py-3.5 rounded-2xl text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 shadow-lg transition-all">
+                            <i class="fa-solid fa-file-code text-base"></i> Зберегти HTML-клієнт
+                        </button>
+                    </div>
+                </div>
+                <div class="absolute -right-10 -bottom-10 w-96 h-96 rounded-full theme-accent-bg-light opacity-30 blur-3xl pointer-events-none"></div>
+            </div>
+
+            <!-- Tests Catalog -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-extrabold">Каталог олімпіад та тестувань</h2>
+                        <p class="text-xs theme-text-secondary">Публічні олімпіади доступні нижче. Приватні тести відкриваються строго за кодом доступу.</p>
+                    </div>
+                </div>
+
+                <!-- Tests Grid -->
+                <div id="tests-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                    <!-- Dynamic rendering -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PROFILE / MANAGEMENT ================= -->
+        <div id="section-profile" class="hidden space-y-6">
+            <div class="p-6 rounded-3xl theme-bg-card border theme-border shadow-xl">
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                    <div>
+                        <h2 class="text-2xl font-black">Мій профіль</h2>
+                        <p id="profile-summary" class="text-sm theme-text-secondary mt-1">Увійдіть, щоб керувати проходженнями та створеними роботами.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="loadProfile()" class="theme-btn-primary px-4 py-2 rounded-xl text-sm font-bold">Оновити</button>
+                        <button onclick="logoutUser()" class="px-4 py-2 rounded-xl text-sm font-bold border theme-border hover:border-red-400 text-red-500">Вийти</button>
+                    </div>
+                </div>
+                <div class="grid md:grid-cols-2 gap-5 mt-6">
+                    <div class="rounded-2xl border theme-border p-4">
+                        <h3 class="font-bold mb-3">Дані профілю</h3>
+                        <label class="block text-xs font-bold theme-text-secondary mb-1">Ім'я / ПІБ</label>
+                        <input id="profile-name-input" maxlength="120" class="w-full p-2.5 rounded-xl border theme-border theme-bg-card text-sm mb-3" placeholder="Ваше ім'я">
+                        <label class="block text-xs font-bold theme-text-secondary mb-1">Опис профілю</label>
+                        <textarea id="profile-description-input" maxlength="1000" class="w-full p-2.5 rounded-xl border theme-border theme-bg-card text-sm mb-3" rows="3" placeholder="Короткий опис (необов'язково)"></textarea>
+                        <button onclick="saveProfileDetails()" class="theme-btn-primary px-4 py-2 rounded-xl text-xs font-bold">Зберегти профіль</button>
+                    </div>
+                    <div class="rounded-2xl border theme-border p-4">
+                        <h3 class="font-bold mb-3">Зміна пароля</h3>
+                        <label class="block text-xs font-bold theme-text-secondary mb-1">Поточний пароль</label>
+                        <input type="password" id="profile-current-password" autocomplete="current-password" class="w-full p-2.5 rounded-xl border theme-border theme-bg-card text-sm mb-3" placeholder="Поточний пароль">
+                        <label class="block text-xs font-bold theme-text-secondary mb-1">Новий пароль (10+ символів)</label>
+                        <input type="password" id="profile-new-password" autocomplete="new-password" minlength="10" class="w-full p-2.5 rounded-xl border theme-border theme-bg-card text-sm mb-3" placeholder="Новий пароль">
+                        <button onclick="changeOwnPassword()" class="theme-btn-primary px-4 py-2 rounded-xl text-xs font-bold">Змінити пароль</button>
+                    </div>
+                </div>
+                <div class="grid md:grid-cols-2 gap-5 mt-6">
+                    <div class="rounded-2xl border theme-border p-4">
+                        <h3 class="font-bold mb-3">Мої створені тести й олімпіади</h3>
+                        <div id="profile-created" class="space-y-2 text-sm theme-text-secondary">Немає даних.</div>
+                    </div>
+                    <div class="rounded-2xl border theme-border p-4">
+                        <h3 class="font-bold mb-3">Мої проходження та результати</h3>
+                        <div id="profile-attempts" class="space-y-2 text-sm theme-text-secondary">Немає даних.</div>
+                    </div>
+                </div>
+                <div class="rounded-2xl border theme-border p-4 mt-5">
+                    <h3 class="font-bold mb-3">Результати учасників (для вчителя — лише власні тести)</h3>
+                    <div id="teacher-results" class="space-y-2 text-sm theme-text-secondary">Доступно після входу в акаунт учителя.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= SECTION 2: LIVE TEST ENVIRONMENT ================= -->
+        <div id="section-test" class="hidden space-y-6">
+            <!-- Test Top Header Bar -->
+            <div class="p-4 rounded-2xl theme-bg-card border theme-border shadow-md flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h2 id="active-test-title" class="font-extrabold text-lg flex items-center gap-2">
+                        <span>Назва тесту</span>
+                        <span id="preview-mode-badge" class="hidden text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-600 border border-amber-500/30">Режим прев'ю (Тест)</span>
+                        <span id="live-mode-badge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 border border-emerald-500/30">Тест триває</span>
+                    </h2>
+                    <p class="text-xs theme-text-secondary">Питання <span id="current-q-index">1</span> з <span id="total-q-count">10</span></p>
+                </div>
+
+                <!-- Formatted Dynamic Deadline Timer (дд:гг:хх:сс / гг:хх:сс / хх:сс) -->
+                <div class="flex items-center gap-3">
+                    <div class="px-4 py-2 rounded-xl theme-accent-bg-light border theme-border flex items-center gap-2">
+                        <i class="fa-solid fa-clock theme-accent-color animate-pulse"></i>
+                        <span class="text-xs font-semibold theme-text-secondary uppercase">Залишилось:</span>
+                        <span id="live-timer" class="font-code font-bold text-lg theme-accent-color">--:--:--</span>
+                    </div>
+                    <button onclick="saveAnswersToPC()" class="px-3.5 py-2 rounded-xl border theme-border theme-bg-card hover:border-sky-400 text-xs font-bold flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-floppy-disk theme-accent-color"></i>
+                        <span class="hidden sm:inline">Зберегти на ПК</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- CUSTOM IN-TEST SECTION TABS -->
+            <div class="space-y-2">
+                <div class="text-xs font-bold uppercase tracking-wider theme-text-secondary">Розділи тесту (Вкладки):</div>
+                <div id="test-section-tabs" class="flex items-center gap-2 overflow-x-auto pb-2 border-b theme-border">
+                    <!-- Dynamic tabs -->
+                </div>
+            </div>
+
+            <!-- Question Pills Navigation inside selected Tab -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-2" id="question-pills"></div>
+
+            <!-- Active Question Display Box -->
+            <div id="question-card-container" class="p-6 md:p-8 rounded-3xl theme-bg-card border theme-border shadow-xl min-h-[440px] flex flex-col justify-between space-y-6"></div>
+
+            <!-- Bottom Action Controls -->
+            <div class="flex items-center justify-between pt-2">
+                <button id="btn-prev" onclick="navigateQuestion(-1)" class="px-5 py-2.5 rounded-xl border theme-border theme-bg-card font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Назад
+                </button>
+                <div class="flex items-center gap-3">
+                    <button id="btn-next" onclick="navigateQuestion(1)" class="theme-btn-primary px-6 py-2.5 rounded-xl font-semibold text-sm flex items-center gap-2">
+                        Далі <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    <button id="btn-finish" onclick="finishTest()" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg transition-all">
+                        <i class="fa-solid fa-check-double"></i> Завершити олімпіаду
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= SECTION 3: TEST RESULTS ================= -->
+        <div id="section-results" class="hidden max-w-3xl mx-auto space-y-8 py-4">
+            <div class="p-8 rounded-3xl theme-bg-card border theme-border shadow-2xl text-center space-y-6 relative overflow-hidden">
+                <div class="w-20 h-20 mx-auto rounded-full theme-accent-bg-light theme-accent-color flex items-center justify-center text-4xl shadow-inner">
+                    <i class="fa-solid fa-award"></i>
+                </div>
+
+                <div class="space-y-2">
+                    <h2 class="text-3xl font-black">Робота Успішно Відправлена!</h2>
+                    <p class="text-xs theme-text-secondary">Результат відображається нижче. Для збереження в Google Sheets потрібне підключення Apps Script.</p>
+                </div>
+
+                <!-- Post-Deadline Lock Message -->
+                <div id="deadline-notice-box" class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs text-left space-y-1">
+                    <p class="font-bold flex items-center gap-2"><i class="fa-solid fa-lock"></i> Розбір відповідей заблоковано до дедлайну</p>
+                    <p id="deadline-notice-text">Детальні правильні відповіді та розбір розблокуються автоматично після настання дати закритості тесту.</p>
+                </div>
+
+                <!-- Final Score Card -->
+                <div class="p-6 rounded-2xl theme-accent-bg-light border theme-border inline-block min-w-[240px]">
+                    <span class="block text-xs font-bold uppercase tracking-wider theme-text-secondary mb-1">Отриманий Бал</span>
+                    <span id="final-score" class="text-5xl font-black theme-accent-color">0 / 0</span>
+                    <span id="final-percentage" class="block text-xs font-semibold text-emerald-600 mt-2">Учасник: Гість</span>
+                </div>
+
+                <!-- Detailed Unlocked Breakdown -->
+                <div id="breakdown-wrapper" class="text-left space-y-3 pt-4 hidden">
+                    <h3 class="font-bold text-base border-b theme-border pb-2">Детальний розбір результатів по розділах:</h3>
+                    <div id="results-breakdown" class="space-y-2"></div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex flex-col sm:flex-row justify-center gap-4 pt-4">
+                    <button id="btn-retry-submit" onclick="retrySubmitAttempt()" class="hidden theme-btn-primary px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg">
+                        <i class="fa-solid fa-rotate-right"></i> Повторити надсилання
+                    </button>
+                    <button onclick="saveAnswersToPC()" class="theme-btn-primary px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg">
+                        <i class="fa-solid fa-download"></i> Зберегти протокол (.json)
+                    </button>
+                    <button onclick="showSection('landing')" class="px-6 py-3 rounded-xl font-bold border theme-border theme-bg-card hover:border-sky-400 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-house"></i> На головну сторінку
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="border-t theme-border py-6 px-4 theme-bg-card text-center text-xs theme-text-secondary mt-12 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div>
+                <p class="font-bold theme-text-primary">ArTesolymp &copy; 2026. Платформа тестувань у реальному часі.</p>
+                <p class="mt-0.5">Вебклієнт ArTesolymp • дані синхронізуються через Google Apps Script.</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="hover:underline cursor-pointer font-bold text-blue-500" onclick="downloadClientHtml()"><i class="fa-solid fa-file-code mr-1"></i>Зберегти HTML-клієнт</span>
+                <span>•</span>
+                <span class="hover:underline cursor-pointer" onclick="openAccessCodeModal()">Код доступу</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODAL: AUTHENTICATION -->
+    <div id="modal-auth" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="theme-bg-card border theme-border rounded-3xl max-w-md w-full p-6 space-y-6 shadow-2xl relative">
+            <button onclick="hideAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <div class="text-center space-y-2">
+                <div class="w-14 h-14 rounded-2xl theme-btn-primary mx-auto flex items-center justify-center text-2xl font-bold text-white shadow-lg">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <h3 class="text-xl font-extrabold">Реєстрація та Вхід</h3>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold theme-text-secondary uppercase mb-1">ПІБ / Нікнейм:</label>
+                    <input type="text" id="auth-name-input" placeholder="Олександр Петренко" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold theme-text-secondary uppercase mb-1">Електронна пошта (Email):</label>
+                    <input type="email" id="auth-email-input" autocomplete="email" placeholder="student@example.com" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold theme-text-secondary uppercase mb-1">Пароль:</label>
+                    <input type="password" id="auth-password-input" autocomplete="current-password" minlength="10" placeholder="Мінімум 10 символів" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                    <p class="text-[11px] theme-text-secondary mt-1">Пароль зберігається лише у вигляді хешу на сервері, а не в браузері.</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold theme-text-secondary uppercase mb-1">Дія:</label>
+                    <select id="auth-mode-select" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm">
+                        <option value="register">Створити акаунт</option>
+                        <option value="login">Увійти в існуючий акаунт</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold theme-text-secondary uppercase mb-1">Роль користувача:</label>
+                    <select id="auth-role-select" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        <option value="Учень">Учень / Студент</option>
+                        <option value="Учитель">Учитель / Викладач</option>
+                        <option value="Олімпієць">Олімпієць</option>
+                    </select>
+                    <p class="text-[11px] theme-text-secondary mt-1">Роль учителя активується адміністратором для підтвердженої пошти.</p>
+                </div>
+                <p id="auth-error" class="hidden rounded-xl border border-red-400/40 bg-red-500/10 text-red-600 text-xs p-3" role="alert"></p>
+                <button id="auth-submit-btn" onclick="handleAuthSubmit()" class="w-full theme-btn-primary py-3 rounded-xl font-bold text-sm shadow-lg">
+                    Продовжити
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ACCESS CODE -->
+    <div id="modal-access-code" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="theme-bg-card border theme-border rounded-3xl max-w-sm w-full p-6 space-y-6 shadow-2xl relative text-center">
+            <button onclick="hideAccessCodeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <div class="w-14 h-14 rounded-2xl theme-accent-bg-light theme-accent-color mx-auto flex items-center justify-center text-2xl font-bold shadow-inner">
+                <i class="fa-solid fa-key"></i>
+            </div>
+            <div>
+                <h3 class="text-xl font-extrabold">Вхід за кодом</h3>
+                <p class="text-xs theme-text-secondary mt-1">Код приватного тесту (наприклад: <code class="font-code font-bold theme-accent-color">w5555w</code>)</p>
+            </div>
+            <input type="text" id="access-code-input" placeholder="w5555w" class="w-full p-3.5 text-center font-code font-bold uppercase tracking-widest text-lg rounded-xl border theme-border theme-bg-card focus:outline-none focus:ring-2 focus:ring-sky-500">
+            <button onclick="verifyAccessCode()" class="w-full theme-btn-primary py-3 rounded-xl font-bold text-sm shadow-lg">
+                Відкрити тест
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL: PUBLISHED SUCCESS WITH ENTRY CODE -->
+    <div id="modal-published" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="theme-bg-card border theme-border rounded-3xl max-w-md w-full p-6 space-y-6 shadow-2xl relative text-center">
+            <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-500 mx-auto flex items-center justify-center text-3xl font-bold">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div class="space-y-1">
+                <h3 class="text-2xl font-black">Тест Успішно Опубліковано!</h3>
+                <p class="text-xs theme-text-secondary">Учасники можуть отримати доступ за допомогою коду входу:</p>
+            </div>
+            <div class="p-4 rounded-2xl theme-accent-bg-light border theme-border space-y-2">
+                <span class="text-xs font-bold uppercase theme-text-secondary">Код входу:</span>
+                <div class="text-3xl font-code font-black tracking-widest theme-accent-color" id="published-code-display">W5555W</div>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="copyPublishedCode()" class="w-full border theme-border theme-bg-card hover:border-sky-400 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+                    <i class="fa-regular fa-copy"></i> Скопіювати код
+                </button>
+                <button onclick="hidePublishedModal()" class="w-full theme-btn-primary py-3 rounded-xl font-bold text-sm shadow-lg">
+                    Зрозуміло
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADVANCED TEST CREATOR BUILDER WITH PREVIEW & IMAGES -->
+    <div id="modal-creator" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto hidden">
+        <div class="theme-bg-card border theme-border rounded-3xl max-w-4xl w-full p-6 md:p-8 space-y-6 shadow-2xl relative my-8">
+            <button onclick="hideCreatorModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl theme-btn-primary flex items-center justify-center text-xl font-bold text-white">
+                    <i class="fa-solid fa-file-circle-plus"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-extrabold">Конструктор олімпіад ArTesolymp</h3>
+                    <p class="text-xs theme-text-secondary">Створюйте питання з кастомними вкладками, зображеннями та мовами коду</p>
+                </div>
+            </div>
+
+            <!-- General Details -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-bold theme-text-secondary uppercase mb-1">Назва тесту:</label>
+                    <input type="text" id="builder-title" placeholder="Олімпіада з предмету..." class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold theme-text-secondary uppercase mb-1">Код доступу (кастомний):</label>
+                    <input type="text" id="builder-code" placeholder="w5555w" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm font-code uppercase focus:outline-none focus:ring-2 focus:ring-sky-500">
+                </div>
+                <div class="sm:col-span-3">
+                    <label class="block text-xs font-bold theme-text-secondary uppercase mb-1">Опис тесту:</label>
+                    <textarea id="builder-desc" placeholder="Короткі вказівки для учасників..." class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 h-16 resize-none"></textarea>
+                </div>
+                <div class="sm:col-span-3">
+                    <label class="block text-xs font-bold theme-text-secondary uppercase mb-1">Дедлайн (дата та час закриття тесту):</label>
+                    <input type="datetime-local" id="builder-deadline" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm font-bold focus:outline-none focus:ring-2 focus:ring-sky-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold theme-text-secondary uppercase mb-1">Доступ</label>
+                    <select id="builder-visibility" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm">
+                        <option value="private">Приватний — за кодом</option>
+                        <option value="public">Публічний у каталозі</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold theme-text-secondary uppercase mb-1">Повторне проходження</label>
+                    <select id="builder-allow-repeat" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm">
+                        <option value="false">Лише один раз</option>
+                        <option value="true">Дозволити повторно</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold theme-text-secondary uppercase mb-1">Режим</label>
+                    <select id="builder-kind" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm">
+                        <option value="test">Тест</option>
+                        <option value="olympiad">Олімпіада</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Custom Tabs Management in Test -->
+            <div class="p-4 rounded-2xl theme-accent-bg-light border theme-border space-y-3">
+                <div class="flex items-center justify-between">
+                    <label class="text-xs font-bold uppercase tracking-wider theme-accent-color">Кастомні Вкладки/Розділи тесту:</label>
+                    <button onclick="builderAddSectionTab()" class="text-xs theme-btn-primary px-3 py-1 rounded-lg font-bold">+ Додати вкладку</button>
+                </div>
+                <div id="builder-tabs-list" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <!-- Questions List -->
+            <div class="space-y-4 pt-2 border-t theme-border">
+                <div class="flex items-center justify-between">
+                    <h4 class="font-bold text-base">Список питань (<span id="builder-q-count">0</span>)</h4>
+                    <button onclick="builderAddQuestion()" class="px-4 py-2 rounded-xl theme-btn-primary text-xs font-bold flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-plus"></i> Додати питання
+                    </button>
+                </div>
+
+                <div id="builder-questions-list" class="space-y-4 max-h-[420px] overflow-y-auto pr-2"></div>
+            </div>
+
+            <!-- Builder Actions: Preview & Save -->
+            <div class="flex flex-wrap justify-between items-center gap-3 pt-4 border-t theme-border">
+                <button onclick="builderPreviewTest()" class="px-5 py-2.5 rounded-xl border theme-border theme-bg-card hover:border-amber-500 text-amber-600 font-bold text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-eye"></i> 🔍 Перевірити тест (Прев'ю)
+                </button>
+                <div class="flex gap-3">
+                    <button onclick="hideCreatorModal()" class="px-5 py-2.5 rounded-xl border theme-border theme-bg-card font-semibold text-sm">Скасувати</button>
+                    <button onclick="builderSaveTest()" class="theme-btn-primary px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg flex items-center gap-2">
+                        <i class="fa-solid fa-rocket"></i> 🚀 Опублікувати тест
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: SAVE HTML CLIENT -->
+    <div id="modal-desktop" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="theme-bg-card border theme-border rounded-3xl max-w-lg w-full p-6 md:p-8 space-y-6 shadow-2xl relative">
+            <button onclick="hideDesktopModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600" aria-label="Закрити"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <div class="text-center space-y-3">
+                <div class="w-16 h-16 rounded-2xl theme-btn-primary mx-auto flex items-center justify-center text-3xl font-bold shadow-lg">
+                    <i class="fa-solid fa-file-code"></i>
+                </div>
+                <h3 class="text-2xl font-black">HTML-клієнт ArTesolymp</h3>
+                <p class="text-sm theme-text-secondary leading-relaxed">
+                    Збережеться копія цієї вебсторінки у форматі <code class="font-code theme-accent-color font-bold">.html</code> — це не інсталятор Windows. Для входу, реєстрації, синхронізації тестів і збереження результатів потрібен доступ до налаштованого Google Apps Script.
+                </p>
+            </div>
+            <div class="p-5 rounded-2xl theme-accent-bg-light border theme-border space-y-3">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-file-code text-2xl theme-accent-color"></i>
+                    <div>
+                        <span class="block font-bold text-sm">ArTesolymp_Client.html</span>
+                        <span class="text-[11px] theme-text-secondary">HTML-файл • працює в сучасному браузері</span>
+                    </div>
+                </div>
+                <button onclick="downloadClientHtml()" class="w-full theme-btn-primary py-3.5 rounded-xl font-bold text-sm shadow-xl flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-download"></i> Зберегти HTML-клієнт
+                </button>
+            </div>
+            <p class="text-xs theme-text-secondary">Якщо API URL змінювався після розгортання, оновіть константу <code>API_URL</code> у файлі перед використанням.</p>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast-notification" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="theme-bg-card border theme-border px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3">
+            <i class="fa-solid fa-circle-info theme-accent-color text-lg"></i>
+            <span id="toast-text" class="text-xs font-bold">Сповіщення платформи</span>
+        </div>
+    </div>
+
+    <script>
+        /*
+         * Інтеграція Google Apps Script:
+         * Після оновлення серверного коду опублікуйте нову версію Web App.
+         * Якщо URL змінився, замініть API_URL на нову адресу /exec.
+         * Реєстрація, створення і проходження реальних тестів виконуються сервером.
+         */
+        const API_URL = "https://script.google.com/macros/s/AKfycby9SH3v5gqcuOR5an9QclFDvGRh0wAlTV3gN6kjru0113TDTuLyPvuuzYABbW7sy1Y/exec"; // Наприклад: https://script.google.com/macros/s/DEPLOYMENT_ID/exec
+        const DEMO_TEST_ID = "demo-olympiad-tabs";
+        let authToken = sessionStorage.getItem("artesolymp_token") || "";
+        let currentTheme = 'light-blue';
+        let currentUser = { name: "Гість", email: "", role: "Учень" };
+
+        /* Tests database with Custom In-Test Section Tabs & Images */
+        let testsDatabase = [
+            {
+                id: "demo-olympiad-tabs",
+                kind: "olympiad",
+                allowRepeat: true,
+                title: "Головна демонстраційна олімпіада для перевірки",
+                description: "Головна демонстраційна олімпіада для перевірки всіх можливостей системи із 10 питаннями по різних предметах.",
+                code: "",
+                deadline: "2026-12-31T23:59",
+                isPublic: true,
+                tabs: ["Вступ та правила", "Інформатика та кодування", "Точні науки (Математика & Фізика)", "Гуманітарний блок (Історія)"],
+                questions: [
+                    {
+                        id: 1,
+                        tabName: "Вступ та правила",
+                        title: "Правила проходження олімпіади ArTesolymp",
+                        description: "Перемикайте кастомні вкладки вище для швидкої навігації між предметними блоками. Час форматується динамічно від залишку до дедлайну.",
+                        imageUrl: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80",
+                        type: "info",
+                        points: 0
+                    },
+                    {
+                        id: 2,
+                        tabName: "Інформатика та кодування",
+                        title: "Алгоритми: Сума елементів масиву",
+                        description: "Напишіть функцію sum_array(arr), яка повертає суму чисел масиву.",
+                        imageUrl: "",
+                        type: "code",
+                        points: 10,
+                        allowedLangs: ["python", "javascript", "cpp", "csharp"],
+                        referenceCode: "# Python\ndef sum_array(arr):\n    return sum(arr)"
+                    },
+                    {
+                        id: 3,
+                        tabName: "Інформатика та кодування",
+                        title: "Структури даних",
+                        description: "Оберіть усі лінійні структури даних зі списку нижче:",
+                        imageUrl: "",
+                        type: "multiple",
+                        points: 10,
+                        options: ["Масив", "Стек", "Дерево", "Черга", "Граф"],
+                        correct: [0, 1, 3]
+                    },
+                    {
+                        id: 4,
+                        tabName: "Точні науки (Математика & Фізика)",
+                        title: "Математика: Площа трикутника",
+                        description: "Обчисліть площу прямокутного трикутника з катетами 6 см та 8 см.",
+                        imageUrl: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&q=80",
+                        type: "single",
+                        points: 10,
+                        options: ["24 см²", "48 см²", "14 см²", "12 см²"],
+                        correct: 0
+                    },
+                    {
+                        id: 5,
+                        tabName: "Точні науки (Математика & Фізика)",
+                        title: "Фізика: Другий закон Ньютона",
+                        description: "Визначте силу, яка надає тілу масою 5 кг прискорення 2 м/с².",
+                        imageUrl: "",
+                        type: "single",
+                        points: 10,
+                        options: ["10 Н", "2.5 Н", "7 Н", "25 Н"],
+                        correct: 0
+                    },
+                    {
+                        id: 6,
+                        tabName: "Гуманітарний блок (Історія)",
+                        title: "Історія: Акт проголошення незалежності України",
+                        description: "Вкажіть точну дату прийняття Акта проголошення незалежності України.",
+                        imageUrl: "",
+                        type: "date",
+                        points: 10,
+                        correctDate: "1991-08-24"
+                    },
+                    {
+                        id: 7,
+                        tabName: "Гуманітарний блок (Історія)",
+                        title: "Текстова відповідь (оцінює вчитель)",
+                        description: "Сформулюйте значення олімпіадного руху для розвитку молоді (1–2 речення). Відповідь оцінює вчитель.",
+                        imageUrl: "",
+                        type: "text",
+                        points: 10,
+                        aiKeywords: ["знання", "розвиток", "наука", "досвід"]
+                    },
+                    {
+                        id: 8,
+                        tabName: "Гуманітарний блок (Історія)",
+                        title: "Українська мова: Частини мови",
+                        description: "Якою частиною мови є слово 'швидко'?",
+                        imageUrl: "",
+                        type: "single",
+                        points: 10,
+                        options: ["Прислівник", "Прикметник", "Дієслово", "Іменник"],
+                        correct: 0
+                    },
+                    {
+                        id: 9,
+                        tabName: "Точні науки (Математика & Фізика)",
+                        title: "Геометрія: Сума кутів трикутника",
+                        description: "Чому дорівнює сума внутрішніх кутів довільного трикутника?",
+                        imageUrl: "",
+                        type: "single",
+                        points: 10,
+                        options: ["180°", "360°", "90°", "270°"],
+                        correct: 0
+                    },
+                    {
+                        id: 10,
+                        tabName: "Інформатика та кодування",
+                        title: "Логічні операції",
+                        description: "Які з операторів належать до логічних в програмуванні?",
+                        imageUrl: "",
+                        type: "multiple",
+                        points: 10,
+                        options: ["AND (&&)", "OR (||)", "NOT (!)", "PLUS (+)"],
+                        correct: [0, 1, 2]
+                    }
+                ]
+            },
+            {
+                id: "artes-pro-2026",
+                title: "Приватна Олімпіада ArTesolymp Pro",
+                description: "Приватна олімпіада. Доступ відкривається за кодом w5555w.",
+                code: "w5555w",
+                deadline: "2026-10-29T19:00",
+                isPublic: false,
+                tabs: ["Алгоритми", "Теорія"],
+                questions: [
+                    {
+                        id: 1,
+                        tabName: "Алгоритми",
+                        title: "Пошук максимуму",
+                        description: "Реалізуйте алгоритм find_max(a, b).",
+                        type: "code",
+                        points: 20,
+                        allowedLangs: ["python", "javascript", "cpp", "csharp"]
+                    }
+                ]
+            }
+        ];
+
+        let activeTest = null;
+        let activeTabName = "";
+        let currentQuestionIndex = 0;
+        let userAnswers = {};
+        let timerInterval = null;
+        let progressSaveTimer = null;
+        let builderQuestions = [];
+        let builderTabs = ["Основний розділ"];
+        let isPreviewSession = false;
+
+        function downloadClientHtml() {
+            try {
+                const source = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+                const blob = new Blob([source], { type: "text/html;charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = "ArTesolymp_Client.html";
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                showNotification("HTML-клієнт збережено. Для синхронізації потрібен доступ до Google Apps Script.");
+            } catch (err) {
+                showNotification("Не вдалося зберегти HTML-клієнт. Спробуйте команду браузера «Зберегти сторінку як…».");
+            }
+        }
+
+        /* THEME MANAGEMENT CLICK CONTROLS (NO HOVER) */
+        function toggleThemeDropdown(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('theme-dropdown-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        function hideThemeDropdown() {
+            document.getElementById('theme-dropdown-menu').classList.add('hidden');
+        }
+
+        document.addEventListener('click', function() {
+            hideThemeDropdown();
+        });
+
+        function setTheme(theme) {
+            currentTheme = theme;
+            document.body.setAttribute('data-theme', theme);
+            const labels = { 'light-blue': 'Світлий синій', 'dark-blue': 'Темний синій', 'dark-red': 'Темний червоний' };
+            document.getElementById('current-theme-label').innerText = labels[theme];
+
+            document.getElementById('check-light-blue').classList.toggle('hidden', theme !== 'light-blue');
+            document.getElementById('check-dark-blue').classList.toggle('hidden', theme !== 'dark-blue');
+            document.getElementById('check-dark-red').classList.toggle('hidden', theme !== 'dark-red');
+
+            localStorage.setItem('artesolymp_theme', theme);
+        }
+
+        /* NAVIGATION & MODALS */
+        function showSection(sec) {
+            ['landing','profile','test','results'].forEach(name => {
+                const el = document.getElementById(`section-${name}`);
+                if (el) el.classList.toggle('hidden', name !== sec);
+            });
+            if (sec === 'landing') renderTestsList();
+        }
+
+        function escapeHtml(value) {
+            return String(value === undefined || value === null ? "" : value)
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+        }
+        function jsString(value) {
+            return "'" + String(value === undefined || value === null ? "" : value)
+                .replace(/\\/g, "\\\\").replace(/'/g, "\\'")
+                .replace(/\r/g, "\\r").replace(/\n/g, "\\n") + "'";
+        }
+
+        function showNotification(msg) {
+            const toast = document.getElementById('toast-notification');
+            document.getElementById('toast-text').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3500);
+        }
+
+        function showAuthModal() { document.getElementById('modal-auth').classList.remove('hidden'); }
+        function hideAuthModal() { document.getElementById('modal-auth').classList.add('hidden'); }
+        async function apiRequest(action, payload = {}) {
+            if (!API_URL) throw new Error("Google Apps Script не налаштовано: відсутній URL /exec.");
+            let response;
+            try {
+                response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({ action, token: authToken, ...payload })
+                });
+            } catch (_) {
+                throw new Error("Не вдалося зв'язатися з Google Apps Script. Перевірте URL /exec, доступність Web App та інтернет-з'єднання.");
+            }
+            const raw = await response.text();
+            let data;
+            try { data = JSON.parse(raw); }
+            catch (_) {
+                throw new Error("Google Apps Script повернув не JSON. Розгорніть останню версію як Web App і перевірте URL /exec.");
+            }
+            if (!response.ok || data.ok === false) throw new Error(data.error || `Помилка API (${response.status}).`);
+            return data;
+        }
+
+        function queueProgressSave() {
+            if (!activeTest || isPreviewSession || activeTest.id === DEMO_TEST_ID || !window.currentAttemptId || !authToken) return;
+            clearTimeout(progressSaveTimer);
+            progressSaveTimer = setTimeout(async () => {
+                try {
+                    await apiRequest("saveProgress", {attemptId:window.currentAttemptId, answers:userAnswers});
+                } catch (err) {
+                    // Show no toast for every keystroke; final submit still reports persistent errors.
+                    console.warn("Progress autosave failed:", err.message || err);
+                }
+            }, 650);
+        }
+
+        function requireLogin() {
+            if (!authToken || !currentUser.email) {
+                showAuthModal();
+                showNotification("Спочатку зареєструйтеся або увійдіть.");
+                return false;
+            }
+            return true;
+        }
+
+        async function handleAuthSubmit() {
+            const name = document.getElementById('auth-name-input').value.trim();
+            const email = document.getElementById('auth-email-input').value.trim().toLowerCase();
+            const password = document.getElementById('auth-password-input').value;
+            const role = document.getElementById('auth-role-select').value;
+            const mode = document.getElementById('auth-mode-select').value;
+            const errBox = document.getElementById('auth-error');
+            const submitBtn = document.getElementById('auth-submit-btn');
+            errBox.textContent = "";
+            errBox.classList.add('hidden');
+
+            // Corrected: the old double-escaped expression rejected common email addresses.
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || password.length < 10) {
+                const message = "Перевірте електронну пошту та введіть пароль щонайменше з 10 символів.";
+                errBox.textContent = message; errBox.classList.remove('hidden'); showNotification(message);
+                return;
+            }
+            if (mode === "register" && !name) {
+                const message = "Для реєстрації введіть ПІБ або нікнейм.";
+                errBox.textContent = message; errBox.classList.remove('hidden'); showNotification(message);
+                return;
+            }
+            if (!API_URL) {
+                const message = "Реєстрація недоступна: не налаштовано URL Google Apps Script.";
+                errBox.textContent = message; errBox.classList.remove('hidden'); showNotification(message);
+                return;
+            }
+            submitBtn.disabled = true;
+            submitBtn.classList.add("opacity-60");
+            submitBtn.textContent = mode === "register" ? "Створення акаунта..." : "Вхід...";
+            try {
+                const data = await apiRequest(mode === "register" ? "register" : "login", { name, email, password, role });
+                if (!data.token || !data.user) throw new Error("Сервер не повернув сесію. Перевірте розгорнуту версію Apps Script.");
+                authToken = data.token;
+                sessionStorage.setItem("artesolymp_token", authToken);
+                currentUser = data.user;
+                applyCurrentUserUI();
+                hideAuthModal();
+                if (data.teacherPending) {
+                    showNotification("Акаунт створено. Роль учителя очікує підтвердження адміністратора; зараз доступна роль учня.");
+                } else {
+                    showNotification(mode === "register" ? "Акаунт створено." : "Вхід виконано.");
+                }
+                await refreshFromServer();
+            } catch (err) {
+                const message = err.message || "Не вдалося виконати операцію.";
+                errBox.textContent = message;
+                errBox.classList.remove('hidden');
+                showNotification(message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove("opacity-60");
+                submitBtn.textContent = "Продовжити";
+            }
+        }
+        function applyCurrentUserUI() {
+            const loggedIn = Boolean(authToken && currentUser && currentUser.email);
+            document.getElementById('auth-nav-text').innerText = loggedIn ? (currentUser.name || currentUser.email).split(" ")[0] : "Вхід / Реєстрація";
+            document.getElementById('profile-nav-btn').classList.toggle('hidden', !loggedIn);
+        }
+
+        async function refreshFromServer() {
+            if (!API_URL) { applyCurrentUserUI(); return false; }
+            const hadToken = Boolean(authToken);
+            try {
+                // Guests may browse only the public catalog. Taking real tests still requires login.
+                const data = await apiRequest(hadToken ? "bootstrap" : "catalog");
+                if (hadToken && data.user) currentUser = data.user;
+                const demo = testsDatabase.find(t => t.id === DEMO_TEST_ID);
+                testsDatabase = [ ...(demo ? [demo] : []), ...(data.tests || []).filter(t => t.id !== DEMO_TEST_ID) ];
+                applyCurrentUserUI();
+                renderTestsList();
+                return true;
+            } catch (err) {
+                const message = err.message || "Не вдалося оновити дані.";
+                if (/Сесія недійсна|Сесія завершилася|Потрібно увійти|Акаунт недоступний/i.test(message)) {
+                    authToken = "";
+                    sessionStorage.removeItem("artesolymp_token");
+                    currentUser = {name:"Гість",email:"",role:"Учень",description:""};
+                    applyCurrentUserUI();
+                    // A stale session falls back to the anonymous catalog rather than hiding it.
+                    if (hadToken) return refreshFromServer();
+                }
+                showNotification("Не вдалося синхронізувати дані: " + message);
+                return false;
+            }
+        }
+
+        async function logoutUser() {
+            try { if (authToken) await apiRequest("logout"); } catch (_) { /* local logout still works if the network is unavailable */ }
+            authToken = "";
+            sessionStorage.removeItem("artesolymp_token");
+            currentUser = {name:"Гість",email:"",role:"Учень",description:""};
+            applyCurrentUserUI();
+            renderTestsList();
+            showSection("landing");
+            showNotification("Ви вийшли з акаунта.");
+        }
+
+        async function saveProfileDetails() {
+            if (!requireLogin()) return;
+            const profile = {
+                name: document.getElementById("profile-name-input").value.trim(),
+                description: document.getElementById("profile-description-input").value.trim()
+            };
+            try {
+                const data = await apiRequest("updateProfile", {profile});
+                currentUser = data.user;
+                applyCurrentUserUI();
+                await loadProfile();
+                showNotification("Профіль збережено.");
+            } catch (err) { showNotification(err.message || "Не вдалося зберегти профіль."); }
+        }
+
+        async function changeOwnPassword() {
+            if (!requireLogin()) return;
+            const currentPassword = document.getElementById("profile-current-password").value;
+            const newPassword = document.getElementById("profile-new-password").value;
+            if (newPassword.length < 10) { showNotification("Новий пароль має містити щонайменше 10 символів."); return; }
+            try {
+                await apiRequest("changePassword", {currentPassword, newPassword});
+                document.getElementById("profile-current-password").value = "";
+                document.getElementById("profile-new-password").value = "";
+                showNotification("Пароль змінено. У Google Sheets зберігається хеш, а не відкритий пароль.");
+            } catch (err) { showNotification(err.message || "Не вдалося змінити пароль."); }
+        }
+        async function loadProfile() {
+            if (!requireLogin()) return;
+            try {
+                const data = await apiRequest("profile");
+                currentUser = data.user || currentUser;
+                applyCurrentUserUI();
+                document.getElementById("profile-summary").textContent =
+                    `${data.user.name} • ${data.user.email} • ${data.user.role}` +
+                    (data.user.requestedRole === "Учитель" ? " • Запит на роль учителя очікує підтвердження адміністратора" : "");
+                document.getElementById("profile-name-input").value = data.user.name || "";
+                document.getElementById("profile-description-input").value = data.user.description || "";
+
+                const created = document.getElementById("profile-created");
+                created.innerHTML = "";
+                (data.created || []).forEach(t => {
+                    const row = document.createElement("div");
+                    row.className = "border-b theme-border py-2";
+                    const label = document.createElement("div");
+                    label.className = "font-semibold mb-1";
+                    label.textContent = `${t.title} · ID ${t.publicId || t.id} · код доступу ${t.code || "—"}`;
+                    row.appendChild(label);
+                    const meta = document.createElement("div");
+                    meta.className = "text-[11px] theme-text-secondary mb-2";
+                    meta.textContent = `${t.kind === "olympiad" ? "Олімпіада" : "Тест"} · ${t.allowRepeat ? "повторне проходження дозволено" : "лише один раз"} · до ${new Date(t.deadline).toLocaleString("uk-UA")}`;
+                    row.appendChild(meta);
+                    const controls = document.createElement("div");
+                    controls.className = "flex flex-wrap gap-3";
+                    const copy = document.createElement("button");
+                    copy.className = "text-xs theme-accent-color font-bold";
+                    copy.textContent = "Створити копію";
+                    copy.onclick = () => duplicateTest(t.id);
+                    controls.appendChild(copy);
+                    const del = document.createElement("button");
+                    del.className = "text-xs text-red-500 font-bold";
+                    del.textContent = "Видалити";
+                    del.onclick = () => deleteOwnTest(t.id);
+                    controls.appendChild(del);
+                    row.appendChild(controls);
+                    created.appendChild(row);
+                });
+                if (!data.created || !data.created.length) created.textContent = "Ви ще не створювали тестів.";
+
+                const attempts = document.getElementById("profile-attempts");
+                attempts.innerHTML = "";
+                (data.attempts || []).forEach(a => {
+                    const row = document.createElement("div");
+                    row.className = "border-b theme-border py-2";
+                    const info = document.createElement("div");
+                    info.textContent = `${a.title} · ${a.score}/${a.maxScore} · ${new Date(a.finishedAt).toLocaleString("uk-UA")}`;
+                    row.appendChild(info);
+                    const delAttempt = document.createElement("button");
+                    delAttempt.className = "text-xs text-red-500 font-bold mt-1";
+                    delAttempt.textContent = "Прибрати з історії";
+                    delAttempt.onclick = () => deleteOwnAttempt(a.id);
+                    row.appendChild(delAttempt);
+                    attempts.appendChild(row);
+                });
+                if (!data.attempts || !data.attempts.length) attempts.textContent = "Проходжень поки немає.";
+
+                const teacher = document.getElementById("teacher-results");
+                teacher.innerHTML = "";
+                if (data.user.role !== "Учитель") {
+                    teacher.textContent = "Перегляд результатів учасників доступний лише підтвердженому вчителю — автору відповідного тесту.";
+                } else {
+                    (data.teacherResults || []).forEach(a => {
+                        const row = document.createElement("div");
+                        row.className = "border-b theme-border py-3";
+                        const summary = document.createElement("div");
+                        summary.className = "flex flex-wrap items-center justify-between gap-2";
+                        const label = document.createElement("div");
+                        label.className = "text-sm";
+                        label.textContent = `${a.testTitle} · ${a.participantName} (${a.participantEmail}) · ${a.score}/${a.maxScore} · ${new Date(a.finishedAt).toLocaleString("uk-UA")}`;
+                        summary.appendChild(label);
+                        const detailsBtn = document.createElement("button");
+                        detailsBtn.className = "text-xs theme-accent-color font-bold";
+                        detailsBtn.textContent = "Відповіді / оцінювання";
+                        summary.appendChild(detailsBtn);
+                        row.appendChild(summary);
+                        const details = document.createElement("div");
+                        details.className = "hidden mt-3 space-y-3";
+                        row.appendChild(details);
+                        detailsBtn.onclick = () => {
+                            const opening = details.classList.contains("hidden");
+                            details.classList.toggle("hidden");
+                            detailsBtn.textContent = opening ? "Сховати відповіді" : "Відповіді / оцінювання";
+                            if (opening && !details.dataset.loaded) {
+                                renderTeacherResponses(a, details);
+                                details.dataset.loaded = "1";
+                            }
+                        };
+                        teacher.appendChild(row);
+                    });
+                    if (!data.teacherResults || !data.teacherResults.length) teacher.textContent = "Ще немає результатів за вашими роботами.";
+                }
+            } catch (err) { showNotification(err.message || "Не вдалося завантажити профіль."); }
+        }
+
+        function renderTeacherResponses(attempt, container) {
+            container.innerHTML = "";
+            (attempt.responses || []).forEach(response => {
+                const card = document.createElement("div");
+                card.className = "rounded-xl border theme-border p-3";
+                const title = document.createElement("div");
+                title.className = "font-bold text-xs mb-2";
+                title.textContent = `${response.title} · ${response.score}/${response.maxScore} б.`;
+                card.appendChild(title);
+                const answer = document.createElement("pre");
+                answer.className = "text-xs theme-text-secondary whitespace-pre-wrap break-words mb-3";
+                let value = response.answer;
+                if (value === null || value === undefined || value === "") value = "Без відповіді";
+                answer.textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2);
+                card.appendChild(answer);
+                if (response.type === "text" || response.type === "code") {
+                    const row = document.createElement("div");
+                    row.className = "flex flex-wrap items-center gap-2";
+                    const scoreInput = document.createElement("input");
+                    scoreInput.type = "number";
+                    scoreInput.min = "0";
+                    scoreInput.max = String(response.maxScore);
+                    scoreInput.step = "0.5";
+                    scoreInput.value = String(response.score || 0);
+                    scoreInput.className = "w-24 p-2 rounded-lg border theme-border theme-bg-card text-xs";
+                    scoreInput.setAttribute("aria-label", "Бал за відповідь");
+                    const scoreLabel = document.createElement("span");
+                    scoreLabel.className = "text-xs theme-text-secondary";
+                    scoreLabel.textContent = `/ ${response.maxScore} балів`;
+                    const save = document.createElement("button");
+                    save.className = "theme-btn-primary px-3 py-2 rounded-lg text-xs font-bold";
+                    save.textContent = "Зберегти оцінку";
+                    save.onclick = async () => {
+                        const score = Number(scoreInput.value);
+                        if (!Number.isFinite(score) || score < 0 || score > response.maxScore) {
+                            showNotification(`Бал має бути від 0 до ${response.maxScore}.`);
+                            return;
+                        }
+                        try {
+                            await apiRequest("gradeAnswer", {attemptId:attempt.attemptId, questionId:response.questionId, score});
+                            await loadProfile();
+                            showNotification("Оцінку збережено.");
+                        } catch (err) { showNotification(err.message || "Не вдалося зберегти оцінку."); }
+                    };
+                    row.append(scoreInput, scoreLabel, save);
+                    card.appendChild(row);
+                }
+                container.appendChild(card);
+            });
+            if (!(attempt.responses || []).length) container.textContent = "Деталізація відповідей недоступна.";
+        }
+        async function deleteOwnAttempt(attemptId) {
+            if (!requireLogin() || !confirm("Прибрати це проходження з вашої історії?")) return;
+            try {
+                await apiRequest("deleteAttempt", { attemptId });
+                await loadProfile();
+                showNotification("Проходження прибрано з історії.");
+            } catch (err) { showNotification(err.message || "Не вдалося змінити історію."); }
+        }
+
+        async function duplicateTest(testId) {
+            if (!requireLogin()) return;
+            try {
+                await apiRequest("duplicateTest", { testId });
+                await refreshFromServer(); await loadProfile();
+                showNotification("Копію створено.");
+            } catch (err) { showNotification(err.message); }
+        }
+        async function deleteOwnTest(testId) {
+            if (!requireLogin() || !confirm("Видалити власний тест? Історія вже зданих робіт збережеться.")) return;
+            try {
+                await apiRequest("deleteTest", { testId });
+                await refreshFromServer(); await loadProfile();
+                showNotification("Тест видалено з каталогу.");
+            } catch (err) { showNotification(err.message); }
+        }
+
+        function openAccessCodeModal() { document.getElementById('modal-access-code').classList.remove('hidden'); }
+        function hideAccessCodeModal() { document.getElementById('modal-access-code').classList.add('hidden'); }
+        async function verifyAccessCode() {
+            const code = document.getElementById('access-code-input').value.trim();
+            if (!requireLogin()) return;
+            try {
+                const data = await apiRequest("verifyCode", { code });
+                hideAccessCodeModal();
+                await startTestSession(data.test, false);
+            } catch (err) {
+                showNotification(err.message || "Не вдалося перевірити код доступу.");
+            }
+        }
+
+        /* RENDER TESTS CATALOG */
+        function renderTestsList() {
+            const container = document.getElementById('tests-grid');
+            container.innerHTML = '';
+
+            const filtered = testsDatabase.filter(t => t.id === DEMO_TEST_ID || (API_URL && (t.isPublic || (currentUser.role === 'Учитель' && t.isOwner))));
+
+            filtered.forEach(test => {
+                const card = document.createElement('div');
+                card.className = 'p-6 rounded-2xl theme-bg-card border theme-border shadow-md flex flex-col justify-between space-y-4 hover:shadow-xl transition-all';
+                const deadlineFormatted = new Date(test.deadline).toLocaleString('uk-UA');
+
+                card.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2.5 py-0.5 rounded text-xs font-bold ${test.isPublic ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/30' : 'bg-purple-500/20 text-purple-600 border border-purple-500/30'}">
+                                ${test.isPublic ? 'Публічна' : 'Приватна'}
+                            </span>
+                            <span class="text-xs theme-text-secondary"><i class="fa-regular fa-clock mr-1"></i>До: ${deadlineFormatted}</span>
+                        </div>
+                        <h3 class="text-xl font-bold">${escapeHtml(test.title)}</h3>
+                        <p class="text-sm theme-text-secondary line-clamp-2">${escapeHtml(test.description || "")}</p>
+                        <p class="text-[11px] theme-text-secondary break-all">Закодований ID: <code class="font-code">${escapeHtml(test.encodedId || test.id || "")}</code></p>
+                        <p class="text-[11px] theme-text-secondary">${test.kind === "olympiad" ? "Олімпіада" : "Тест"} · ${test.allowRepeat ? "Повторне проходження дозволено" : "Одне проходження"}</p>
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            ${(test.tabs || ['Загальний']).map(tab => `<span class="text-[10px] font-bold px-2 py-0.5 rounded theme-badge">${escapeHtml(tab)}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between pt-2 border-t theme-border">
+                        <span class="text-xs font-semibold theme-text-secondary"><i class="fa-solid fa-list-check mr-1"></i>${test.questions.length} питань</span>
+                        <button onclick="startTestSession(${jsString(test.id)}, false)" class="theme-btn-primary px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow">
+                            <i class="fa-solid fa-play"></i> Почати тест
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        /* LIVE TEST SESSION WITH IN-TEST TABS & EXACT TIMER */
+        async function startTestSession(testId, isPreview = false) {
+            window.currentAttemptId = null;
+            let restoredAnswers = {};
+            let test = null;
+            if (isPreview || (testId && typeof testId === "object")) {
+                test = testId; // full test object from preview or server-side code verification
+            } else {
+                test = testsDatabase.find(t => t.id === testId);
+            }
+            if (!test) return;
+            if (!isPreview && !(test.id === DEMO_TEST_ID && test.kind === "olympiad") && !requireLogin()) return;
+            if (!isPreview && test.id !== DEMO_TEST_ID && !API_URL) {
+                showNotification("Реальні тести доступні після підключення Google Apps Script.");
+                return;
+            }
+            if (!isPreview && test.id !== DEMO_TEST_ID && API_URL) {
+                try {
+                    const started = await apiRequest("startAttempt", { testId: test.id });
+                    window.currentAttemptId = started.attemptId;
+                    restoredAnswers = started.answers && typeof started.answers === "object" ? started.answers : {};
+                    if (started.resumed) showNotification("Відновлено незавершене проходження зі збереженими відповідями.");
+                } catch (err) {
+                    showNotification(err.message || "Не вдалося розпочати проходження.");
+                    return;
+                }
+            }
+
+            activeTest = test;
+            userAnswers = restoredAnswers;
+            isPreviewSession = isPreview;
+            activeTabName = (test.tabs && test.tabs.length > 0) ? test.tabs[0] : "";
+
+            document.getElementById('active-test-title').querySelector('span').innerText = test.title;
+            document.getElementById('total-q-count').innerText = test.questions.length;
+
+            document.getElementById('preview-mode-badge').classList.toggle('hidden', !isPreview);
+            document.getElementById('live-mode-badge').classList.toggle('hidden', isPreview);
+
+            showSection('test');
+            startLiveTimer();
+            renderInTestTabs();
+            selectInTestTab(activeTabName);
+        }
+
+        /* Dynamic Deadline Timer: дд:гг:хх:сс / гг:хх:сс / хх:сс */
+        function startLiveTimer() {
+            clearInterval(timerInterval);
+            const deadlineMs = new Date(activeTest.deadline).getTime();
+
+            const updateTimer = () => {
+                const nowMs = new Date().getTime();
+                const diffSec = Math.max(0, Math.floor((deadlineMs - nowMs) / 1000));
+
+                if (diffSec <= 0) {
+                    clearInterval(timerInterval);
+                    document.getElementById('live-timer').innerText = "00:00";
+                    showNotification("Дедлайн вичерпано! Тест завершено.");
+                    finishTest();
+                    return;
+                }
+
+                const days = Math.floor(diffSec / 86400);
+                const hours = Math.floor((diffSec % 86400) / 3600);
+                const minutes = Math.floor((diffSec % 3600) / 60);
+                const seconds = diffSec % 60;
+
+                const pad = (n, len = 2) => String(n).padStart(len, '0');
+
+                let formatted = "";
+                if (days > 0) {
+                    formatted = `${days}:${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+                } else if (hours > 0) {
+                    formatted = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+                } else {
+                    formatted = `${pad(minutes)}:${pad(seconds)}`;
+                }
+
+                document.getElementById('live-timer').innerText = formatted;
+            };
+
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        /* IN-TEST TABS LOGIC */
+        function renderInTestTabs() {
+            const container = document.getElementById('test-section-tabs');
+            container.innerHTML = '';
+
+            const tabs = activeTest.tabs && activeTest.tabs.length > 0 ? activeTest.tabs : ["Основний розділ"];
+
+            tabs.forEach(tabName => {
+                const tabQuestions = activeTest.questions.filter(q => (q.tabName || tabs[0]) === tabName);
+                const answeredCount = tabQuestions.filter(q => checkIsAnswered(q)).length;
+                const isActive = tabName === activeTabName;
+
+                const tabBtn = document.createElement('button');
+                tabBtn.onclick = () => selectInTestTab(tabName);
+                tabBtn.className = `px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap border ${
+                    isActive ? 'theme-btn-primary border-transparent shadow' : 'theme-bg-card theme-border hover:border-sky-400'
+                }`;
+
+                tabBtn.innerHTML = `
+                    <span>${escapeHtml(tabName)}</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] ${isActive ? 'bg-white/20 text-white' : 'theme-badge'}">${answeredCount}/${tabQuestions.length}</span>
+                `;
+                container.appendChild(tabBtn);
+            });
+        }
+
+        function selectInTestTab(tabName) {
+            activeTabName = tabName;
+            renderInTestTabs();
+
+            const tabQuestions = getTabQuestions();
+            if (tabQuestions.length > 0) {
+                const firstGlobalIdx = activeTest.questions.findIndex(q => q.id === tabQuestions[0].id);
+                currentQuestionIndex = firstGlobalIdx >= 0 ? firstGlobalIdx : 0;
+            }
+            renderPills();
+            renderQuestion();
+        }
+
+        function getTabQuestions() {
+            const defaultTab = activeTest.tabs && activeTest.tabs.length > 0 ? activeTest.tabs[0] : "";
+            return activeTest.questions.filter(q => (q.tabName || defaultTab) === activeTabName);
+        }
+
+        function renderPills() {
+            const container = document.getElementById('question-pills');
+            container.innerHTML = '';
+
+            const tabQuestions = getTabQuestions();
+
+            tabQuestions.forEach((q) => {
+                const globalIndex = activeTest.questions.findIndex(item => item.id === q.id);
+                const isAns = checkIsAnswered(q);
+                const isActive = globalIndex === currentQuestionIndex;
+
+                const pill = document.createElement('button');
+                pill.onclick = () => jumpToQuestion(globalIndex);
+                pill.className = `px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap border ${
+                    isActive ? 'theme-btn-primary border-transparent scale-105' :
+                    isAns ? 'bg-emerald-500/20 text-emerald-600 border-emerald-500/40' :
+                    'theme-bg-card theme-border hover:border-sky-400'
+                }`;
+
+                pill.innerHTML = `<span>Питання ${globalIndex + 1}</span><i class="fa-solid ${isAns ? 'fa-circle-check text-[10px]' : 'fa-circle text-[6px] opacity-40'}"></i>`;
+                container.appendChild(pill);
+            });
+        }
+
+        function checkIsAnswered(q) {
+            if (q.type === 'info') return true;
+            const ans = userAnswers[q.id];
+            if (Array.isArray(ans)) return ans.length > 0;
+            return ans !== null && ans !== "" && ans !== undefined;
+        }
+
+        function renderQuestion() {
+            const q = activeTest.questions[currentQuestionIndex];
+            document.getElementById('current-q-index').innerText = currentQuestionIndex + 1;
+            const container = document.getElementById('question-card-container');
+
+            const typeNames = {
+                'info': 'Інформаційний блок',
+                'code': 'Кодування (Програмування)',
+                'single': 'Тест (Одна правильна)',
+                'multiple': 'Тест (Декілька правильних)',
+                'text': 'Текстова відповідь (ШІ)',
+                'date': 'Введення дати'
+            };
+
+            let html = `
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold theme-badge px-3 py-1 rounded-full">${escapeHtml(typeNames[q.type] || 'Питання')} • ${escapeHtml(q.tabName || 'Загальний')}</span>
+                        <span class="text-xs theme-text-secondary font-semibold"><i class="fa-solid fa-star text-amber-400 mr-1"></i>${q.points || 0} Балів</span>
+                    </div>
+                    <h3 class="text-xl md:text-2xl font-bold leading-snug">${escapeHtml(q.title)}</h3>
+                    ${q.description ? `<p class="text-sm theme-text-secondary leading-relaxed">${escapeHtml(q.description)}</p>` : ''}
+                    ${q.imageUrl ? `<div class="pt-2"><img src="${escapeHtml(q.imageUrl)}" class="max-h-64 rounded-2xl border theme-border object-cover shadow-md" alt="Question Image" onerror="this.style.display='none'"></div>` : ''}
+                </div>
+            `;
+
+            // TYPE 1: INFO BLOCK
+            if (q.type === 'info') {
+                html += `
+                    <div class="p-6 rounded-2xl theme-accent-bg-light border theme-border space-y-2">
+                        <p class="text-xs font-bold theme-accent-color uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-circle-info"></i> Інформаційне повідомлення
+                        </p>
+                        <p class="text-sm theme-text-secondary">Ознайомтесь з матеріалом та натисніть "Далі" для переходу до питань.</p>
+                    </div>
+                `;
+            }
+            // TYPE 2: CODE
+            else if (q.type === 'code') {
+                const allowedLangs = q.allowedLangs || ["python", "javascript", "cpp", "csharp"];
+                const selectedLang = userAnswers[`lang_${q.id}`] || allowedLangs[0];
+                userAnswers[`lang_${q.id}`] = selectedLang;
+                const currentCode = userAnswers[q.id] || `# Напишіть розв'язок мовою ${selectedLang}\n`;
+
+                html += `
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between bg-slate-900 px-4 py-2 rounded-t-2xl border-b border-slate-800 text-xs text-slate-300">
+                            <span class="font-code"><i class="fa-solid fa-code text-sky-400 mr-2"></i>editor</span>
+                            <select onchange="userAnswers['lang_${q.id}'] = this.value; queueProgressSave(); renderQuestion();" class="bg-slate-800 text-sky-400 font-bold px-2 py-1 rounded border border-slate-700 text-xs">
+                                ${allowedLangs.map(l => `<option value="${escapeHtml(l)}" ${selectedLang === l ? 'selected' : ''}>${escapeHtml(l.toUpperCase())}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="rounded-b-2xl overflow-hidden border theme-border">
+                            <textarea id="code-input-${q.id}" oninput="userAnswers[${jsString(q.id)}] = this.value; queueProgressSave(); renderPills(); renderInTestTabs();" class="w-full h-40 p-4 font-code text-sm bg-slate-950 text-sky-300 focus:outline-none resize-none">${escapeHtml(currentCode)}</textarea>
+                        </div>
+                    </div>
+                `;
+            }
+            // TYPE 3: SINGLE CHOICE
+            else if (q.type === 'single') {
+                html += `<div class="space-y-3 pt-2">`;
+                (q.options || []).forEach((opt, idx) => {
+                    const isChecked = userAnswers[q.id] === idx;
+                    html += `
+                        <label onclick="setSingleChoice(${jsString(q.id)}, ${idx})" class="p-4 rounded-xl border theme-border theme-bg-card hover:border-sky-400 cursor-pointer flex items-center gap-3 transition-all ${isChecked ? 'ring-2 ring-sky-500 theme-accent-bg-light' : ''}">
+                            <input type="radio" name="q-${q.id}" ${isChecked ? 'checked' : ''} class="w-4 h-4 text-sky-600">
+                            <span class="text-sm font-medium">${escapeHtml(opt)}</span>
+                        </label>
+                    `;
+                });
+                html += `</div>`;
+            }
+            // TYPE 4: MULTIPLE CHOICE
+            else if (q.type === 'multiple') {
+                html += `<div class="space-y-3 pt-2">`;
+                const ansArr = Array.isArray(userAnswers[q.id]) ? userAnswers[q.id] : [];
+                (q.options || []).forEach((opt, idx) => {
+                    const isChecked = ansArr.includes(idx);
+                    html += `
+                        <label onclick="toggleMultipleChoice(${jsString(q.id)}, ${idx})" class="p-4 rounded-xl border theme-border theme-bg-card hover:border-sky-400 cursor-pointer flex items-center gap-3 transition-all ${isChecked ? 'ring-2 ring-sky-500 theme-accent-bg-light' : ''}">
+                            <input type="checkbox" ${isChecked ? 'checked' : ''} class="w-4 h-4 rounded text-sky-600">
+                            <span class="text-sm font-medium">${escapeHtml(opt)}</span>
+                        </label>
+                    `;
+                });
+                html += `</div>`;
+            }
+            // TYPE 5: TEXT
+            else if (q.type === 'text') {
+                const val = userAnswers[q.id] || '';
+                html += `
+                    <textarea oninput="userAnswers[${jsString(q.id)}] = this.value; queueProgressSave(); renderPills(); renderInTestTabs();" placeholder="Введіть відповідь..." class="w-full h-32 p-4 rounded-2xl border theme-border theme-bg-card text-sm focus:outline-none resize-none">${escapeHtml(val)}</textarea>
+                `;
+            }
+            // TYPE 6: DATE
+            else if (q.type === 'date') {
+                const val = userAnswers[q.id] || '';
+                html += `
+                    <div class="max-w-xs space-y-2">
+                        <label class="block text-xs font-bold theme-text-secondary uppercase">Оберіть точну дату:</label>
+                        <input type="date" value="${escapeHtml(val)}" onchange="userAnswers[${jsString(q.id)}] = this.value; queueProgressSave(); renderPills(); renderInTestTabs();" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm font-bold focus:outline-none">
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+
+            document.getElementById('btn-prev').disabled = currentQuestionIndex === 0;
+            if (currentQuestionIndex === activeTest.questions.length - 1) {
+                document.getElementById('btn-next').classList.add('hidden');
+                document.getElementById('btn-finish').classList.remove('hidden');
+            } else {
+                document.getElementById('btn-next').classList.remove('hidden');
+                document.getElementById('btn-finish').classList.add('hidden');
+            }
+        }
+
+        function setSingleChoice(qId, idx) {
+            userAnswers[qId] = idx;
+            queueProgressSave();
+            renderPills();
+            renderInTestTabs();
+            renderQuestion();
+        }
+
+        function toggleMultipleChoice(qId, idx) {
+            if (!Array.isArray(userAnswers[qId])) userAnswers[qId] = [];
+            const arr = userAnswers[qId];
+            const pos = arr.indexOf(idx);
+            if (pos > -1) arr.splice(pos, 1);
+            else arr.push(idx);
+            queueProgressSave();
+            renderPills();
+            renderInTestTabs();
+            renderQuestion();
+        }
+
+        function navigateQuestion(dir) {
+            const nextIdx = currentQuestionIndex + dir;
+            if (nextIdx >= 0 && nextIdx < activeTest.questions.length) {
+                currentQuestionIndex = nextIdx;
+                const nextQ = activeTest.questions[currentQuestionIndex];
+                if (nextQ.tabName && nextQ.tabName !== activeTabName) {
+                    activeTabName = nextQ.tabName;
+                    renderInTestTabs();
+                }
+                renderPills();
+                renderQuestion();
+            }
+        }
+
+        function jumpToQuestion(idx) {
+            currentQuestionIndex = idx;
+            renderPills();
+            renderQuestion();
+        }
+
+        function saveAnswersToPC() {
+            const exportData = {
+                platform: "ArTesolymp",
+                testTitle: activeTest ? activeTest.title : "",
+                user: currentUser,
+                timestamp: new Date().toISOString(),
+                answers: userAnswers
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+            const anchor = document.createElement('a');
+            anchor.setAttribute("href", dataStr);
+            anchor.setAttribute("download", `ArTesolymp_Answers_${Date.now()}.json`);
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+            showNotification("Результати збережено на ПК!");
+        }
+
+        async function finishTest() {
+            if (!activeTest || window.finishInProgress) return;
+            window.finishInProgress = true;
+            clearInterval(timerInterval);
+            clearTimeout(progressSaveTimer);
+            showSection('results');
+
+            const breakdown = document.getElementById('results-breakdown');
+            breakdown.innerHTML = '';
+            document.getElementById('btn-retry-submit').classList.add('hidden');
+            let totalPoints = 0;
+            let possiblePoints = 0;
+            let serverSubmitted = false;
+
+            if (!isPreviewSession && activeTest.id !== DEMO_TEST_ID && API_URL && window.currentAttemptId) {
+                try {
+                    const submitted = await apiRequest("submitAttempt", {
+                        attemptId: window.currentAttemptId,
+                        answers: userAnswers
+                    });
+                    totalPoints = Number(submitted.score) || 0;
+                    possiblePoints = Number(submitted.maxScore) || 0;
+                    serverSubmitted = true;
+                    (submitted.breakdown || []).forEach(item => {
+                        const card = document.createElement('div');
+                        card.className = 'p-3 rounded-xl border theme-border flex justify-between items-center text-xs';
+                        const left = document.createElement('div');
+                        const title = document.createElement('span');
+                        title.className = 'font-bold block';
+                        title.textContent = item.title || 'Питання';
+                        const sub = document.createElement('span');
+                        sub.className = 'text-[10px] theme-text-secondary';
+                        sub.textContent = `Тип: ${item.type || 'питання'}`;
+                        left.append(title, sub);
+                        const score = document.createElement('span');
+                        score.className = `font-bold ${Number(item.score) > 0 ? 'text-emerald-500' : 'theme-text-secondary'}`;
+                        score.textContent = `${item.score} / ${item.maxScore} б.`;
+                        card.append(left, score);
+                        breakdown.appendChild(card);
+                    });
+                    await loadProfile();
+                } catch (err) {
+                    showNotification("Не вдалося зберегти результат на сервері: " + err.message);
+                    document.getElementById('btn-retry-submit').classList.remove('hidden');
+                    document.getElementById('final-percentage').innerText = "Результат ще не збережено на сервері.";
+                    window.finishInProgress = false;
+                    return;
+                }
+            }
+
+            // Local scoring is only used for the deliberately public demonstration olympiad and preview.
+            if (!serverSubmitted) {
+                activeTest.questions.forEach(q => {
+                    let score = 0;
+                    const points = Number(q.points) || 0;
+                    possiblePoints += points;
+                    if (q.type === 'single' && userAnswers[q.id] !== undefined && userAnswers[q.id] !== null && userAnswers[q.id] !== "" && Number(userAnswers[q.id]) === Number(q.correct)) {
+                        score = points;
+                    } else if (q.type === 'multiple') {
+                        const userArr = (Array.isArray(userAnswers[q.id]) ? userAnswers[q.id] : []).map(Number).sort((a,b)=>a-b).join(',');
+                        const correctArr = (Array.isArray(q.correct) ? q.correct : [q.correct]).map(Number).sort((a,b)=>a-b).join(',');
+                        if (correctArr !== "" && userArr === correctArr) score = points;
+                    } else if (q.type === 'date' && String(userAnswers[q.id] || "") === String(q.correctDate || "")) {
+                        score = points;
+                    }
+                    totalPoints += score;
+                    const item = document.createElement('div');
+                    item.className = 'p-3 rounded-xl border theme-border flex justify-between items-center text-xs';
+                    const left = document.createElement('div');
+                    const title = document.createElement('span');
+                    title.className = 'font-bold block';
+                    title.textContent = q.title || 'Питання';
+                    const sub = document.createElement('span');
+                    sub.className = 'text-[10px] theme-text-secondary';
+                    sub.textContent = `Розділ: ${q.tabName || 'Загальний'}`;
+                    left.append(title, sub);
+                    const scoreBadge = document.createElement('span');
+                    scoreBadge.className = `font-bold ${score > 0 ? 'text-emerald-500' : 'theme-text-secondary'}`;
+                    scoreBadge.textContent = `${score} / ${points} б.`;
+                    item.append(left, scoreBadge);
+                    breakdown.appendChild(item);
+                });
+            }
+
+            document.getElementById('final-score').innerText = `${totalPoints} / ${possiblePoints}`;
+            document.getElementById('final-percentage').innerText = `Учасник: ${currentUser.name}`;
+            const deadlineDate = new Date(activeTest.deadline);
+            const now = new Date();
+            if (now < deadlineDate && !isPreviewSession) {
+                document.getElementById('deadline-notice-box').classList.remove('hidden');
+                document.getElementById('breakdown-wrapper').classList.add('hidden');
+            } else {
+                document.getElementById('deadline-notice-box').classList.add('hidden');
+                document.getElementById('breakdown-wrapper').classList.remove('hidden');
+            }
+            window.currentAttemptId = null;
+            window.finishInProgress = false;
+        }
+        async function retrySubmitAttempt() {
+            if (!window.currentAttemptId) {
+                showNotification("Немає незавершеної відправки для повтору. Перевірте результат у профілі.");
+                return;
+            }
+            if (window.finishInProgress) return;
+            await finishTest();
+        }
+
+        /* BUILDER WITH PREVIEW & IMAGES */
+        function showCreatorModal() {
+            if (!requireLogin()) return;
+            if (currentUser.role !== "Учитель") {
+                showNotification("Створювати тести та олімпіади може лише акаунт учителя.");
+                return;
+            }
+            document.getElementById('modal-creator').classList.remove('hidden');
+            document.getElementById('builder-title').value = "";
+            document.getElementById('builder-desc').value = "";
+            document.getElementById('builder-code').value = "w" + Math.floor(1000 + Math.random() * 9000) + "w";
+            builderTabs = ["Основний розділ", "Додатковий розділ"];
+            builderQuestions = [];
+            renderBuilderTabs();
+            renderBuilderQuestions();
+        }
+        function hideCreatorModal() { document.getElementById('modal-creator').classList.add('hidden'); }
+
+        function renderBuilderTabs() {
+            const container = document.getElementById('builder-tabs-list');
+            container.innerHTML = '';
+            builderTabs.forEach((tab, tIdx) => {
+                const badge = document.createElement('div');
+                badge.className = 'flex items-center gap-1 px-3 py-1 rounded-xl border theme-border theme-bg-card text-xs font-bold';
+                badge.innerHTML = `
+                    <span>${escapeHtml(tab)}</span>
+                    ${builderTabs.length > 1 ? `<button onclick="builderRemoveSectionTab(${tIdx})" class="text-red-400 hover:text-red-600 ml-1"><i class="fa-solid fa-xmark"></i></button>` : ''}
+                `;
+                container.appendChild(badge);
+            });
+        }
+
+        function builderAddSectionTab() {
+            const tabName = prompt("Введіть назву нової вкладки тесту:", `Розділ ${builderTabs.length + 1}`);
+            if (tabName && tabName.trim()) {
+                builderTabs.push(tabName.trim());
+                renderBuilderTabs();
+                renderBuilderQuestions();
+            }
+        }
+
+        function builderRemoveSectionTab(tIdx) {
+            if (builderTabs.length <= 1) {
+                showNotification("У тесті має залишитися хоча б одна вкладка.");
+                return;
+            }
+            const removedTab = builderTabs[tIdx];
+            builderTabs.splice(tIdx, 1);
+            const fallbackTab = builderTabs[0];
+            builderQuestions.forEach(q => {
+                if (q.tabName === removedTab) q.tabName = fallbackTab;
+            });
+            renderBuilderTabs();
+            renderBuilderQuestions();
+        }
+
+        function builderAddQuestion() {
+            builderQuestions.push({
+                id: Date.now(),
+                tabName: builderTabs[0] || "Основний розділ",
+                title: "Нове питання",
+                description: "Опис завдання...",
+                imageUrl: "",
+                type: "single",
+                points: 10,
+                options: ["Варіант 1", "Варіант 2"],
+                correct: 0,
+                allowedLangs: ["python", "javascript", "cpp", "csharp"],
+                correctDate: "2026-01-01"
+            });
+            renderBuilderQuestions();
+        }
+
+        function builderRemoveQuestion(qIndex) {
+            builderQuestions.splice(qIndex, 1);
+            renderBuilderQuestions();
+        }
+
+        function changeQuestionType(qIdx, newType) {
+            const q = builderQuestions[qIdx];
+            q.type = newType;
+            if (newType === 'single' || newType === 'multiple') {
+                if (!Array.isArray(q.options) || q.options.length === 0) q.options = ["Варіант 1", "Варіант 2"];
+                if (newType === 'multiple') {
+                    q.correct = (Array.isArray(q.correct) ? q.correct : [Number(q.correct) || 0])
+                        .filter(i => Number.isInteger(i) && i >= 0 && i < q.options.length);
+                    if (q.correct.length === 0) q.correct = [0];
+                } else {
+                    q.correct = Array.isArray(q.correct) ? (q.correct.length ? q.correct[0] : 0) : (Number(q.correct) || 0);
+                    if (q.correct < 0 || q.correct >= q.options.length) q.correct = 0;
+                }
+            } else if (newType === 'info') {
+                q.points = 0;
+            }
+            renderBuilderQuestions();
+        }
+
+        function handleImageUpload(qIdx, event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            if (!file.type.startsWith("image/")) {
+                showNotification("Оберіть файл зображення.");
+                event.target.value = "";
+                return;
+            }
+            if (file.size > 15 * 1024 * 1024) {
+                showNotification("Файл завеликий. Максимальний розмір вхідного зображення — 15 МБ.");
+                event.target.value = "";
+                return;
+            }
+            const reader = new FileReader();
+            reader.onerror = () => showNotification("Не вдалося прочитати файл зображення.");
+            reader.onload = ev => {
+                const img = new Image();
+                img.onerror = () => showNotification("Формат цього зображення не вдалося обробити. Спробуйте PNG або JPEG.");
+                img.onload = () => {
+                    let scale = Math.min(1, 900 / Math.max(img.naturalWidth || img.width, img.naturalHeight || img.height));
+                    let dataUrl = "";
+                    for (let attempt = 0; attempt < 10; attempt++) {
+                        const canvas = document.createElement("canvas");
+                        canvas.width = Math.max(1, Math.round((img.naturalWidth || img.width) * scale));
+                        canvas.height = Math.max(1, Math.round((img.naturalHeight || img.height) * scale));
+                        const ctx = canvas.getContext("2d");
+                        if (!ctx) { showNotification("Браузер не підтримує обробку зображень."); return; }
+                        ctx.fillStyle = "#ffffff";
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        let quality = 0.78;
+                        dataUrl = canvas.toDataURL("image/jpeg", quality);
+                        while (dataUrl.length > 46000 && quality > 0.34) {
+                            quality -= 0.08;
+                            dataUrl = canvas.toDataURL("image/jpeg", quality);
+                        }
+                        if (dataUrl.length <= 46000) break;
+                        scale *= 0.78;
+                    }
+                    if (!dataUrl || dataUrl.length > 49000) {
+                        showNotification("Не вдалося стиснути зображення до ліміту Google Sheets. Виберіть менше зображення.");
+                        return;
+                    }
+                    builderQuestions[qIdx].imageUrl = dataUrl;
+                    renderBuilderQuestions();
+                    showNotification("Зображення додано та стиснуто для збереження в Google Sheets.");
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        function renderBuilderQuestions() {
+            const container = document.getElementById('builder-questions-list');
+            document.getElementById('builder-q-count').innerText = builderQuestions.length;
+            container.innerHTML = '';
+
+            if (builderQuestions.length === 0) {
+                container.innerHTML = `<p class="text-xs theme-text-secondary text-center py-6">Натисніть "+ Додати питання" для створення завдання.</p>`;
+                return;
+            }
+
+            builderQuestions.forEach((q, idx) => {
+                if (q.type === 'multiple' && !Array.isArray(q.correct)) q.correct = [0];
+
+                const card = document.createElement('div');
+                card.className = 'p-4 rounded-2xl border theme-border theme-bg-card space-y-3 relative';
+
+                let specificFieldsHtml = '';
+
+                if (q.type === 'single' || q.type === 'multiple') {
+                    const isMulti = q.type === 'multiple';
+                    const correctArr = isMulti ? (Array.isArray(q.correct) ? q.correct : []) : [];
+
+                    specificFieldsHtml = `
+                        <div class="space-y-2 pt-2 border-t theme-border">
+                            <div class="flex items-center justify-between">
+                                <label class="text-xs font-bold theme-text-secondary">Варіанти відповідей:</label>
+                                <button onclick="builderAddOption(${idx})" class="text-xs theme-accent-color font-bold hover:underline">+ Варіант</button>
+                            </div>
+                            <div class="space-y-2">
+                                ${(q.options || []).map((opt, optIdx) => {
+                                    const isChecked = isMulti ? correctArr.includes(optIdx) : q.correct === optIdx;
+                                    return `
+                                        <div class="flex items-center gap-2">
+                                            <input type="${isMulti ? 'checkbox' : 'radio'}" ${isChecked ? 'checked' : ''} onchange="setBuilderCorrect(${idx}, ${optIdx}, '${q.type}')" name="builder-correct-${idx}">
+                                            <input type="text" value="${escapeHtml(opt)}" oninput="builderQuestions[${idx}].options[${optIdx}] = this.value" class="w-full p-2 rounded-lg border theme-border theme-bg-main text-xs focus:outline-none">
+                                            <button onclick="builderRemoveOption(${idx}, ${optIdx})" class="text-red-400 px-2"><i class="fa-solid fa-trash text-xs"></i></button>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between gap-3">
+                        <span class="text-xs font-bold px-2.5 py-0.5 rounded theme-badge">Питання #${idx + 1}</span>
+                        <div class="flex items-center gap-2">
+                            <label class="text-xs font-bold theme-text-secondary">Вкладка:</label>
+                            <select onchange="builderQuestions[${idx}].tabName = this.value" class="p-1 rounded-lg border theme-border theme-bg-main text-xs font-bold">
+                                ${builderTabs.map(t => `<option value="${escapeHtml(t)}" ${q.tabName === t ? 'selected' : ''}>${escapeHtml(t)}</option>`).join('')}
+                            </select>
+                            <label class="text-xs font-bold theme-text-secondary ml-2">Бали:</label>
+                            <input type="number" min="0" value="${q.points || 0}" oninput="builderQuestions[${idx}].points = parseInt(this.value)||0" class="w-14 p-1 rounded-lg border theme-border theme-bg-main text-xs font-bold text-center">
+                            <button onclick="builderRemoveQuestion(${idx})" class="text-red-400 hover:text-red-600 ml-2"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div class="sm:col-span-2">
+                            <input type="text" value="${escapeHtml(q.title)}" oninput="builderQuestions[${idx}].title = this.value" placeholder="Назва питання" class="w-full p-2.5 rounded-xl border theme-border theme-bg-main text-xs font-bold focus:outline-none">
+                        </div>
+                        <div>
+                            <select onchange="changeQuestionType(${idx}, this.value)" class="w-full p-2.5 rounded-xl border theme-border theme-bg-main text-xs font-semibold focus:outline-none">
+                                <option value="info" ${q.type === 'info' ? 'selected' : ''}>0. Інфо-блок (0 б.)</option>
+                                <option value="code" ${q.type === 'code' ? 'selected' : ''}>1. Кодування</option>
+                                <option value="single" ${q.type === 'single' ? 'selected' : ''}>2. Одна правильна</option>
+                                <option value="multiple" ${q.type === 'multiple' ? 'selected' : ''}>3. Декілька правильних</option>
+                                <option value="text" ${q.type === 'text' ? 'selected' : ''}>4. Текстова відповідь (оцінює вчитель)</option>
+                                <option value="date" ${q.type === 'date' ? 'selected' : ''}>5. Введення дати</option>
+                            </select>
+                        </div>
+                    </div>
+                    <textarea oninput="builderQuestions[${idx}].description = this.value" placeholder="Опис питання..." class="w-full p-2.5 rounded-xl border theme-border theme-bg-main text-xs h-12 resize-none focus:outline-none">${escapeHtml(q.description)}</textarea>
+                    
+                    <!-- Image Attachment Input -->
+                    <div class="flex items-center gap-2 pt-1">
+                        <input type="text" value="${escapeHtml(q.imageUrl || '')}" oninput="builderQuestions[${idx}].imageUrl = this.value" placeholder="URL зображення (наприклад: https://...)" class="w-full p-2 rounded-lg border theme-border theme-bg-main text-xs focus:outline-none">
+                        <label class="cursor-pointer px-3 py-2 rounded-lg border theme-border theme-bg-main text-xs font-bold whitespace-nowrap hover:border-sky-400">
+                            <i class="fa-solid fa-upload mr-1"></i>Файл
+                            <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(${idx}, event)">
+                        </label>
+                    </div>
+                    ${q.imageUrl ? `<div class="relative w-20 h-20 rounded-lg overflow-hidden border theme-border"><img src="${escapeHtml(q.imageUrl)}" class="w-full h-full object-cover"><button onclick="builderQuestions[${idx}].imageUrl=''; renderBuilderQuestions();" class="absolute top-0 right-0 bg-red-600 text-white p-1 text-[10px]"><i class="fa-solid fa-xmark"></i></button></div>` : ''}
+
+                    ${specificFieldsHtml}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function builderAddOption(qIdx) {
+            builderQuestions[qIdx].options.push("Новий варіант");
+            renderBuilderQuestions();
+        }
+
+        function builderRemoveOption(qIdx, optIdx) {
+            const q = builderQuestions[qIdx];
+            if (!q || !Array.isArray(q.options)) return;
+            if (q.options.length <= 1) {
+                showNotification("Залиште хоча б один варіант відповіді.");
+                return;
+            }
+            q.options.splice(optIdx, 1);
+            if (q.type === 'single') {
+                if (q.correct === optIdx) q.correct = Math.min(optIdx, q.options.length - 1);
+                else if (q.correct > optIdx) q.correct -= 1;
+            } else if (q.type === 'multiple') {
+                q.correct = (Array.isArray(q.correct) ? q.correct : [])
+                    .filter(i => i !== optIdx).map(i => i > optIdx ? i - 1 : i);
+                if (q.correct.length === 0) q.correct = [0];
+            }
+            renderBuilderQuestions();
+        }
+
+        function setBuilderCorrect(qIdx, optIdx, type) {
+            if (type === 'single') {
+                builderQuestions[qIdx].correct = optIdx;
+            } else {
+                if (!Array.isArray(builderQuestions[qIdx].correct)) builderQuestions[qIdx].correct = [];
+                const arr = builderQuestions[qIdx].correct;
+                const pos = arr.indexOf(optIdx);
+                if (pos > -1) arr.splice(pos, 1);
+                else arr.push(optIdx);
+            }
+        }
+
+        /* BUILDER PREVIEW FUNCTION */
+        function builderPreviewTest() {
+            const title = document.getElementById('builder-title').value.trim() || "Прев'ю Олімпіади";
+            const desc = document.getElementById('builder-desc').value.trim();
+            const deadline = document.getElementById('builder-deadline').value;
+
+            if (builderQuestions.length === 0) {
+                showNotification("Додайте хоча б одне питання для перевірки!");
+                return;
+            }
+
+            const previewTestObj = {
+                id: "preview_test",
+                title: "[Прев'ю] " + title,
+                description: desc || "Тестовий режим перед публікацією",
+                code: "",
+                deadline: deadline ? new Date(deadline).toISOString() : new Date(Date.now() + 365 * 86400000).toISOString(),
+                isPublic: true,
+                tabs: builderTabs,
+                questions: builderQuestions
+            };
+
+            hideCreatorModal();
+            startTestSession(previewTestObj, true);
+        }
+
+        /* BUILDER PUBLISH FUNCTION WITH PUBLISHED MODAL & ENTRY CODE */
+        function builderSaveTest() {
+            const title = document.getElementById('builder-title').value.trim();
+            const desc = document.getElementById('builder-desc').value.trim();
+            let code = document.getElementById('builder-code').value.trim();
+            const deadline = document.getElementById('builder-deadline').value;
+
+            if (!title) { showNotification("Введіть назву тесту!"); return; }
+            if (builderQuestions.length === 0) { showNotification("Додайте хоча б одне питання!"); return; }
+
+            if (!code) code = "w" + Math.floor(1000 + Math.random() * 9000) + "w";
+
+            if (!requireLogin()) return;
+            if (!API_URL) { showNotification("Публікація недоступна: налаштуйте Google Apps Script API."); return; }
+            const newTest = {
+                title, description: desc,
+                code,
+                deadline: deadline ? new Date(deadline).toISOString() : new Date(Date.now() + 365 * 86400000).toISOString(),
+                isPublic: document.getElementById("builder-visibility").value === "public",
+                allowRepeat: document.getElementById("builder-allow-repeat").value === "true",
+                kind: document.getElementById("builder-kind").value,
+                tabs: builderTabs,
+                questions: builderQuestions
+            };
+            apiRequest("createTest", { test: newTest }).then(data => {
+                hideCreatorModal();
+                document.getElementById('published-code-display').innerText = data.code;
+                document.getElementById('modal-published').classList.remove('hidden');
+                refreshFromServer(); renderTestsList();
+            }).catch(err => showNotification(err.message || "Не вдалося опублікувати тест."));
+        }
+
+        function hidePublishedModal() {
+            document.getElementById('modal-published').classList.add('hidden');
+        }
+
+        function copyPublishedCode() {
+            const code = document.getElementById('published-code-display').innerText;
+            const tempInput = document.createElement("input");
+            tempInput.value = code;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+            showNotification(`Код ${code} скопійовано!`);
+        }
+
+        function showDesktopModal() { document.getElementById('modal-desktop').classList.remove('hidden'); }
+        function hideDesktopModal() { document.getElementById('modal-desktop').classList.add('hidden'); }
+
+        window.onload = function() {
+            const savedTheme = localStorage.getItem('artesolymp_theme') || 'light-blue';
+            setTheme(savedTheme);
+            applyCurrentUserUI();
+            renderTestsList();
+            if (API_URL) refreshFromServer();
+        };
+    </script>
+</body>
+</html>
