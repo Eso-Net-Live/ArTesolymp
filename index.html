@@ -134,7 +134,7 @@
 
             <!-- Controls -->
             <div class="flex items-center gap-3 md:gap-4">
-                <!-- Theme Switcher Button with Click Menu (No Hover) -->
+                <!-- Theme Switcher Button -->
                 <div class="relative">
                     <button id="theme-menu-btn" onclick="toggleThemeDropdown(event)" class="flex items-center gap-2 px-3.5 py-2 rounded-xl theme-bg-card border theme-border text-sm font-semibold shadow-sm hover:border-sky-400 transition-all">
                         <i class="fa-solid fa-palette theme-accent-color"></i>
@@ -169,7 +169,7 @@
                     <i class="fa-solid fa-id-card theme-accent-color"></i> <span class="hidden sm:inline">Профіль</span>
                 </button>
 
-                <!-- Desktop Client Button (Windows Only) -->
+                <!-- Desktop Client Button -->
                 <button onclick="showDesktopModal()" class="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold border theme-border theme-bg-card hover:border-sky-400 transition-all shadow-sm">
                     <i class="fa-solid fa-file-code theme-accent-color"></i>
                     <span class="hidden sm:inline">Клієнт HTML</span>
@@ -188,7 +188,7 @@
                 <div class="relative z-10 max-w-3xl space-y-6">
                     <span class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-bold theme-badge">
                         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Платформа ArTesolymp v6.3 • Google Sheets + Apps Script
+                        Платформа ArTesolymp v6.4 • Google Sheets + Apps Script
                     </span>
                     <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
                         Онлайн-тестування та олімпіади <span class="theme-accent-color">в реальному часі</span>
@@ -301,7 +301,7 @@
                     <p class="text-xs theme-text-secondary">Питання <span id="current-q-index">1</span> з <span id="total-q-count">10</span></p>
                 </div>
 
-                <!-- Formatted Dynamic Deadline Timer (дд:гг:хх:сс / гг:хх:сс / хх:сс) -->
+                <!-- Formatted Dynamic Deadline Timer -->
                 <div class="flex items-center gap-3">
                     <div class="px-4 py-2 rounded-xl theme-accent-bg-light border theme-border flex items-center gap-2">
                         <i class="fa-solid fa-clock theme-accent-color animate-pulse"></i>
@@ -323,7 +323,7 @@
                 </div>
             </div>
 
-            <!-- Question Pills Navigation inside selected Tab -->
+            <!-- Question Pills Navigation -->
             <div class="flex items-center gap-2 overflow-x-auto pb-2" id="question-pills"></div>
 
             <!-- Active Question Display Box -->
@@ -521,7 +521,7 @@
         </div>
     </div>
 
-    <!-- MODAL: ADVANCED TEST CREATOR BUILDER WITH PREVIEW & IMAGES -->
+    <!-- MODAL: ADVANCED TEST CREATOR BUILDER -->
     <div id="modal-creator" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto hidden">
         <div class="theme-bg-card border theme-border rounded-3xl max-w-4xl w-full p-6 md:p-8 space-y-6 shadow-2xl relative my-8">
             <button onclick="hideCreatorModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
@@ -631,7 +631,7 @@
                 </div>
                 <h3 class="text-2xl font-black">HTML-клієнт ArTesolymp</h3>
                 <p class="text-sm theme-text-secondary leading-relaxed">
-                    Збережеться копія цієї вебсторінки у форматі <code class="font-code theme-accent-color font-bold">.html</code> — це не інсталятор Windows. Для входу, реєстрації, синхронізації тестів і збереження результатів потрібен доступ до налаштованого Google Apps Script.
+                    Збережеться копія цієї вебсторінки у форматі <code class="font-code theme-accent-color font-bold">.html</code>. Для входу, реєстрації, синхронізації тестів і збереження результатів потрібен доступ до налаштованого Google Apps Script.
                 </p>
             </div>
             <div class="p-5 rounded-2xl theme-accent-bg-light border theme-border space-y-3">
@@ -662,16 +662,14 @@
         /*
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
-         * Якщо URL змінився, замініть API_URL на нову адресу /exec.
-         * Реєстрація, створення і проходження реальних тестів виконуються сервером.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbynYNrOVtRGLOxY2-kvo9lebauHmJMjCQQXs5nHGKaKufybWhO2FY9Ivb6xvBGRtHUS/exec"; // Наприклад: https://script.google.com/macros/s/DEPLOYMENT_ID/exec
+        const API_URL = "https://script.google.com/macros/s/AKfycbynYNrOVtRGLOxY2-kvo9lebauHmJMjCQQXs5nHGKaKufybWhO2FY9Ivb6xvBGRtHUS/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
         let currentUser = { name: "Гість", email: "", role: "Учень" };
 
-        /* Tests database with Custom In-Test Section Tabs & Images */
+        /* Database */
         let testsDatabase = [
             {
                 id: "demo-olympiad-tabs",
@@ -750,12 +748,12 @@
                     {
                         id: 7,
                         tabName: "Гуманітарний блок (Історія)",
-                        title: "Текстова відповідь (оцінює вчитель)",
+                        title: "Текстова відповідь (оцінює вчитель / AI)",
                         description: "Сформулюйте значення олімпіадного руху для розвитку молоді (1–2 речення). Відповідь оцінює вчитель.",
                         imageUrl: "",
                         type: "text",
                         points: 10,
-                        aiKeywords: ["знання", "розвиток", "наука", "досвід"]
+                        aiPrompt: "Перевірити наявність думок про розвиток знань, науку та самодосконалення молоді."
                     },
                     {
                         id: 8,
@@ -805,6 +803,7 @@
         let builderEditingTestId = null;
         let isPreviewSession = false;
         let pendingPasswordTestId = "";
+
         function getFavoriteTestIds() {
             try { const value = JSON.parse(localStorage.getItem("artesolymp_favorites") || "[]"); return Array.isArray(value) ? value.map(String) : []; }
             catch (_) { return []; }
@@ -835,7 +834,7 @@
             }
         }
 
-        /* THEME MANAGEMENT CLICK CONTROLS (NO HOVER) */
+        /* THEME MANAGEMENT CLICK CONTROLS */
         function toggleThemeDropdown(e) {
             e.stopPropagation();
             const menu = document.getElementById('theme-dropdown-menu');
@@ -1246,24 +1245,31 @@
                         aiRow.className = "mt-2 space-y-2";
                         const instructions = document.createElement("textarea");
                         instructions.rows = 2;
-                        instructions.placeholder = "Інструкція для AI (необов’язково; використає критерії питання, якщо порожньо)";
+                        instructions.placeholder = "Критерії для AI-перевірки (інструкція викладача)";
                         instructions.value = response.aiPrompt || "";
                         instructions.className = "w-full p-2 rounded-lg border theme-border theme-bg-card text-xs";
                         const aiBtn = document.createElement("button");
                         aiBtn.className = "px-3 py-2 rounded-lg border theme-border text-xs font-bold hover:border-sky-400";
-                        aiBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>AI-перевірка (рекомендація)';
+                        aiBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>AI-перевірка (лише числова оцінка)';
                         const aiResult = document.createElement("div");
-                        aiResult.className = "hidden rounded-lg theme-accent-bg-light border theme-border p-3 text-xs whitespace-pre-wrap";
+                        aiResult.className = "hidden rounded-lg theme-accent-bg-light border theme-border p-3 text-xs whitespace-pre-wrap font-bold";
                         aiBtn.onclick = async () => {
                             aiBtn.disabled = true; aiBtn.textContent = "AI перевіряє відповідь…";
                             try {
-                                const reviewed = await apiRequest("reviewTextAnswer", {attemptId:attempt.attemptId, questionId:response.questionId, instructions:instructions.value});
+                                const reviewed = await apiRequest("reviewTextAnswer", {
+                                    attemptId: attempt.attemptId,
+                                    questionId: response.questionId,
+                                    title: response.title || "",
+                                    description: response.description || "",
+                                    instructions: instructions.value || "",
+                                    maxScore: response.maxScore,
+                                    answer: response.answer || ""
+                                });
                                 scoreInput.value = String(reviewed.score);
-                                commentInput.value = reviewed.feedback || "";
-                                aiResult.textContent = `Рекомендований бал: ${reviewed.score}/${reviewed.maxScore}\n${reviewed.feedback || ''}\n\nНатисніть «Зберегти оцінку», щоб підтвердити результат.`;
+                                aiResult.textContent = `Автоматично розрахована AI-оцінка: ${reviewed.score} / ${reviewed.maxScore}\nНатисніть «Зберегти оцінку», щоб підтвердити її.`;
                                 aiResult.classList.remove("hidden");
                             } catch (err) { aiResult.textContent = err.message || "Не вдалося перевірити відповідь."; aiResult.classList.remove("hidden"); }
-                            finally { aiBtn.disabled = false; aiBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>AI-перевірка (рекомендація)'; }
+                            finally { aiBtn.disabled = false; aiBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>AI-перевірка (лише числова оцінка)'; }
                         };
                         aiRow.append(instructions, aiBtn, aiResult);
                         card.appendChild(aiRow);
@@ -1950,7 +1956,8 @@
                     inputOptionsText: JSON.stringify(q.inputOptions || {}, null, 2),
                     testInputsText: (q.testInputs || []).join("\n---\n"),
                     allowedLangs: q.type === "code" && q.referenceCode ? ["python"] : (q.allowedLangs || ["python"]),
-                    manualTestInput: ""
+                    manualTestInput: "",
+                    correctDate: q.correctDate || ""
                 }));
                 document.getElementById('builder-modal-title').textContent = "Редагування тесту";
                 document.getElementById('builder-save-label').textContent = "Зберегти зміни";
@@ -2178,7 +2185,7 @@
                                     <select onchange="builderQuestions[${idx}].inputKind=this.value; renderBuilderQuestions()" class="w-full p-2.5 rounded-lg border theme-border theme-bg-main text-xs">
                                         <option value="numbers" ${(q.inputKind || 'numbers') === 'numbers' ? 'selected' : ''}>Числа</option>
                                         <option value="fixed_strings" ${q.inputKind === 'fixed_strings' ? 'selected' : ''}>Конкретні строки / слова</option>
-                                        <option value="strings" ${q.inputKind === 'strings' ? 'selected' : ''}>Звичайні строки</option>
+                                        <option value="strings" ${q.inputKind === 'strings' ? 'selected' : ''}>Ззвичайні строки</option>
                                         <option value="mixed" ${q.inputKind === 'mixed' ? 'selected' : ''}>Змішане (числа + строки)</option>
                                     </select>
                                 </div>
@@ -2192,15 +2199,12 @@
                             </div>
                             <div><label class="block text-xs font-bold theme-text-secondary mb-1">Форматування вхідних даних</label>
                                 <textarea oninput="builderQuestions[${idx}].inputFormat=this.value" class="w-full p-3 rounded-lg border theme-border theme-bg-main text-xs font-code h-20" placeholder="i<-100 100> i<-100 100>\ni<0 1000000>">${escapeHtml(q.inputFormat || '')}</textarea>
-                                <p class="text-[10px] theme-text-secondary mt-1">Один рядок формату = один рядок input. i&lt;мін макс&gt; — ціле число; f&lt;мін макс&gt; — дробове число; s[ID] — вибір слова зі списку; s&lt;мін макс&gt; — рядок заданої довжини; m&lt;мін макс&gt; — ціле число або рядок.</p>
                             </div>
                             <div><label class="block text-xs font-bold theme-text-secondary mb-1">Конкретні строки / слова (JSON)</label>
                                 <textarea oninput="builderQuestions[${idx}].inputOptionsText=this.value" class="w-full p-3 rounded-lg border theme-border theme-bg-main text-xs font-code h-16" placeholder='{"1":["так","ні","невідомо"]}'>${escapeHtml(inputOptionsText)}</textarea>
-                                <p class="text-[10px] theme-text-secondary mt-1">Приклад формату: {"1":["так","ні","невідомо"]}; у форматі входу напишіть s[1].</p>
                             </div>
                             <div><label class="block text-xs font-bold theme-text-secondary mb-1">Спеціальні приховані тестові набори (необов’язково)</label>
                                 <textarea oninput="builderQuestions[${idx}].testInputsText=this.value" class="w-full p-3 rounded-lg border theme-border theme-bg-main text-xs font-code h-24" placeholder="2 3 4&#10;24&#10;---&#10;1 1 1&#10;1">${escapeHtml(q.testInputsText !== undefined ? q.testInputsText : (q.testInputs || []).join('\n---\n'))}</textarea>
-                                <p class="text-[10px] theme-text-secondary mt-1">Один набір — це весь вхід програми, включно з кількома рядками input(). Розділяйте набори рядком --- . Ці дані учасникам не показуються; вони займають частину загальної кількості прихованих тестів і корисні для граничних випадків та залежних значень.</p>
                             </div>
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                 <div><label class="block text-[10px] font-bold theme-text-secondary mb-1">Прихованих тестів (1–100)</label><input type="number" min="1" max="100" value="${Number(q.hiddenTestCount) || 100}" oninput="builderQuestions[${idx}].hiddenTestCount=Math.max(1,Math.min(100,Number(this.value)||100))" class="w-full p-2 rounded-lg border theme-border theme-bg-main text-xs"></div>
@@ -2227,7 +2231,7 @@
                     specificFieldsHtml = `
                         <div class="pt-2 border-t theme-border space-y-1">
                             <label class="block text-xs font-bold theme-text-secondary">Правильна дата для автоматичної перевірки (РРРР-ММ-ДД)</label>
-                            <input type="date" value="${escapeHtml(q.correctDate || '')}" onchange="builderQuestions[${idx}].correctDate = this.value" class="w-full sm:w-1/2 p-2.5 rounded-lg border theme-border theme-bg-main text-xs font-bold">
+                            <input type="date" value="${escapeHtml(q.correctDate || '')}" oninput="builderQuestions[${idx}].correctDate = this.value" onchange="builderQuestions[${idx}].correctDate = this.value" class="w-full sm:w-1/2 p-2.5 rounded-lg border theme-border theme-bg-main text-xs font-bold">
                         </div>
                     `;
                 }
