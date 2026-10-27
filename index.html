@@ -384,7 +384,7 @@
                 <h3 class="text-xl font-extrabold">Реєстрація та Вхід</h3>
             </div>
             <div class="space-y-4">
-                <div>
+                <div id="auth-name-field">
                     <label class="block text-xs font-bold theme-text-secondary uppercase mb-1">ПІБ / Нікнейм:</label>
                     <input type="text" id="auth-name-input" placeholder="Олександр Петренко" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
                 </div>
@@ -399,12 +399,12 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold theme-text-secondary uppercase mb-1">Дія:</label>
-                    <select id="auth-mode-select" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm">
+                    <select id="auth-mode-select" onchange="toggleAuthFields()" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm">
                         <option value="register">Створити акаунт</option>
                         <option value="login">Увійти в існуючий акаунт</option>
                     </select>
                 </div>
-                <div>
+                <div id="auth-role-field">
                     <label class="block text-xs font-bold theme-text-secondary uppercase mb-1">Роль користувача:</label>
                     <select id="auth-role-select" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500">
                         <option value="Учень">Учень / Студент</option>
@@ -413,6 +413,10 @@
                     </select>
                     <p class="text-[11px] theme-text-secondary mt-1">Роль учителя активується адміністратором для підтвердженої пошти.</p>
                 </div>
+                <label class="flex items-start gap-2 text-xs theme-text-secondary cursor-pointer">
+                    <input id="auth-remember-me" type="checkbox" class="mt-0.5 rounded border-slate-300">
+                    <span><strong class="theme-text-primary">Запам’ятати мене</strong> — залишатися в акаунті після перезапуску браузера (до 30 днів на цьому пристрої).</span>
+                </label>
                 <p id="auth-error" class="hidden rounded-xl border border-red-400/40 bg-red-500/10 text-red-600 text-xs p-3" role="alert"></p>
                 <button id="auth-submit-btn" onclick="handleAuthSubmit()" class="w-full theme-btn-primary py-3 rounded-xl font-bold text-sm shadow-lg">
                     Продовжити
@@ -473,7 +477,7 @@
                     <i class="fa-solid fa-file-circle-plus"></i>
                 </div>
                 <div>
-                    <h3 class="text-xl font-extrabold">Конструктор олімпіад ArTesolymp</h3>
+                    <h3 id="builder-modal-title" class="text-xl font-extrabold">Конструктор олімпіад ArTesolymp</h3>
                     <p class="text-xs theme-text-secondary">Створюйте питання з кастомними вкладками, зображеннями та мовами коду</p>
                 </div>
             </div>
@@ -548,7 +552,7 @@
                 <div class="flex gap-3">
                     <button onclick="hideCreatorModal()" class="px-5 py-2.5 rounded-xl border theme-border theme-bg-card font-semibold text-sm">Скасувати</button>
                     <button onclick="builderSaveTest()" class="theme-btn-primary px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg flex items-center gap-2">
-                        <i class="fa-solid fa-rocket"></i> 🚀 Опублікувати тест
+                        <i class="fa-solid fa-rocket"></i> <span id="builder-save-label">🚀 Опублікувати тест</span>
                     </button>
                 </div>
             </div>
@@ -599,9 +603,9 @@
          * Якщо URL змінився, замініть API_URL на нову адресу /exec.
          * Реєстрація, створення і проходження реальних тестів виконуються сервером.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycby9SH3v5gqcuOR5an9QclFDvGRh0wAlTV3gN6kjru0113TDTuLyPvuuzYABbW7sy1Y/exec"; // Наприклад: https://script.google.com/macros/s/DEPLOYMENT_ID/exec
+        const API_URL = "https://script.google.com/macros/s/AKfycbwEFC6BhRp7rAjflIzkGLiqbvYcHOG_Uf3BRBBJfpV5ouwT80qvuKtKznywRxnSNm5n/exec"; // Наприклад: https://script.google.com/macros/s/DEPLOYMENT_ID/exec
         const DEMO_TEST_ID = "demo-olympiad-tabs";
-        let authToken = sessionStorage.getItem("artesolymp_token") || "";
+        let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
         let currentUser = { name: "Гість", email: "", role: "Учень" };
 
@@ -756,6 +760,7 @@
         let progressSaveTimer = null;
         let builderQuestions = [];
         let builderTabs = ["Основний розділ"];
+        let builderEditingTestId = null;
         let isPreviewSession = false;
 
         function downloadClientHtml() {
@@ -823,6 +828,11 @@
                 .replace(/\\/g, "\\\\").replace(/'/g, "\\'")
                 .replace(/\r/g, "\\r").replace(/\n/g, "\\n") + "'";
         }
+        function toLocalDateTimeInput(value) {
+            const date = new Date(value);
+            if (!Number.isFinite(date.getTime())) return "";
+            return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        }
 
         function showNotification(msg) {
             const toast = document.getElementById('toast-notification');
@@ -831,8 +841,17 @@
             setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3500);
         }
 
-        function showAuthModal() { document.getElementById('modal-auth').classList.remove('hidden'); }
+        function showAuthModal() {
+            document.getElementById('modal-auth').classList.remove('hidden');
+            document.getElementById('auth-remember-me').checked = Boolean(localStorage.getItem("artesolymp_remember_token"));
+            toggleAuthFields();
+        }
         function hideAuthModal() { document.getElementById('modal-auth').classList.add('hidden'); }
+        function toggleAuthFields() {
+            const isLogin = document.getElementById('auth-mode-select').value === 'login';
+            document.getElementById('auth-name-field').classList.toggle('hidden', isLogin);
+            document.getElementById('auth-role-field').classList.toggle('hidden', isLogin);
+        }
         async function apiRequest(action, payload = {}) {
             if (!API_URL) throw new Error("Google Apps Script не налаштовано: відсутній URL /exec.");
             let response;
@@ -883,6 +902,7 @@
             const password = document.getElementById('auth-password-input').value;
             const role = document.getElementById('auth-role-select').value;
             const mode = document.getElementById('auth-mode-select').value;
+            const rememberMe = document.getElementById('auth-remember-me').checked;
             const errBox = document.getElementById('auth-error');
             const submitBtn = document.getElementById('auth-submit-btn');
             errBox.textContent = "";
@@ -908,10 +928,13 @@
             submitBtn.classList.add("opacity-60");
             submitBtn.textContent = mode === "register" ? "Створення акаунта..." : "Вхід...";
             try {
-                const data = await apiRequest(mode === "register" ? "register" : "login", { name, email, password, role });
+                const data = await apiRequest(mode === "register" ? "register" : "login", { name, email, password, role, rememberMe });
                 if (!data.token || !data.user) throw new Error("Сервер не повернув сесію. Перевірте розгорнуту версію Apps Script.");
                 authToken = data.token;
-                sessionStorage.setItem("artesolymp_token", authToken);
+                sessionStorage.removeItem("artesolymp_token");
+                localStorage.removeItem("artesolymp_remember_token");
+                if (rememberMe) localStorage.setItem("artesolymp_remember_token", authToken);
+                else sessionStorage.setItem("artesolymp_token", authToken);
                 currentUser = data.user;
                 applyCurrentUserUI();
                 hideAuthModal();
@@ -955,6 +978,7 @@
                 if (/Сесія недійсна|Сесія завершилася|Потрібно увійти|Акаунт недоступний/i.test(message)) {
                     authToken = "";
                     sessionStorage.removeItem("artesolymp_token");
+                    localStorage.removeItem("artesolymp_remember_token");
                     currentUser = {name:"Гість",email:"",role:"Учень",description:""};
                     applyCurrentUserUI();
                     // A stale session falls back to the anonymous catalog rather than hiding it.
@@ -969,8 +993,10 @@
             try { if (authToken) await apiRequest("logout"); } catch (_) { /* local logout still works if the network is unavailable */ }
             authToken = "";
             sessionStorage.removeItem("artesolymp_token");
+            localStorage.removeItem("artesolymp_remember_token");
             currentUser = {name:"Гість",email:"",role:"Учень",description:""};
             applyCurrentUserUI();
+            toggleAuthFields();
             renderTestsList();
             showSection("landing");
             showNotification("Ви вийшли з акаунта.");
@@ -1030,6 +1056,11 @@
                     row.appendChild(meta);
                     const controls = document.createElement("div");
                     controls.className = "flex flex-wrap gap-3";
+                    const edit = document.createElement("button");
+                    edit.className = "text-xs theme-accent-color font-bold";
+                    edit.textContent = "Редагувати";
+                    edit.onclick = () => editOwnTest(t.id);
+                    controls.appendChild(edit);
                     const copy = document.createElement("button");
                     copy.className = "text-xs theme-accent-color font-bold";
                     copy.textContent = "Створити копію";
@@ -1109,6 +1140,13 @@
                 title.className = "font-bold text-xs mb-2";
                 title.textContent = `${response.title} · ${response.score}/${response.maxScore} б.`;
                 card.appendChild(title);
+                if (response.type === "code" && response.details && Number(response.details.totalTests) > 0) {
+                    const testStatus = document.createElement("div");
+                    testStatus.className = "text-[11px] theme-text-secondary mb-2";
+                    testStatus.textContent = `Приховані тести: ${Number(response.details.passedTests) || 0}/${Number(response.details.totalTests)} правильні` +
+                        (response.details.executionError ? ` · Помилка виконання: ${response.details.executionError}` : "");
+                    card.appendChild(testStatus);
+                }
                 const answer = document.createElement("pre");
                 answer.className = "text-xs theme-text-secondary whitespace-pre-wrap break-words mb-3";
                 let value = response.answer;
@@ -1129,6 +1167,12 @@
                     const scoreLabel = document.createElement("span");
                     scoreLabel.className = "text-xs theme-text-secondary";
                     scoreLabel.textContent = `/ ${response.maxScore} балів`;
+                    const commentInput = document.createElement("textarea");
+                    commentInput.rows = 2;
+                    commentInput.maxLength = 1000;
+                    commentInput.placeholder = "Коментар до оцінки / відгук викладача";
+                    commentInput.value = response.comment || "";
+                    commentInput.className = "w-full mt-2 p-2 rounded-lg border theme-border theme-bg-card text-xs";
                     const save = document.createElement("button");
                     save.className = "theme-btn-primary px-3 py-2 rounded-lg text-xs font-bold";
                     save.textContent = "Зберегти оцінку";
@@ -1139,13 +1183,41 @@
                             return;
                         }
                         try {
-                            await apiRequest("gradeAnswer", {attemptId:attempt.attemptId, questionId:response.questionId, score});
+                            await apiRequest("gradeAnswer", {attemptId:attempt.attemptId, questionId:response.questionId, score, comment:commentInput.value});
                             await loadProfile();
                             showNotification("Оцінку збережено.");
                         } catch (err) { showNotification(err.message || "Не вдалося зберегти оцінку."); }
                     };
                     row.append(scoreInput, scoreLabel, save);
                     card.appendChild(row);
+                    card.appendChild(commentInput);
+                    if (response.type === "text") {
+                        const aiRow = document.createElement("div");
+                        aiRow.className = "mt-2 space-y-2";
+                        const instructions = document.createElement("textarea");
+                        instructions.rows = 2;
+                        instructions.placeholder = "Інструкція для AI (необов’язково; використає критерії питання, якщо порожньо)";
+                        instructions.value = response.aiPrompt || "";
+                        instructions.className = "w-full p-2 rounded-lg border theme-border theme-bg-card text-xs";
+                        const aiBtn = document.createElement("button");
+                        aiBtn.className = "px-3 py-2 rounded-lg border theme-border text-xs font-bold hover:border-sky-400";
+                        aiBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>AI-перевірка (рекомендація)';
+                        const aiResult = document.createElement("div");
+                        aiResult.className = "hidden rounded-lg theme-accent-bg-light border theme-border p-3 text-xs whitespace-pre-wrap";
+                        aiBtn.onclick = async () => {
+                            aiBtn.disabled = true; aiBtn.textContent = "AI перевіряє відповідь…";
+                            try {
+                                const reviewed = await apiRequest("reviewTextAnswer", {attemptId:attempt.attemptId, questionId:response.questionId, instructions:instructions.value});
+                                scoreInput.value = String(reviewed.score);
+                                commentInput.value = reviewed.feedback || "";
+                                aiResult.textContent = `Рекомендований бал: ${reviewed.score}/${reviewed.maxScore}\n${reviewed.feedback || ''}\n\nНатисніть «Зберегти оцінку», щоб підтвердити результат.`;
+                                aiResult.classList.remove("hidden");
+                            } catch (err) { aiResult.textContent = err.message || "Не вдалося перевірити відповідь."; aiResult.classList.remove("hidden"); }
+                            finally { aiBtn.disabled = false; aiBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>AI-перевірка (рекомендація)'; }
+                        };
+                        aiRow.append(instructions, aiBtn, aiResult);
+                        card.appendChild(aiRow);
+                    }
                 }
                 container.appendChild(card);
             });
@@ -1436,6 +1508,7 @@
 
                 html += `
                     <div class="space-y-3">
+                        ${q.inputFormat ? `<div class="rounded-xl border theme-border theme-accent-bg-light p-3"><div class="text-xs font-bold theme-accent-color mb-1">Форматування вхідних даних</div><pre class="font-code text-xs whitespace-pre-wrap break-words">${escapeHtml(q.inputFormat)}</pre>${q.inputOptions && Object.keys(q.inputOptions).length ? `<div class="text-xs theme-text-secondary mt-2">Допустимі рядки: ${escapeHtml(JSON.stringify(q.inputOptions))}</div>` : ''}</div>` : ''}
                         <div class="flex items-center justify-between bg-slate-900 px-4 py-2 rounded-t-2xl border-b border-slate-800 text-xs text-slate-300">
                             <span class="font-code"><i class="fa-solid fa-code text-sky-400 mr-2"></i>editor</span>
                             <select onchange="userAnswers['lang_${q.id}'] = this.value; queueProgressSave(); renderQuestion();" class="bg-slate-800 text-sky-400 font-bold px-2 py-1 rounded border border-slate-700 text-xs">
@@ -1444,6 +1517,15 @@
                         </div>
                         <div class="rounded-b-2xl overflow-hidden border theme-border">
                             <textarea id="code-input-${q.id}" oninput="userAnswers[${jsString(q.id)}] = this.value; queueProgressSave(); renderPills(); renderInTestTabs();" class="w-full h-40 p-4 font-code text-sm bg-slate-950 text-sky-300 focus:outline-none resize-none">${escapeHtml(currentCode)}</textarea>
+                        </div>
+                        <div class="rounded-xl border theme-border p-3 space-y-2">
+                            <label class="block text-xs font-bold theme-text-secondary">Власна перевірка — введіть дані для input()</label>
+                            <textarea id="code-test-input-${q.id}" rows="3" placeholder="Наприклад: 2 3 4&#10;24" class="w-full p-3 rounded-lg border theme-border theme-bg-card font-code text-xs">${escapeHtml(q.manualTestInput || '')}</textarea>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <button onclick="runCodeCheck(${jsString(q.id)})" class="theme-btn-primary px-4 py-2 rounded-lg text-xs font-bold"><i class="fa-solid fa-play mr-1"></i>Перевірити в коді</button>
+                                <span class="text-[11px] theme-text-secondary">${Number(q.maxChecks) > 0 && !isPreviewSession ? `Ліміт запусків: ${Number(q.maxChecks)}` : 'Самостійні запуски без ліміту'}</span>
+                            </div>
+                            <pre id="code-test-output-${q.id}" class="hidden whitespace-pre-wrap break-words rounded-lg bg-slate-950 text-slate-100 p-3 font-code text-xs"></pre>
                         </div>
                     </div>
                 `;
@@ -1504,6 +1586,30 @@
             } else {
                 document.getElementById('btn-next').classList.remove('hidden');
                 document.getElementById('btn-finish').classList.add('hidden');
+            }
+        }
+
+        async function runCodeCheck(qId) {
+            const codeEl = document.getElementById(`code-input-${qId}`);
+            const inputEl = document.getElementById(`code-test-input-${qId}`);
+            const outputEl = document.getElementById(`code-test-output-${qId}`);
+            if (!codeEl || !inputEl || !outputEl) return;
+            outputEl.classList.remove('hidden');
+            outputEl.textContent = 'Виконується Python-код…';
+            try {
+                const payload = {code: codeEl.value, input: inputEl.value};
+                if (isPreviewSession) payload.preview = true;
+                else {
+                    if (!window.currentAttemptId) throw new Error('Для запуску коду відкрийте реальне проходження тесту.');
+                    payload.attemptId = window.currentAttemptId;
+                    payload.questionId = qId;
+                }
+                const data = await apiRequest('runCodeCheck', payload);
+                const r = data.result || {};
+                const newLine = '\n';
+                outputEl.textContent = `${r.ok ? '✅ Код завершився' : '❌ Помилка виконання'}${data.used !== undefined ? ` · Перевірка ${data.used}${data.maxChecks > 0 ? '/' + data.maxChecks : ''}` : ''}${newLine}${newLine}Вивід print():${newLine}${r.stdout || '(порожньо)'}${r.stderr ? newLine + newLine + 'Помилки stderr:' + newLine + r.stderr : ''}${r.error ? newLine + newLine + r.error : ''}`;
+            } catch (err) {
+                outputEl.textContent = 'Не вдалося виконати код: ' + (err.message || err);
             }
         }
 
@@ -1598,7 +1704,7 @@
                         title.textContent = item.title || 'Питання';
                         const sub = document.createElement('span');
                         sub.className = 'text-[10px] theme-text-secondary';
-                        sub.textContent = `Тип: ${item.type || 'питання'}`;
+                        sub.textContent = item.type === 'code' && item.totalTests ? `Python: ${item.passedTests || 0}/${item.totalTests} прихованих тестів` : `Тип: ${item.type || 'питання'}`;
                         left.append(title, sub);
                         const score = document.createElement('span');
                         score.className = `font-bold ${Number(item.score) > 0 ? 'text-emerald-500' : 'theme-text-secondary'}`;
@@ -1680,14 +1786,48 @@
                 showNotification("Створювати тести та олімпіади може лише акаунт учителя.");
                 return;
             }
+            builderEditingTestId = null;
+            document.getElementById('builder-modal-title').textContent = "Конструктор олімпіад ArTesolymp";
+            document.getElementById('builder-save-label').textContent = "🚀 Опублікувати тест";
             document.getElementById('modal-creator').classList.remove('hidden');
             document.getElementById('builder-title').value = "";
             document.getElementById('builder-desc').value = "";
             document.getElementById('builder-code').value = "w" + Math.floor(1000 + Math.random() * 9000) + "w";
+            document.getElementById('builder-deadline').value = "";
+            document.getElementById('builder-visibility').value = "private";
+            document.getElementById('builder-allow-repeat').value = "false";
+            document.getElementById('builder-kind').value = "test";
             builderTabs = ["Основний розділ", "Додатковий розділ"];
             builderQuestions = [];
             renderBuilderTabs();
             renderBuilderQuestions();
+        }
+        async function editOwnTest(testId) {
+            if (!requireLogin()) return;
+            if (currentUser.role !== "Учитель") { showNotification("Редагувати тести може лише викладач."); return; }
+            try {
+                const data = await apiRequest("getTestForEdit", {testId});
+                const t = data.test;
+                builderEditingTestId = t.id;
+                document.getElementById('builder-title').value = t.title || "";
+                document.getElementById('builder-desc').value = t.description || "";
+                document.getElementById('builder-code').value = t.code || "";
+                document.getElementById('builder-deadline').value = toLocalDateTimeInput(t.deadline);
+                document.getElementById('builder-visibility').value = t.isPublic ? "public" : "private";
+                document.getElementById('builder-allow-repeat').value = t.allowRepeat ? "true" : "false";
+                document.getElementById('builder-kind').value = t.kind || "test";
+                builderTabs = Array.isArray(t.tabs) && t.tabs.length ? t.tabs : ["Основний розділ"];
+                builderQuestions = (t.questions || []).map(q => ({...q,
+                    inputOptionsText: JSON.stringify(q.inputOptions || {}, null, 2),
+                    testInputsText: (q.testInputs || []).join("\n---\n"),
+                    allowedLangs: q.type === "code" && q.referenceCode ? ["python"] : (q.allowedLangs || ["python"]),
+                    manualTestInput: ""
+                }));
+                document.getElementById('builder-modal-title').textContent = "Редагування тесту";
+                document.getElementById('builder-save-label').textContent = "Зберегти зміни";
+                renderBuilderTabs(); renderBuilderQuestions();
+                document.getElementById('modal-creator').classList.remove('hidden');
+            } catch (err) { showNotification(err.message || "Не вдалося завантажити тест для редагування."); }
         }
         function hideCreatorModal() { document.getElementById('modal-creator').classList.add('hidden'); }
 
@@ -1740,8 +1880,20 @@
                 points: 10,
                 options: ["Варіант 1", "Варіант 2"],
                 correct: 0,
-                allowedLangs: ["python", "javascript", "cpp", "csharp"],
-                correctDate: "2026-01-01"
+                allowedLangs: ["python"],
+                correctDate: "2026-01-01",
+                referenceCode: "",
+                inputFormat: "i<0 100> i<0 100> i<0 100>\ni<0 1000000>",
+                inputKind: "numbers",
+                inputOptions: {},
+                inputOptionsText: "{\n  \"1\": [\"так\", \"ні\", \"невідомо\"]\n}",
+                codeScoreMode: "partial",
+                hiddenTestCount: 100,
+                maxChecks: 20,
+                memoryLimitMb: 156,
+                timeLimitMs: 3000,
+                aiPrompt: "",
+                manualTestInput: ""
             });
             renderBuilderQuestions();
         }
@@ -1766,6 +1918,22 @@
                 }
             } else if (newType === 'info') {
                 q.points = 0;
+            } else if (newType === 'code') {
+                q.allowedLangs = ["python"];
+                if (q.referenceCode === undefined) q.referenceCode = "";
+                if (q.inputFormat === undefined) q.inputFormat = "i<0 100> i<0 100> i<0 100>\ni<0 1000000>";
+                if (!q.inputKind) q.inputKind = "numbers";
+                if (!q.inputOptions) q.inputOptions = {};
+                if (q.inputOptionsText === undefined) q.inputOptionsText = JSON.stringify(q.inputOptions, null, 2);
+                if (!Array.isArray(q.testInputs)) q.testInputs = [];
+                if (q.testInputsText === undefined) q.testInputsText = q.testInputs.join("\n---\n");
+                if (!q.codeScoreMode) q.codeScoreMode = "partial";
+                if (!q.hiddenTestCount) q.hiddenTestCount = 100;
+                if (q.maxChecks === undefined) q.maxChecks = 20;
+                if (!q.memoryLimitMb) q.memoryLimitMb = 156;
+                if (!q.timeLimitMs) q.timeLimitMs = 3000;
+            } else if (newType === 'text') {
+                if (q.aiPrompt === undefined) q.aiPrompt = "";
             }
             renderBuilderQuestions();
         }
@@ -1865,6 +2033,66 @@
                     `;
                 }
 
+                if (q.type === 'code') {
+                    const inputOptionsText = q.inputOptionsText !== undefined ? q.inputOptionsText : JSON.stringify(q.inputOptions || {}, null, 2);
+                    specificFieldsHtml = `
+                        <div class="space-y-3 pt-3 border-t theme-border">
+                            <div class="flex items-center justify-between gap-2"><label class="text-xs font-bold theme-text-secondary">Автоматична перевірка Python</label><span class="text-[10px] theme-badge px-2 py-1 rounded">input() / print()</span></div>
+                            <div><label class="block text-xs font-bold theme-text-secondary mb-1">Еталонний код учителя (прихований від учасників)</label>
+                                <textarea oninput="builderQuestions[${idx}].referenceCode = this.value" class="w-full p-3 rounded-lg border theme-border theme-bg-main text-xs font-code h-36" placeholder="Введіть правильний Python-код, який читає input() і виводить print()">${escapeHtml(q.referenceCode || '')}</textarea>
+                            </div>
+                            <div class="grid sm:grid-cols-2 gap-3">
+                                <div><label class="block text-xs font-bold theme-text-secondary mb-1">Тип вхідних даних</label>
+                                    <select onchange="builderQuestions[${idx}].inputKind=this.value; renderBuilderQuestions()" class="w-full p-2.5 rounded-lg border theme-border theme-bg-main text-xs">
+                                        <option value="numbers" ${(q.inputKind || 'numbers') === 'numbers' ? 'selected' : ''}>Числа</option>
+                                        <option value="fixed_strings" ${q.inputKind === 'fixed_strings' ? 'selected' : ''}>Конкретні строки / слова</option>
+                                        <option value="strings" ${q.inputKind === 'strings' ? 'selected' : ''}>Звичайні строки</option>
+                                        <option value="mixed" ${q.inputKind === 'mixed' ? 'selected' : ''}>Змішане (числа + строки)</option>
+                                    </select>
+                                </div>
+                                <div><label class="block text-xs font-bold theme-text-secondary mb-1">Тип нарахування балів</label>
+                                    <select onchange="builderQuestions[${idx}].codeScoreMode=this.value" class="w-full p-2.5 rounded-lg border theme-border theme-bg-main text-xs">
+                                        <option value="all_or_nothing" ${q.codeScoreMode === 'all_or_nothing' ? 'selected' : ''}>Усі тести правильні — усі бали</option>
+                                        <option value="partial" ${(q.codeScoreMode || 'partial') === 'partial' ? 'selected' : ''}>Часткові бали за кожен тест</option>
+                                        <option value="manual" ${q.codeScoreMode === 'manual' ? 'selected' : ''}>Оцінює викладач вручну</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div><label class="block text-xs font-bold theme-text-secondary mb-1">Форматування вхідних даних</label>
+                                <textarea oninput="builderQuestions[${idx}].inputFormat=this.value" class="w-full p-3 rounded-lg border theme-border theme-bg-main text-xs font-code h-20" placeholder="i<-100 100> i<-100 100>\ni<0 1000000>">${escapeHtml(q.inputFormat || '')}</textarea>
+                                <p class="text-[10px] theme-text-secondary mt-1">Один рядок формату = один рядок input. i&lt;мін макс&gt; — ціле число; f&lt;мін макс&gt; — дробове число; s[ID] — вибір слова зі списку; s&lt;мін макс&gt; — рядок заданої довжини; m&lt;мін макс&gt; — ціле число або рядок.</p>
+                            </div>
+                            <div><label class="block text-xs font-bold theme-text-secondary mb-1">Конкретні строки / слова (JSON)</label>
+                                <textarea oninput="builderQuestions[${idx}].inputOptionsText=this.value" class="w-full p-3 rounded-lg border theme-border theme-bg-main text-xs font-code h-16" placeholder='{"1":["так","ні","невідомо"]}'>${escapeHtml(inputOptionsText)}</textarea>
+                                <p class="text-[10px] theme-text-secondary mt-1">Приклад формату: {"1":["так","ні","невідомо"]}; у форматі входу напишіть s[1].</p>
+                            </div>
+                            <div><label class="block text-xs font-bold theme-text-secondary mb-1">Спеціальні приховані тестові набори (необов’язково)</label>
+                                <textarea oninput="builderQuestions[${idx}].testInputsText=this.value" class="w-full p-3 rounded-lg border theme-border theme-bg-main text-xs font-code h-24" placeholder="2 3 4&#10;24&#10;---&#10;1 1 1&#10;1">${escapeHtml(q.testInputsText !== undefined ? q.testInputsText : (q.testInputs || []).join('\n---\n'))}</textarea>
+                                <p class="text-[10px] theme-text-secondary mt-1">Один набір — це весь вхід програми, включно з кількома рядками input(). Розділяйте набори рядком --- . Ці дані учасникам не показуються; вони займають частину загальної кількості прихованих тестів і корисні для граничних випадків та залежних значень.</p>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                <div><label class="block text-[10px] font-bold theme-text-secondary mb-1">Прихованих тестів (1–100)</label><input type="number" min="1" max="100" value="${Number(q.hiddenTestCount) || 100}" oninput="builderQuestions[${idx}].hiddenTestCount=Math.max(1,Math.min(100,Number(this.value)||100))" class="w-full p-2 rounded-lg border theme-border theme-bg-main text-xs"></div>
+                                <div><label class="block text-[10px] font-bold theme-text-secondary mb-1">Ручних запусків (0 = ∞)</label><input type="number" min="0" max="10000" value="${q.maxChecks === undefined ? 20 : Number(q.maxChecks)}" oninput="builderQuestions[${idx}].maxChecks=Math.max(0,Math.min(10000,Number(this.value)||0))" class="w-full p-2 rounded-lg border theme-border theme-bg-main text-xs"></div>
+                                <div><label class="block text-[10px] font-bold theme-text-secondary mb-1">Пам’ять (1–900 МБ)</label><input type="number" min="1" max="900" value="${Number(q.memoryLimitMb) || 156}" oninput="builderQuestions[${idx}].memoryLimitMb=Math.max(1,Math.min(900,Number(this.value)||156))" class="w-full p-2 rounded-lg border theme-border theme-bg-main text-xs"></div>
+                                <div><label class="block text-[10px] font-bold theme-text-secondary mb-1">Час (100–15000 мс)</label><input type="number" min="100" max="15000" value="${Number(q.timeLimitMs) || 3000}" oninput="builderQuestions[${idx}].timeLimitMs=Math.max(100,Math.min(15000,Number(this.value)||3000))" class="w-full p-2 rounded-lg border theme-border theme-bg-main text-xs"></div>
+                            </div>
+                            <div class="rounded-xl border theme-border p-3 space-y-2">
+                                <label class="block text-xs font-bold theme-text-secondary">Ручна перевірка еталону (вхідні дані)</label>
+                                <textarea oninput="builderQuestions[${idx}].manualTestInput=this.value" rows="2" class="w-full p-2 rounded-lg border theme-border theme-bg-main text-xs font-code" placeholder="Приклад: 2 3 4&#10;24">${escapeHtml(q.manualTestInput || '')}</textarea>
+                                <button onclick="builderRunReference(${idx})" class="theme-btn-primary px-3 py-2 rounded-lg text-xs font-bold"><i class="fa-solid fa-play mr-1"></i>Перевірити код учителя</button>
+                                <pre id="builder-code-result-${idx}" class="hidden rounded-lg bg-slate-950 text-slate-100 p-3 whitespace-pre-wrap break-words font-code text-xs"></pre>
+                            </div>
+                        </div>
+                    `;
+                } else if (q.type === 'text') {
+                    specificFieldsHtml = `
+                        <div class="pt-2 border-t theme-border space-y-1">
+                            <label class="block text-xs font-bold theme-text-secondary">Критерії для AI-перевірки (інструкція викладача)</label>
+                            <textarea oninput="builderQuestions[${idx}].aiPrompt=this.value" class="w-full p-3 rounded-lg border theme-border theme-bg-main text-xs h-20" placeholder="Наприклад: оцінити точність, повноту й використання термінів...">${escapeHtml(q.aiPrompt || '')}</textarea>
+                        </div>
+                    `;
+                }
+
                 card.innerHTML = `
                     <div class="flex items-center justify-between gap-3">
                         <span class="text-xs font-bold px-2.5 py-0.5 rounded theme-badge">Питання #${idx + 1}</span>
@@ -1947,6 +2175,20 @@
             }
         }
 
+        async function builderRunReference(idx) {
+            const q = builderQuestions[idx];
+            const out = document.getElementById(`builder-code-result-${idx}`);
+            if (!q || !out) return;
+            out.classList.remove('hidden');
+            out.textContent = 'Виконується еталонний код…';
+            try {
+                const data = await apiRequest('runCodeCheck', {preview:true, code:q.referenceCode || '', input:q.manualTestInput || '',
+                    timeLimitMs:Number(q.timeLimitMs)||3000, memoryLimitMb:Number(q.memoryLimitMb)||156});
+                const r = data.result || {};
+                out.textContent = `${r.ok ? '✅ Код завершився' : '❌ Помилка виконання'}\n\nВивід print():\n${r.stdout || '(порожньо)'}${r.stderr ? '\n\nПомилки stderr:\n' + r.stderr : ''}${r.error ? '\n\n' + r.error : ''}`;
+            } catch (err) { out.textContent = 'Не вдалося виконати код: ' + (err.message || err); }
+        }
+
         /* BUILDER PREVIEW FUNCTION */
         function builderPreviewTest() {
             const title = document.getElementById('builder-title').value.trim() || "Прев'ю Олімпіади";
@@ -1987,6 +2229,24 @@
 
             if (!requireLogin()) return;
             if (!API_URL) { showNotification("Публікація недоступна: налаштуйте Google Apps Script API."); return; }
+            let questions;
+            try {
+                questions = builderQuestions.map(q => {
+                    const item = {...q};
+                    if (item.type === "code") {
+                        const optsText = String(item.inputOptionsText !== undefined ? item.inputOptionsText : JSON.stringify(item.inputOptions || {})).trim() || "{}";
+                        item.inputOptions = JSON.parse(optsText);
+                        if (!item.inputOptions || typeof item.inputOptions !== "object" || Array.isArray(item.inputOptions)) throw new Error("Список конкретних строк має бути JSON-об'єктом із масивами, наприклад {\"1\":[\"так\",\"ні\"]}.");
+                        const testInputsText = String(item.testInputsText !== undefined ? item.testInputsText : (item.testInputs || []).join("\n---\n"));
+                        item.testInputs = testInputsText.split(/\r?\n---\r?\n/).map(x => x.trim()).filter(Boolean);
+                        if (item.testInputs.length > (Number(item.hiddenTestCount) || 100)) throw new Error(`У питанні «${item.title}» спеціальних наборів більше, ніж прихованих тестів.`);
+                        if (item.referenceCode && item.codeScoreMode !== "manual" && !item.inputFormat.trim() && item.testInputs.length < (Number(item.hiddenTestCount) || 100)) throw new Error(`У питанні «${item.title}» додайте форматування входу або заповніть усі приховані тестові набори.`);
+                        item.allowedLangs = ["python"];
+                    }
+                    delete item.inputOptionsText; delete item.testInputsText; delete item.manualTestInput;
+                    return item;
+                });
+            } catch (err) { showNotification(err.message || "Перевірте налаштування кодування."); return; }
             const newTest = {
                 title, description: desc,
                 code,
@@ -1995,14 +2255,21 @@
                 allowRepeat: document.getElementById("builder-allow-repeat").value === "true",
                 kind: document.getElementById("builder-kind").value,
                 tabs: builderTabs,
-                questions: builderQuestions
+                questions
             };
-            apiRequest("createTest", { test: newTest }).then(data => {
+            const action = builderEditingTestId ? "updateTest" : "createTest";
+            const payload = builderEditingTestId ? {testId:builderEditingTestId,test:newTest} : {test:newTest};
+            apiRequest(action, payload).then(data => {
                 hideCreatorModal();
-                document.getElementById('published-code-display').innerText = data.code;
-                document.getElementById('modal-published').classList.remove('hidden');
-                refreshFromServer(); renderTestsList();
-            }).catch(err => showNotification(err.message || "Не вдалося опублікувати тест."));
+                if (data.updated) {
+                    showNotification("Зміни тесту збережено.");
+                } else {
+                    document.getElementById('published-code-display').innerText = data.code;
+                    document.getElementById('modal-published').classList.remove('hidden');
+                }
+                builderEditingTestId = null;
+                refreshFromServer(); renderTestsList(); loadProfile();
+            }).catch(err => showNotification(err.message || "Не вдалося зберегти тест."));
         }
 
         function hidePublishedModal() {
@@ -2027,6 +2294,7 @@
             const savedTheme = localStorage.getItem('artesolymp_theme') || 'light-blue';
             setTheme(savedTheme);
             applyCurrentUserUI();
+            toggleAuthFields();
             renderTestsList();
             if (API_URL) refreshFromServer();
         };
