@@ -223,7 +223,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_220px] gap-3 pt-2">
                     <label class="relative block">
                         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 theme-text-secondary"></i>
-                        <input id="catalog-search" oninput="scheduleCatalogRender()" type="search" autocomplete="off" placeholder="Пошук за назвою або предметом…" class="w-full pl-10 pr-4 py-3 rounded-xl border theme-border theme-bg-card text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        <input id="catalog-search" oninput="scheduleTestsListRender()" type="search" autocomplete="off" placeholder="Пошук за назвою або предметом…" class="w-full pl-10 pr-4 py-3 rounded-xl border theme-border theme-bg-card text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
                     </label>
                     <select id="catalog-filter" onchange="renderTestsList()" aria-label="Фільтр каталогу" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm font-semibold">
                         <option value="all">Усі публічні</option>
@@ -663,7 +663,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbwVfVEqsA5_M6VL9uIOXaXV0cZp4JytJSzYqBqzRUhWX4L6sg1nxYIuynG7pDFeU1k_/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbyvR3rXvw645sf5526XyZMNgKjFNOHHdmlAqncLKQR_djUe5rCtxTAXZMtvwu4KggRN/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -803,6 +803,8 @@
         let builderEditingTestId = null;
         let isPreviewSession = false;
         let pendingPasswordTestId = "";
+        let catalogRenderFrame = 0;
+        let progressRenderFrame = 0;
 
         function getFavoriteTestIds() {
             try { const value = JSON.parse(localStorage.getItem("artesolymp_favorites") || "[]"); return Array.isArray(value) ? value.map(String) : []; }
@@ -881,19 +883,17 @@
                 .replace(/\\/g, "\\\\").replace(/'/g, "\\'")
                 .replace(/\r/g, "\\r").replace(/\n/g, "\\n") + "'";
         }
-        function normalizeQuestionDate(value) {
-            const s = String(value || '').trim();
-            if (!s) return '';
-            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-            const m = s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})$/);
-            if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
-            return '';
-        }
-
         function toLocalDateTimeInput(value) {
             const date = new Date(value);
             if (!Number.isFinite(date.getTime())) return "";
             return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        }
+        function normalizeClientDateOnly(value) {
+            const raw = String(value == null ? "" : value).trim().replace(/\+$/, "").trim();
+            if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+            const match = raw.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})$/);
+            if (match) return `${match[3]}-${String(match[2]).padStart(2, "0")}-${String(match[1]).padStart(2, "0")}`;
+            return "";
         }
 
         function showNotification(msg) {
@@ -1198,6 +1198,17 @@
                 title.className = "font-bold text-xs mb-2";
                 title.textContent = `${response.title} · ${response.score}/${response.maxScore} б.`;
                 card.appendChild(title);
+                if (response.type === "text" && response.details && response.details.aiGradingPending) {
+                    const aiPending = document.createElement("div");
+                    aiPending.className = "text-[11px] text-amber-600 mb-2";
+                    aiPending.textContent = "Автоматична AI-перевірка не завершилася. Відповідь збережена: повторіть перевірку ШІ або виставте бал вручну.";
+                    card.appendChild(aiPending);
+                } else if (response.type === "text" && response.details && response.details.aiGraded) {
+                    const aiStatus = document.createElement("div");
+                    aiStatus.className = "text-[11px] theme-text-secondary mb-2";
+                    aiStatus.textContent = "Автоматично оцінено ШІ під час здачі.";
+                    card.appendChild(aiStatus);
+                }
                 if (response.type === "code" && response.details && Number(response.details.totalTests) > 0) {
                     const testStatus = document.createElement("div");
                     testStatus.className = "text-[11px] theme-text-secondary mb-2";
@@ -1259,7 +1270,7 @@
                         instructions.className = "w-full p-2 rounded-lg border theme-border theme-bg-card text-xs";
                         const aiBtn = document.createElement("button");
                         aiBtn.className = "px-3 py-2 rounded-lg border theme-border text-xs font-bold hover:border-sky-400";
-                        aiBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>AI-перевірка (лише числова оцінка)';
+                        aiBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Повторно оцінити ШІ (лише бал)';
                         const aiResult = document.createElement("div");
                         aiResult.className = "hidden rounded-lg theme-accent-bg-light border theme-border p-3 text-xs whitespace-pre-wrap font-bold";
                         aiBtn.onclick = async () => {
@@ -1275,10 +1286,10 @@
                                     answer: response.answer || ""
                                 });
                                 scoreInput.value = String(reviewed.score);
-                                aiResult.textContent = `${reviewed.score} / ${reviewed.maxScore}`;
+                                aiResult.textContent = `Оцінка ШІ: ${reviewed.score} / ${reviewed.maxScore}. Натисніть «Зберегти оцінку», щоб змінити збережений бал.`;
                                 aiResult.classList.remove("hidden");
                             } catch (err) { aiResult.textContent = err.message || "Не вдалося перевірити відповідь."; aiResult.classList.remove("hidden"); }
-                            finally { aiBtn.disabled = false; aiBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>AI-перевірка (лише числова оцінка)'; }
+                            finally { aiBtn.disabled = false; aiBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Повторно оцінити ШІ (лише бал)'; }
                         };
                         aiRow.append(instructions, aiBtn, aiResult);
                         card.appendChild(aiRow);
@@ -1328,8 +1339,24 @@
             }
         }
 
-        let catalogRenderTimer = null;
-        function scheduleCatalogRender() { clearTimeout(catalogRenderTimer); catalogRenderTimer = setTimeout(renderTestsList, 120); }
+        function scheduleTestsListRender() {
+            if (catalogRenderFrame) cancelAnimationFrame(catalogRenderFrame);
+            catalogRenderFrame = requestAnimationFrame(() => {
+                catalogRenderFrame = 0;
+                renderTestsList();
+            });
+        }
+
+        function scheduleProgressRender() {
+            if (progressRenderFrame) cancelAnimationFrame(progressRenderFrame);
+            progressRenderFrame = requestAnimationFrame(() => {
+                progressRenderFrame = 0;
+                if (activeTest) {
+                    renderPills();
+                    renderInTestTabs();
+                }
+            });
+        }
 
         function renderTestsList() {
             const container = document.getElementById('tests-grid');
@@ -1609,7 +1636,7 @@
                     </div>
                     <h3 class="text-xl md:text-2xl font-bold leading-snug">${escapeHtml(q.title)}</h3>
                     ${q.description ? `<p class="text-sm theme-text-secondary leading-relaxed">${escapeHtml(q.description)}</p>` : ''}
-                    ${q.imageUrl ? `<div class="pt-2"><img src="${escapeHtml(q.imageUrl)}" class="max-h-64 rounded-2xl border theme-border object-cover shadow-md" alt="Question Image" onerror="this.style.display='none'"></div>` : ''}
+                    ${q.imageUrl ? `<div class="pt-2"><img src="${escapeHtml(q.imageUrl)}" class="max-h-64 rounded-2xl border theme-border object-cover shadow-md" alt="Question Image" loading="lazy" decoding="async" onerror="this.style.display='none'"></div>` : ''}
                 </div>
             `;
 
@@ -1655,7 +1682,7 @@
                             </select>
                         </div>
                         <div class="rounded-b-2xl overflow-hidden border theme-border">
-                            <textarea id="code-input-${q.id}" aria-label="Код відповіді" oninput="userAnswers[${jsString(q.id)}] = this.value; queueProgressSave(); renderPills(); renderInTestTabs();" class="w-full h-48 p-4 font-code text-sm bg-slate-950 text-sky-300 focus:outline-none resize-y">${escapeHtml(currentCode)}</textarea>
+                            <textarea id="code-input-${q.id}" aria-label="Код відповіді" oninput="userAnswers[${jsString(q.id)}] = this.value; queueProgressSave(); scheduleProgressRender();" class="w-full h-48 p-4 font-code text-sm bg-slate-950 text-sky-300 focus:outline-none resize-y">${escapeHtml(currentCode)}</textarea>
                         </div>
                         ${previewRunner}
                     </div>
@@ -1691,7 +1718,7 @@
             else if (q.type === 'text') {
                 const val = userAnswers[q.id] || '';
                 html += `
-                    <textarea oninput="userAnswers[${jsString(q.id)}] = this.value; queueProgressSave(); renderPills(); renderInTestTabs();" placeholder="Введіть відповідь..." class="w-full h-32 p-4 rounded-2xl border theme-border theme-bg-card text-sm focus:outline-none resize-none">${escapeHtml(val)}</textarea>
+                    <textarea oninput="userAnswers[${jsString(q.id)}] = this.value; queueProgressSave(); scheduleProgressRender();" placeholder="Введіть відповідь..." class="w-full h-32 p-4 rounded-2xl border theme-border theme-bg-card text-sm focus:outline-none resize-none">${escapeHtml(val)}</textarea>
                 `;
             }
             else if (q.type === 'date') {
@@ -1699,7 +1726,7 @@
                 html += `
                     <div class="max-w-xs space-y-2">
                         <label class="block text-xs font-bold theme-text-secondary uppercase">Оберіть точну дату:</label>
-                        <input type="date" value="${escapeHtml(val)}" onchange="userAnswers[${jsString(q.id)}] = this.value; queueProgressSave(); renderPills(); renderInTestTabs();" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm font-bold focus:outline-none">
+                        <input type="date" value="${escapeHtml(val)}" onchange="userAnswers[${jsString(q.id)}] = this.value; queueProgressSave(); scheduleProgressRender();" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm font-bold focus:outline-none">
                     </div>
                 `;
             }
@@ -1843,7 +1870,13 @@
                         title.textContent = item.title || 'Питання';
                         const sub = document.createElement('span');
                         sub.className = 'text-[10px] theme-text-secondary';
-                        sub.textContent = item.type === 'code' && item.totalTests ? `Python: ${item.passedTests || 0}/${item.totalTests} прихованих тестів` : `Тип: ${item.type || 'питання'}`;
+                        sub.textContent = item.aiGradingPending
+                            ? 'AI тимчасово не оцінив відповідь — її збережено для перевірки викладачем.'
+                            : item.type === 'code' && item.totalTests
+                                ? `Python: ${item.passedTests || 0}/${item.totalTests} прихованих тестів`
+                                : item.type === 'text'
+                                    ? 'Текстову відповідь оцінено ШІ.'
+                                    : `Тип: ${item.type || 'питання'}`;
                         left.append(title, sub);
                         const score = document.createElement('span');
                         score.className = `font-bold ${Number(item.score) > 0 ? 'text-emerald-500' : 'theme-text-secondary'}`;
@@ -1872,7 +1905,7 @@
                         const userArr = (Array.isArray(userAnswers[q.id]) ? userAnswers[q.id] : []).map(Number).sort((a,b)=>a-b).join(',');
                         const correctArr = (Array.isArray(q.correct) ? q.correct : [q.correct]).map(Number).sort((a,b)=>a-b).join(',');
                         if (correctArr !== "" && userArr === correctArr) score = points;
-                    } else if (q.type === 'date' && String(userAnswers[q.id] || "") === String(q.correctDate || "")) {
+                    } else if (q.type === 'date' && normalizeClientDateOnly(userAnswers[q.id]) === normalizeClientDateOnly(q.correctDate)) {
                         score = points;
                     }
                     totalPoints += score;
@@ -2243,7 +2276,7 @@
                     specificFieldsHtml = `
                         <div class="pt-2 border-t theme-border space-y-1">
                             <label class="block text-xs font-bold theme-text-secondary">Правильна дата для автоматичної перевірки (РРРР-ММ-ДД)</label>
-                            <input type="date" value="${escapeHtml(normalizeQuestionDate(q.correctDate || ''))}" oninput="builderQuestions[${idx}].correctDate = this.value" onchange="builderQuestions[${idx}].correctDate = normalizeQuestionDate(this.value)" class="w-full sm:w-1/2 p-2.5 rounded-lg border theme-border theme-bg-main text-xs font-bold">
+                            <input type="date" value="${escapeHtml(q.correctDate || '')}" oninput="builderQuestions[${idx}].correctDate = this.value" onchange="builderQuestions[${idx}].correctDate = this.value" class="w-full sm:w-1/2 p-2.5 rounded-lg border theme-border theme-bg-main text-xs font-bold">
                         </div>
                     `;
                 }
@@ -2388,7 +2421,6 @@
             try {
                 questions = builderQuestions.map(q => {
                     const item = {...q};
-                    if (item.type === "date") item.correctDate = normalizeQuestionDate(item.correctDate);
                     if (item.type === "code") {
                         const optsText = String(item.inputOptionsText !== undefined ? item.inputOptionsText : JSON.stringify(item.inputOptions || {})).trim() || "{}";
                         item.inputOptions = JSON.parse(optsText);
