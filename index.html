@@ -92,6 +92,28 @@
             background: var(--border-color);
             border-radius: 4px;
         }
+        html, body { max-width: 100%; overflow-x: hidden; }
+        button, input, select, textarea { touch-action: manipulation; }
+        button { -webkit-tap-highlight-color: transparent; }
+        img, pre, code { max-width: 100%; }
+        @media (max-width: 640px) {
+            header { padding-left: 10px !important; padding-right: 10px !important; }
+            #theme-menu-btn { padding: 9px !important; gap: 6px !important; }
+            #current-theme-label { display: none; }
+            #auth-nav-btn, #profile-nav-btn { padding: 9px !important; }
+            #modal-creator > div { max-height: calc(100dvh - 16px); overflow-y: auto; margin: 0; padding: 16px; }
+            #modal-auth > div, #modal-access-code > div, #modal-published > div,
+            #modal-desktop > div, #modal-test-password > div { max-height: calc(100dvh - 24px); overflow-y: auto; }
+            #question-card-container { min-height: 0 !important; padding: 16px !important; }
+            #question-card-container textarea { font-size: 16px; }
+            #btn-prev, #btn-next, #btn-finish { min-height: 44px; padding-left: 14px !important; padding-right: 14px !important; }
+            #section-test .test-topbar { align-items: flex-start; }
+            #tests-grid > div { padding: 16px; min-width: 0; }
+            #tests-grid button { min-height: 42px; }
+            #toast-notification { left: 12px; right: 12px; bottom: 12px; }
+            #toast-notification > div { width: 100%; }
+            .mobile-stack { flex-direction: column; align-items: stretch; }
+        }
     </style>
 </head>
 <body class="theme-bg-main theme-text-primary min-h-screen flex flex-col justify-between transition-colors duration-300">
@@ -105,8 +127,8 @@
                     <span>AT</span>
                 </div>
                 <div>
-                    <span class="text-2xl font-extrabold tracking-tight theme-text-primary">ArTes<span class="theme-accent-color">olymp</span></span>
-                    <span class="block text-[10px] font-semibold tracking-widest uppercase theme-text-secondary -mt-1">Real-Time Olympiad Platform</span>
+                    <span class="text-lg sm:text-2xl font-extrabold tracking-tight theme-text-primary">ArTes<span class="theme-accent-color">olymp</span></span>
+                    <span class="hidden sm:block text-[10px] font-semibold tracking-widest uppercase theme-text-secondary -mt-1">Real-Time Olympiad Platform</span>
                 </div>
             </div>
 
@@ -117,7 +139,7 @@
                     <button id="theme-menu-btn" onclick="toggleThemeDropdown(event)" class="flex items-center gap-2 px-3.5 py-2 rounded-xl theme-bg-card border theme-border text-sm font-semibold shadow-sm hover:border-sky-400 transition-all">
                         <i class="fa-solid fa-palette theme-accent-color"></i>
                         <span class="hidden sm:inline">Стиль:</span>
-                        <span id="current-theme-label" class="font-bold">Світлий синій</span>
+                        <span id="current-theme-label" class="font-bold hidden sm:inline">Світлий синій</span>
                         <i class="fa-solid fa-chevron-down text-xs opacity-60 ml-1"></i>
                     </button>
                     <!-- Click Dropdown Menu -->
@@ -138,9 +160,9 @@
                 </div>
 
                 <!-- User Profile / Auth Button -->
-                <button onclick="showAuthModal()" id="auth-nav-btn" class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold border theme-border theme-bg-card hover:border-sky-400 transition-all shadow-sm">
+                <button onclick="showAuthModal()" id="auth-nav-btn" aria-label="Вхід або реєстрація" title="Вхід або реєстрація" class="flex items-center gap-2 px-2.5 sm:px-3.5 py-2 rounded-xl text-sm font-semibold border theme-border theme-bg-card hover:border-sky-400 transition-all shadow-sm">
                     <i class="fa-solid fa-user-circle theme-accent-color text-base"></i>
-                    <span id="auth-nav-text">Вхід / Реєстрація</span>
+                    <span id="auth-nav-text" class="hidden sm:inline">Вхід / Реєстрація</span>
                 </button>
 
                 <button onclick="showSection('profile'); loadProfile();" id="profile-nav-btn" class="hidden px-3.5 py-2 rounded-xl text-sm font-semibold border theme-border theme-bg-card hover:border-sky-400 shadow-sm">
@@ -148,7 +170,7 @@
                 </button>
 
                 <!-- Desktop Client Button (Windows Only) -->
-                <button onclick="showDesktopModal()" class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold border theme-border theme-bg-card hover:border-sky-400 transition-all shadow-sm">
+                <button onclick="showDesktopModal()" class="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold border theme-border theme-bg-card hover:border-sky-400 transition-all shadow-sm">
                     <i class="fa-solid fa-file-code theme-accent-color"></i>
                     <span class="hidden sm:inline">Клієнт HTML</span>
                 </button>
@@ -176,7 +198,7 @@
                     </p>
                     <div class="flex flex-wrap gap-4 pt-2">
                         <button onclick="openAccessCodeModal()" class="theme-btn-primary px-6 py-3.5 rounded-2xl text-sm font-bold flex items-center gap-2 shadow-lg hover:scale-105 transition-all">
-                            <i class="fa-solid fa-key"></i> Ввести код доступу (напр. w5555w)
+                            <i class="fa-solid fa-key"></i> Ввести код доступу
                         </button>
                         <button onclick="showCreatorModal()" class="px-6 py-3.5 rounded-2xl text-sm font-bold border theme-border theme-bg-card hover:border-sky-400 flex items-center gap-2 transition-all">
                             <i class="fa-solid fa-plus-circle theme-accent-color"></i> Конструктор тестів
@@ -198,8 +220,21 @@
                     </div>
                 </div>
 
+                <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_220px] gap-3 pt-2">
+                    <label class="relative block">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 theme-text-secondary"></i>
+                        <input id="catalog-search" oninput="renderTestsList()" type="search" autocomplete="off" placeholder="Пошук за назвою або предметом…" class="w-full pl-10 pr-4 py-3 rounded-xl border theme-border theme-bg-card text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                    </label>
+                    <select id="catalog-filter" onchange="renderTestsList()" aria-label="Фільтр каталогу" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm font-semibold">
+                        <option value="all">Усі публічні</option>
+                        <option value="test">Лише тести</option>
+                        <option value="olympiad">Лише олімпіади</option>
+                        <option value="favorites">Обране ★</option>
+                    </select>
+                </div>
+                <p id="catalog-count" class="text-xs theme-text-secondary" aria-live="polite"></p>
                 <!-- Tests Grid -->
-                <div id="tests-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                <div id="tests-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 pt-1">
                     <!-- Dynamic rendering -->
                 </div>
             </div>
@@ -256,7 +291,7 @@
         <!-- ================= SECTION 2: LIVE TEST ENVIRONMENT ================= -->
         <div id="section-test" class="hidden space-y-6">
             <!-- Test Top Header Bar -->
-            <div class="p-4 rounded-2xl theme-bg-card border theme-border shadow-md flex flex-wrap items-center justify-between gap-4">
+            <div class="test-topbar p-4 rounded-2xl theme-bg-card border theme-border shadow-md flex flex-wrap items-center justify-between gap-4">
                 <div>
                     <h2 id="active-test-title" class="font-extrabold text-lg flex items-center gap-2">
                         <span>Назва тесту</span>
@@ -434,12 +469,30 @@
             </div>
             <div>
                 <h3 class="text-xl font-extrabold">Вхід за кодом</h3>
-                <p class="text-xs theme-text-secondary mt-1">Код приватного тесту (наприклад: <code class="font-code font-bold theme-accent-color">w5555w</code>)</p>
+                <p class="text-xs theme-text-secondary mt-1">Код від учителя для приватного тесту або олімпіади</p>
             </div>
-            <input type="text" id="access-code-input" placeholder="w5555w" class="w-full p-3.5 text-center font-code font-bold uppercase tracking-widest text-lg rounded-xl border theme-border theme-bg-card focus:outline-none focus:ring-2 focus:ring-sky-500">
+            <input type="text" id="access-code-input" placeholder="Введіть код доступу" class="w-full p-3.5 text-center font-code font-bold uppercase tracking-widest text-lg rounded-xl border theme-border theme-bg-card focus:outline-none focus:ring-2 focus:ring-sky-500">
             <button onclick="verifyAccessCode()" class="w-full theme-btn-primary py-3 rounded-xl font-bold text-sm shadow-lg">
                 Відкрити тест
             </button>
+        </div>
+    </div>
+
+    <!-- MODAL: PASSWORD-PROTECTED TEST -->
+    <div id="modal-test-password" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="theme-bg-card border theme-border rounded-3xl max-w-sm w-full p-6 space-y-5 shadow-2xl relative">
+            <button onclick="hideTestPasswordModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600" aria-label="Закрити"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <div class="w-14 h-14 rounded-2xl theme-accent-bg-light theme-accent-color mx-auto flex items-center justify-center text-2xl"><i class="fa-solid fa-lock"></i></div>
+            <div class="text-center">
+                <h3 class="text-xl font-extrabold">Олімпіада захищена паролем</h3>
+                <p id="test-password-title" class="text-sm font-semibold mt-2"></p>
+                <p class="text-xs theme-text-secondary mt-1">Запитання та приховані тести відкриються лише після перевірки пароля.</p>
+            </div>
+            <form onsubmit="submitTestPassword(event)" class="space-y-3">
+                <input id="test-password-input" type="password" autocomplete="current-password" required maxlength="128" placeholder="Введіть пароль" class="w-full p-3.5 rounded-xl border theme-border theme-bg-card text-sm">
+                <p id="test-password-error" role="alert" class="hidden text-xs text-red-500"></p>
+                <button id="test-password-submit" type="submit" class="w-full theme-btn-primary py-3 rounded-xl font-bold text-sm"><i class="fa-solid fa-unlock-keyhole mr-2"></i>Перевірити пароль</button>
+            </form>
         </div>
     </div>
 
@@ -490,7 +543,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold theme-text-secondary uppercase mb-1">Код доступу (кастомний):</label>
-                    <input type="text" id="builder-code" placeholder="w5555w" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm font-code uppercase focus:outline-none focus:ring-2 focus:ring-sky-500">
+                    <input type="text" id="builder-code" placeholder="Необов’язково — код згенерується автоматично" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm font-code uppercase focus:outline-none focus:ring-2 focus:ring-sky-500">
                 </div>
                 <div class="sm:col-span-3">
                     <label class="block text-xs font-bold theme-text-secondary uppercase mb-1">Опис тесту:</label>
@@ -520,6 +573,15 @@
                         <option value="test">Тест</option>
                         <option value="olympiad">Олімпіада</option>
                     </select>
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-bold theme-text-secondary uppercase mb-1">Пароль на тест / олімпіаду (необов'язково)</label>
+                    <input type="password" id="builder-password" autocomplete="new-password" minlength="4" maxlength="128" placeholder="Від 4 символів — не показується учасникам" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm">
+                    <p id="builder-password-help" class="text-[11px] theme-text-secondary mt-1">Для публічної олімпіади пароль теж можна ввімкнути. На сервері зберігається лише хеш.</p>
+                </div>
+                <div id="builder-password-remove-wrap" class="hidden sm:col-span-1 rounded-xl border theme-border p-3 flex items-start gap-2">
+                    <input type="checkbox" id="builder-remove-password" class="mt-1">
+                    <label for="builder-remove-password" class="text-xs theme-text-secondary">Зняти поточний пароль під час збереження</label>
                 </div>
             </div>
 
@@ -603,7 +665,7 @@
          * Якщо URL змінився, замініть API_URL на нову адресу /exec.
          * Реєстрація, створення і проходження реальних тестів виконуються сервером.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbwEFC6BhRp7rAjflIzkGLiqbvYcHOG_Uf3BRBBJfpV5ouwT80qvuKtKznywRxnSNm5n/exec"; // Наприклад: https://script.google.com/macros/s/DEPLOYMENT_ID/exec
+        const API_URL = "https://script.google.com/macros/s/AKfycbynYNrOVtRGLOxY2-kvo9lebauHmJMjCQQXs5nHGKaKufybWhO2FY9Ivb6xvBGRtHUS/exec"; // Наприклад: https://script.google.com/macros/s/DEPLOYMENT_ID/exec
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -730,26 +792,6 @@
                     }
                 ]
             },
-            {
-                id: "artes-pro-2026",
-                title: "Приватна Олімпіада ArTesolymp Pro",
-                description: "Приватна олімпіада. Доступ відкривається за кодом w5555w.",
-                code: "w5555w",
-                deadline: "2026-10-29T19:00",
-                isPublic: false,
-                tabs: ["Алгоритми", "Теорія"],
-                questions: [
-                    {
-                        id: 1,
-                        tabName: "Алгоритми",
-                        title: "Пошук максимуму",
-                        description: "Реалізуйте алгоритм find_max(a, b).",
-                        type: "code",
-                        points: 20,
-                        allowedLangs: ["python", "javascript", "cpp", "csharp"]
-                    }
-                ]
-            }
         ];
 
         let activeTest = null;
@@ -762,6 +804,18 @@
         let builderTabs = ["Основний розділ"];
         let builderEditingTestId = null;
         let isPreviewSession = false;
+        let pendingPasswordTestId = "";
+        function getFavoriteTestIds() {
+            try { const value = JSON.parse(localStorage.getItem("artesolymp_favorites") || "[]"); return Array.isArray(value) ? value.map(String) : []; }
+            catch (_) { return []; }
+        }
+        function toggleFavoriteTest(testId) {
+            const favorites = new Set(getFavoriteTestIds());
+            if (favorites.has(String(testId))) favorites.delete(String(testId)); else favorites.add(String(testId));
+            localStorage.setItem("artesolymp_favorites", JSON.stringify([...favorites]));
+            renderTestsList();
+            showNotification(favorites.has(String(testId)) ? "Додано до обраного." : "Прибрано з обраного.");
+        }
 
         function downloadClientHtml() {
             try {
@@ -1052,7 +1106,7 @@
                     row.appendChild(label);
                     const meta = document.createElement("div");
                     meta.className = "text-[11px] theme-text-secondary mb-2";
-                    meta.textContent = `${t.kind === "olympiad" ? "Олімпіада" : "Тест"} · ${t.allowRepeat ? "повторне проходження дозволено" : "лише один раз"} · до ${new Date(t.deadline).toLocaleString("uk-UA")}`;
+                    meta.textContent = `${t.kind === "olympiad" ? "Олімпіада" : "Тест"} · ${t.isPublic ? "публічна" : "приватна"} · ${t.hasPassword ? "з паролем" : "без пароля"} · ${t.allowRepeat ? "повторне проходження дозволено" : "лише один раз"} · до ${new Date(t.deadline).toLocaleString("uk-UA")}`;
                     row.appendChild(meta);
                     const controls = document.createElement("div");
                     controls.className = "flex flex-wrap gap-3";
@@ -1263,73 +1317,110 @@
             }
         }
 
-        /* RENDER TESTS CATALOG */
+        /* PUBLIC CATALOG: private tests are intentionally absent; search/favorites work locally. */
         function renderTestsList() {
             const container = document.getElementById('tests-grid');
+            if (!container) return;
             container.innerHTML = '';
-
-            const filtered = testsDatabase.filter(t => t.id === DEMO_TEST_ID || (API_URL && (t.isPublic || (currentUser.role === 'Учитель' && t.isOwner))));
-
+            const search = (document.getElementById('catalog-search')?.value || '').trim().toLocaleLowerCase('uk-UA');
+            const filter = document.getElementById('catalog-filter')?.value || 'all';
+            const favorites = new Set(getFavoriteTestIds());
+            const publicOnly = testsDatabase.filter(t => t.id === DEMO_TEST_ID || (API_URL && t.isPublic));
+            const filtered = publicOnly.filter(test => {
+                if (filter === 'test' && test.kind === 'olympiad') return false;
+                if (filter === 'olympiad' && test.kind !== 'olympiad') return false;
+                if (filter === 'favorites' && !favorites.has(String(test.id))) return false;
+                const haystack = [test.title, test.description, ...(test.tabs || [])].join(' ').toLocaleLowerCase('uk-UA');
+                return !search || haystack.includes(search);
+            });
+            const count = document.getElementById('catalog-count');
+            if (count) count.textContent = `Знайдено: ${filtered.length} · приватні тести в каталозі не відображаються`;
+            if (!filtered.length) {
+                const empty = document.createElement('div');
+                empty.className = 'md:col-span-2 rounded-2xl border theme-border theme-bg-card p-8 text-center';
+                empty.innerHTML = '<i class="fa-solid fa-magnifying-glass text-2xl theme-accent-color"></i><p class="font-bold mt-3">Нічого не знайдено</p><p class="text-sm theme-text-secondary mt-1">Змініть пошуковий запит або фільтр. Для приватної роботи використайте код доступу.</p>';
+                container.appendChild(empty);
+                return;
+            }
             filtered.forEach(test => {
                 const card = document.createElement('div');
-                card.className = 'p-6 rounded-2xl theme-bg-card border theme-border shadow-md flex flex-col justify-between space-y-4 hover:shadow-xl transition-all';
-                const deadlineFormatted = new Date(test.deadline).toLocaleString('uk-UA');
-
+                card.className = 'p-4 sm:p-6 rounded-2xl theme-bg-card border theme-border shadow-md flex flex-col justify-between space-y-4 hover:shadow-xl transition-all min-w-0';
+                const deadlineDate = new Date(test.deadline);
+                const deadlineFormatted = Number.isFinite(deadlineDate.getTime()) ? deadlineDate.toLocaleString('uk-UA') : 'Без дедлайну';
+                const isFavorite = favorites.has(String(test.id));
+                const questionCount = Number(test.questionCount) || (Array.isArray(test.questions) ? test.questions.length : 0);
                 card.innerHTML = `
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between">
-                            <span class="px-2.5 py-0.5 rounded text-xs font-bold ${test.isPublic ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/30' : 'bg-purple-500/20 text-purple-600 border border-purple-500/30'}">
-                                ${test.isPublic ? 'Публічна' : 'Приватна'}
-                            </span>
-                            <span class="text-xs theme-text-secondary"><i class="fa-regular fa-clock mr-1"></i>До: ${deadlineFormatted}</span>
+                    <div class="space-y-3 min-w-0">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500/15 text-emerald-600 border border-emerald-500/30">Публічна</span>
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-bold theme-badge">${test.kind === 'olympiad' ? 'Олімпіада' : 'Тест'}</span>
+                                ${test.requiresPassword ? '<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/15 text-amber-600"><i class="fa-solid fa-lock mr-1"></i>За паролем</span>' : ''}
+                            </div>
+                            <button onclick="toggleFavoriteTest(${jsString(test.id)})" aria-label="${isFavorite ? 'Прибрати з обраного' : 'Додати до обраного'}" title="${isFavorite ? 'Прибрати з обраного' : 'Додати до обраного'}" class="shrink-0 w-10 h-10 rounded-xl border theme-border theme-bg-card theme-accent-color"><i class="${isFavorite ? 'fa-solid' : 'fa-regular'} fa-star"></i></button>
                         </div>
-                        <h3 class="text-xl font-bold">${escapeHtml(test.title)}</h3>
-                        <p class="text-sm theme-text-secondary line-clamp-2">${escapeHtml(test.description || "")}</p>
-                        <p class="text-[11px] theme-text-secondary break-all">Закодований ID: <code class="font-code">${escapeHtml(test.encodedId || test.id || "")}</code></p>
-                        <p class="text-[11px] theme-text-secondary">${test.kind === "olympiad" ? "Олімпіада" : "Тест"} · ${test.allowRepeat ? "Повторне проходження дозволено" : "Одне проходження"}</p>
+                        <h3 class="text-lg sm:text-xl font-bold break-words">${escapeHtml(test.title)}</h3>
+                        <p class="text-sm theme-text-secondary line-clamp-3 break-words">${escapeHtml(test.description || '')}</p>
+                        <p class="text-xs theme-text-secondary"><i class="fa-regular fa-clock mr-1"></i>Дедлайн: ${escapeHtml(deadlineFormatted)}</p>
+                        <p class="text-xs theme-text-secondary">${test.allowRepeat ? 'Повторне проходження дозволено' : 'Одне проходження'}${test.requiresPassword ? ' · потрібен пароль' : ''}</p>
                         <div class="flex flex-wrap gap-1.5 pt-1">
-                            ${(test.tabs || ['Загальний']).map(tab => `<span class="text-[10px] font-bold px-2 py-0.5 rounded theme-badge">${escapeHtml(tab)}</span>`).join('')}
+                            ${(test.tabs || []).slice(0,5).map(tab => `<span class="text-[10px] font-bold px-2 py-1 rounded-lg theme-badge">${escapeHtml(tab)}</span>`).join('')}
                         </div>
                     </div>
-                    <div class="flex items-center justify-between pt-2 border-t theme-border">
-                        <span class="text-xs font-semibold theme-text-secondary"><i class="fa-solid fa-list-check mr-1"></i>${test.questions.length} питань</span>
-                        <button onclick="startTestSession(${jsString(test.id)}, false)" class="theme-btn-primary px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow">
-                            <i class="fa-solid fa-play"></i> Почати тест
+                    <div class="flex items-center justify-between gap-3 pt-3 border-t theme-border">
+                        <span class="text-xs font-semibold theme-text-secondary shrink-0"><i class="fa-solid fa-list-check mr-1"></i>${questionCount} питань</span>
+                        <button onclick="startTestSession(${jsString(test.id)}, false)" class="theme-btn-primary px-4 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow min-w-0">
+                            <i class="fa-solid ${test.requiresPassword ? 'fa-lock' : 'fa-play'}"></i>${test.requiresPassword ? 'Ввести пароль' : 'Почати'}
                         </button>
-                    </div>
-                `;
+                    </div>`;
                 container.appendChild(card);
             });
         }
 
         /* LIVE TEST SESSION WITH IN-TEST TABS & EXACT TIMER */
-        async function startTestSession(testId, isPreview = false) {
-            window.currentAttemptId = null;
+        async function startTestSession(testId, isPreview = false, testPassword = "") {
             let restoredAnswers = {};
             let test = null;
-            if (isPreview || (testId && typeof testId === "object")) {
-                test = testId; // full test object from preview or server-side code verification
+            if (isPreview) {
+                test = testId; // Teacher's local builder preview.
             } else {
-                test = testsDatabase.find(t => t.id === testId);
-            }
-            if (!test) return;
-            if (!isPreview && !(test.id === DEMO_TEST_ID && test.kind === "olympiad") && !requireLogin()) return;
-            if (!isPreview && test.id !== DEMO_TEST_ID && !API_URL) {
-                showNotification("Реальні тести доступні після підключення Google Apps Script.");
-                return;
-            }
-            if (!isPreview && test.id !== DEMO_TEST_ID && API_URL) {
-                try {
-                    const started = await apiRequest("startAttempt", { testId: test.id });
-                    window.currentAttemptId = started.attemptId;
-                    restoredAnswers = started.answers && typeof started.answers === "object" ? started.answers : {};
-                    if (started.resumed) showNotification("Відновлено незавершене проходження зі збереженими відповідями.");
-                } catch (err) {
-                    showNotification(err.message || "Не вдалося розпочати проходження.");
-                    return;
+                const requested = (testId && typeof testId === "object")
+                    ? testId : (testsDatabase.find(t => t.id === testId) ||
+                        (String(testId) === String(pendingPasswordTestId) ? {id:String(testId),title:document.getElementById('test-password-title').textContent} : null));
+                if (!requested) { showNotification("Тест не знайдено. Оновіть каталог."); return false; }
+                if (requested.id === DEMO_TEST_ID && requested.kind === "olympiad") {
+                    test = requested;
+                } else {
+                    if (!requireLogin()) return false;
+                    if (!API_URL) { showNotification("Реальні тести доступні після підключення Google Apps Script."); return false; }
+                    try {
+                        const started = await apiRequest("startAttempt", {testId: requested.id, password: testPassword});
+                        if (started.requiresPassword) {
+                            pendingPasswordTestId = requested.id;
+                            document.getElementById('test-password-title').textContent = requested.title || started.test?.title || 'Захищена робота';
+                            document.getElementById('test-password-input').value = '';
+                            document.getElementById('test-password-error').classList.add('hidden');
+                            document.getElementById('modal-test-password').classList.remove('hidden');
+                            setTimeout(() => document.getElementById('test-password-input').focus(), 40);
+                            return false;
+                        }
+                        if (!started.test || !Array.isArray(started.test.questions)) throw new Error("Сервер не повернув питання. Оновіть розгортання Apps Script.");
+                        window.currentAttemptId = started.attemptId;
+                        restoredAnswers = started.answers && typeof started.answers === "object" ? started.answers : {};
+                        test = started.test;
+                        if (started.resumed) showNotification("Відновлено незавершене проходження зі збереженими відповідями.");
+                    } catch (err) {
+                        const message = err.message || "Не вдалося розпочати проходження.";
+                        if (testPassword && !document.getElementById('modal-test-password').classList.contains('hidden')) {
+                            const passwordError = document.getElementById('test-password-error');
+                            passwordError.textContent = message;
+                            passwordError.classList.remove('hidden');
+                        } else showNotification(message);
+                        return false;
+                    }
                 }
             }
-
+            if (!test || !Array.isArray(test.questions)) { showNotification("У тесті немає доступних питань."); return false; }
             activeTest = test;
             userAnswers = restoredAnswers;
             isPreviewSession = isPreview;
@@ -1337,14 +1428,41 @@
 
             document.getElementById('active-test-title').querySelector('span').innerText = test.title;
             document.getElementById('total-q-count').innerText = test.questions.length;
-
             document.getElementById('preview-mode-badge').classList.toggle('hidden', !isPreview);
             document.getElementById('live-mode-badge').classList.toggle('hidden', isPreview);
-
             showSection('test');
             startLiveTimer();
             renderInTestTabs();
             selectInTestTab(activeTabName);
+            return true;
+        }
+
+        function hideTestPasswordModal() {
+            document.getElementById('modal-test-password').classList.add('hidden');
+            pendingPasswordTestId = "";
+            document.getElementById('test-password-input').value = '';
+        }
+        async function submitTestPassword(event) {
+            if (event) event.preventDefault();
+            if (!pendingPasswordTestId) return;
+            const targetId = pendingPasswordTestId;
+            const password = document.getElementById('test-password-input').value;
+            const button = document.getElementById('test-password-submit');
+            const err = document.getElementById('test-password-error');
+            button.disabled = true; button.classList.add('opacity-60');
+            err.classList.add('hidden');
+            try {
+                const ok = await startTestSession(targetId, false, password);
+                if (ok) hideTestPasswordModal();
+                else if (!document.getElementById('modal-test-password').classList.contains('hidden')) {
+                    // keep modal open on validation/network error
+                }
+            } catch (e) {
+                err.textContent = e.message || "Не вдалося перевірити пароль.";
+                err.classList.remove('hidden');
+            } finally {
+                button.disabled = false; button.classList.remove('opacity-60');
+            }
         }
 
         /* Dynamic Deadline Timer: дд:гг:хх:сс / гг:хх:сс / хх:сс */
@@ -1499,34 +1617,42 @@
                     </div>
                 `;
             }
-            // TYPE 2: CODE
+            // TYPE 2: CODE. Participant mode runs server-side hidden tests only; only counts return.
             else if (q.type === 'code') {
-                const allowedLangs = q.allowedLangs || ["python", "javascript", "cpp", "csharp"];
+                const allowedLangs = q.allowedLangs || ["python"];
                 const selectedLang = userAnswers[`lang_${q.id}`] || allowedLangs[0];
                 userAnswers[`lang_${q.id}`] = selectedLang;
                 const currentCode = userAnswers[q.id] || `# Напишіть розв'язок мовою ${selectedLang}\n`;
-
+                const previewRunner = isPreviewSession ? `
+                    <div class="rounded-xl border theme-border p-3 space-y-2">
+                        <label class="block text-xs font-bold theme-text-secondary">Ручна перевірка для автора (лише прев'ю)</label>
+                        ${q.inputFormat ? `<p class="text-[11px] theme-text-secondary">Формат входу: <code class="font-code">${escapeHtml(q.inputFormat)}</code></p>` : ''}
+                        <textarea id="code-test-input-${q.id}" rows="3" placeholder="Тестовий input() для перевірки в прев'ю" class="w-full p-3 rounded-lg border theme-border theme-bg-card font-code text-xs">${escapeHtml(q.manualTestInput || '')}</textarea>
+                        <button onclick="runCodeCheck(${jsString(q.id)})" class="theme-btn-primary px-4 py-2.5 rounded-lg text-xs font-bold"><i class="fa-solid fa-play mr-1"></i>Запустити ручний тест</button>
+                        <pre id="code-test-output-${q.id}" class="hidden whitespace-pre-wrap break-words rounded-lg bg-slate-950 text-slate-100 p-3 font-code text-xs"></pre>
+                    </div>` : (activeTest.id === DEMO_TEST_ID ? `
+                    <div class="rounded-xl border theme-border theme-accent-bg-light p-4 text-sm"><i class="fa-solid fa-circle-info theme-accent-color mr-2"></i>Це демонстраційне завдання. Для запуску серверних прихованих тестів відкрийте реальне завдання з програмування.</div>` : (q.codeScoreMode === 'manual' ? `
+                    <div class="rounded-xl border theme-border theme-accent-bg-light p-4 text-sm"><i class="fa-solid fa-user-check theme-accent-color mr-2"></i>Код перевірить викладач вручну. Деталі тестових даних не показуються.</div>` : `
+                    <div class="rounded-xl border theme-border p-4 space-y-3">
+                        <div class="flex items-start gap-3"><i class="fa-solid fa-shield-halved theme-accent-color text-lg mt-0.5"></i><div><p class="text-sm font-bold">Приховані автоматичні тести</p><p class="text-xs theme-text-secondary mt-1">Сервер сам генерує тестові дані. Вхідні дані, еталонні відповіді та вивід програми не розкриваються.</p></div></div>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <button onclick="runCodeCheck(${jsString(q.id)})" class="theme-btn-primary px-4 py-2.5 rounded-lg text-xs font-bold"><i class="fa-solid fa-play mr-1"></i>Запустити приховані тести</button>
+                            <span class="text-[11px] theme-text-secondary">${Number(q.maxChecks) > 0 ? `Ліміт запусків: ${Number(q.maxChecks)}` : 'Запуски без ліміту'}</span>
+                        </div>
+                        <div id="code-test-output-${q.id}" class="hidden rounded-lg border theme-border p-3 text-sm font-semibold" aria-live="polite"></div>
+                    </div>`));
                 html += `
                     <div class="space-y-3">
-                        ${q.inputFormat ? `<div class="rounded-xl border theme-border theme-accent-bg-light p-3"><div class="text-xs font-bold theme-accent-color mb-1">Форматування вхідних даних</div><pre class="font-code text-xs whitespace-pre-wrap break-words">${escapeHtml(q.inputFormat)}</pre>${q.inputOptions && Object.keys(q.inputOptions).length ? `<div class="text-xs theme-text-secondary mt-2">Допустимі рядки: ${escapeHtml(JSON.stringify(q.inputOptions))}</div>` : ''}</div>` : ''}
                         <div class="flex items-center justify-between bg-slate-900 px-4 py-2 rounded-t-2xl border-b border-slate-800 text-xs text-slate-300">
                             <span class="font-code"><i class="fa-solid fa-code text-sky-400 mr-2"></i>editor</span>
-                            <select onchange="userAnswers['lang_${q.id}'] = this.value; queueProgressSave(); renderQuestion();" class="bg-slate-800 text-sky-400 font-bold px-2 py-1 rounded border border-slate-700 text-xs">
+                            <select aria-label="Мова програмування" onchange="userAnswers['lang_${q.id}'] = this.value; queueProgressSave(); renderQuestion();" class="bg-slate-800 text-sky-400 font-bold px-2 py-2 rounded border border-slate-700 text-xs">
                                 ${allowedLangs.map(l => `<option value="${escapeHtml(l)}" ${selectedLang === l ? 'selected' : ''}>${escapeHtml(l.toUpperCase())}</option>`).join('')}
                             </select>
                         </div>
                         <div class="rounded-b-2xl overflow-hidden border theme-border">
-                            <textarea id="code-input-${q.id}" oninput="userAnswers[${jsString(q.id)}] = this.value; queueProgressSave(); renderPills(); renderInTestTabs();" class="w-full h-40 p-4 font-code text-sm bg-slate-950 text-sky-300 focus:outline-none resize-none">${escapeHtml(currentCode)}</textarea>
+                            <textarea id="code-input-${q.id}" aria-label="Код відповіді" oninput="userAnswers[${jsString(q.id)}] = this.value; queueProgressSave(); renderPills(); renderInTestTabs();" class="w-full h-48 p-4 font-code text-sm bg-slate-950 text-sky-300 focus:outline-none resize-y">${escapeHtml(currentCode)}</textarea>
                         </div>
-                        <div class="rounded-xl border theme-border p-3 space-y-2">
-                            <label class="block text-xs font-bold theme-text-secondary">Власна перевірка — введіть дані для input()</label>
-                            <textarea id="code-test-input-${q.id}" rows="3" placeholder="Наприклад: 2 3 4&#10;24" class="w-full p-3 rounded-lg border theme-border theme-bg-card font-code text-xs">${escapeHtml(q.manualTestInput || '')}</textarea>
-                            <div class="flex flex-wrap items-center gap-3">
-                                <button onclick="runCodeCheck(${jsString(q.id)})" class="theme-btn-primary px-4 py-2 rounded-lg text-xs font-bold"><i class="fa-solid fa-play mr-1"></i>Перевірити в коді</button>
-                                <span class="text-[11px] theme-text-secondary">${Number(q.maxChecks) > 0 && !isPreviewSession ? `Ліміт запусків: ${Number(q.maxChecks)}` : 'Самостійні запуски без ліміту'}</span>
-                            </div>
-                            <pre id="code-test-output-${q.id}" class="hidden whitespace-pre-wrap break-words rounded-lg bg-slate-950 text-slate-100 p-3 font-code text-xs"></pre>
-                        </div>
+                        ${previewRunner}
                     </div>
                 `;
             }
@@ -1591,25 +1717,38 @@
 
         async function runCodeCheck(qId) {
             const codeEl = document.getElementById(`code-input-${qId}`);
-            const inputEl = document.getElementById(`code-test-input-${qId}`);
+            const inputEl = isPreviewSession ? document.getElementById(`code-test-input-${qId}`) : null;
             const outputEl = document.getElementById(`code-test-output-${qId}`);
-            if (!codeEl || !inputEl || !outputEl) return;
+            if (!codeEl || !outputEl) return;
             outputEl.classList.remove('hidden');
-            outputEl.textContent = 'Виконується Python-код…';
+            outputEl.textContent = isPreviewSession ? 'Виконується тестовий код…' : 'Перевіряємо приховані тести на сервері…';
             try {
-                const payload = {code: codeEl.value, input: inputEl.value};
-                if (isPreviewSession) payload.preview = true;
+                const payload = {code: codeEl.value};
+                if (isPreviewSession) { payload.preview = true; payload.input = inputEl ? inputEl.value : ''; }
                 else {
-                    if (!window.currentAttemptId) throw new Error('Для запуску коду відкрийте реальне проходження тесту.');
+                    if (!window.currentAttemptId) throw new Error('Спочатку відкрийте реальне проходження тесту.');
                     payload.attemptId = window.currentAttemptId;
                     payload.questionId = qId;
+                    payload.hiddenTests = true;
                 }
                 const data = await apiRequest('runCodeCheck', payload);
-                const r = data.result || {};
-                const newLine = '\n';
-                outputEl.textContent = `${r.ok ? '✅ Код завершився' : '❌ Помилка виконання'}${data.used !== undefined ? ` · Перевірка ${data.used}${data.maxChecks > 0 ? '/' + data.maxChecks : ''}` : ''}${newLine}${newLine}Вивід print():${newLine}${r.stdout || '(порожньо)'}${r.stderr ? newLine + newLine + 'Помилки stderr:' + newLine + r.stderr : ''}${r.error ? newLine + newLine + r.error : ''}`;
+                if (data.hidden) {
+                    if (data.manual) outputEl.textContent = 'Це питання перевіряє викладач вручну.';
+                    else if (data.unconfigured) outputEl.textContent = 'Автор ще не налаштував автоматичні тести для цього питання. Повідомте викладача.';
+                    else if (data.systemError) outputEl.textContent = 'Приховане тестове середовище тимчасово недоступне. Повідомте викладача.';
+                    else {
+                        const passed = Number(data.passedTests) || 0, total = Number(data.totalTests) || 0;
+                        outputEl.textContent = `Пройдено тестів: ${passed}/${total}${data.used !== undefined ? ` · Запуск ${data.used}${data.maxChecks > 0 ? '/' + data.maxChecks : ''}` : ''}. Вхідні дані та вихід приховано.`;
+                        outputEl.classList.toggle('text-emerald-600', total > 0 && passed === total);
+                        outputEl.classList.toggle('text-amber-600', total > 0 && passed < total);
+                    }
+                } else {
+                    // Raw execution output is available only in the teacher's local builder preview.
+                    const r = data.result || {};
+                    outputEl.textContent = `${r.ok ? '✅ Код завершився' : '❌ Помилка виконання'}\n\nВивід print():\n${r.stdout || '(порожньо)'}${r.stderr ? '\n\nПомилки stderr:\n' + r.stderr : ''}${r.error ? '\n\n' + r.error : ''}`;
+                }
             } catch (err) {
-                outputEl.textContent = 'Не вдалося виконати код: ' + (err.message || err);
+                outputEl.textContent = 'Не вдалося виконати перевірку: ' + (err.message || err);
             }
         }
 
@@ -1797,6 +1936,10 @@
             document.getElementById('builder-visibility').value = "private";
             document.getElementById('builder-allow-repeat').value = "false";
             document.getElementById('builder-kind').value = "test";
+            document.getElementById('builder-password').value = "";
+            document.getElementById('builder-password-help').textContent = "Для публічної олімпіади пароль теж можна ввімкнути. На сервері зберігається лише хеш.";
+            document.getElementById('builder-password-remove-wrap').classList.add('hidden');
+            document.getElementById('builder-remove-password').checked = false;
             builderTabs = ["Основний розділ", "Додатковий розділ"];
             builderQuestions = [];
             renderBuilderTabs();
@@ -1816,6 +1959,12 @@
                 document.getElementById('builder-visibility').value = t.isPublic ? "public" : "private";
                 document.getElementById('builder-allow-repeat').value = t.allowRepeat ? "true" : "false";
                 document.getElementById('builder-kind').value = t.kind || "test";
+                document.getElementById('builder-password').value = "";
+                document.getElementById('builder-password-help').textContent = t.hasPassword
+                    ? "Для зміни пароля введіть новий. Порожнє поле залишить поточний пароль без змін."
+                    : "Установіть пароль за бажанням. На сервері зберігається лише хеш.";
+                document.getElementById('builder-password-remove-wrap').classList.remove('hidden');
+                document.getElementById('builder-remove-password').checked = false;
                 builderTabs = Array.isArray(t.tabs) && t.tabs.length ? t.tabs : ["Основний розділ"];
                 builderQuestions = (t.questions || []).map(q => ({...q,
                     inputOptionsText: JSON.stringify(q.inputOptions || {}, null, 2),
@@ -2221,7 +2370,10 @@
             const desc = document.getElementById('builder-desc').value.trim();
             let code = document.getElementById('builder-code').value.trim();
             const deadline = document.getElementById('builder-deadline').value;
+            const password = document.getElementById('builder-password').value;
+            const removePassword = document.getElementById('builder-remove-password').checked;
 
+            if (password && password.length < 4) { showNotification("Пароль має містити щонайменше 4 символи."); return; }
             if (!title) { showNotification("Введіть назву тесту!"); return; }
             if (builderQuestions.length === 0) { showNotification("Додайте хоча б одне питання!"); return; }
 
@@ -2254,6 +2406,8 @@
                 isPublic: document.getElementById("builder-visibility").value === "public",
                 allowRepeat: document.getElementById("builder-allow-repeat").value === "true",
                 kind: document.getElementById("builder-kind").value,
+                password,
+                removePassword,
                 tabs: builderTabs,
                 questions
             };
@@ -2289,6 +2443,10 @@
 
         function showDesktopModal() { document.getElementById('modal-desktop').classList.remove('hidden'); }
         function hideDesktopModal() { document.getElementById('modal-desktop').classList.add('hidden'); }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !document.getElementById('modal-test-password').classList.contains('hidden')) hideTestPasswordModal();
+        });
 
         window.onload = function() {
             const savedTheme = localStorage.getItem('artesolymp_theme') || 'light-blue';
