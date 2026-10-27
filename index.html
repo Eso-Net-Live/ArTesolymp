@@ -2240,6 +2240,13 @@
                             <textarea oninput="builderQuestions[${idx}].aiPrompt=this.value" class="w-full p-3 rounded-lg border theme-border theme-bg-main text-xs h-20" placeholder="Наприклад: оцінити точність, повноту й використання термінів...">${escapeHtml(q.aiPrompt || '')}</textarea>
                         </div>
                     `;
+                } else if (q.type === 'date') {
+                    specificFieldsHtml = `
+                        <div class="pt-2 border-t theme-border space-y-1">
+                            <label class="block text-xs font-bold theme-text-secondary">Правильна дата для автоматичної перевірки (РРРР-ММ-ДД)</label>
+                            <input type="date" value="${escapeHtml(q.correctDate || '')}" onchange="builderQuestions[${idx}].correctDate = this.value" class="w-full sm:w-1/2 p-2.5 rounded-lg border theme-border theme-bg-main text-xs font-bold">
+                        </div>
+                    `;
                 }
 
                 card.innerHTML = `
