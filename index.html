@@ -223,7 +223,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_220px] gap-3 pt-2">
                     <label class="relative block">
                         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 theme-text-secondary"></i>
-                        <input id="catalog-search" oninput="renderTestsList()" type="search" autocomplete="off" placeholder="Пошук за назвою або предметом…" class="w-full pl-10 pr-4 py-3 rounded-xl border theme-border theme-bg-card text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        <input id="catalog-search" oninput="scheduleCatalogRender()" type="search" autocomplete="off" placeholder="Пошук за назвою або предметом…" class="w-full pl-10 pr-4 py-3 rounded-xl border theme-border theme-bg-card text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
                     </label>
                     <select id="catalog-filter" onchange="renderTestsList()" aria-label="Фільтр каталогу" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm font-semibold">
                         <option value="all">Усі публічні</option>
@@ -663,7 +663,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbynYNrOVtRGLOxY2-kvo9lebauHmJMjCQQXs5nHGKaKufybWhO2FY9Ivb6xvBGRtHUS/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbwVfVEqsA5_M6VL9uIOXaXV0cZp4JytJSzYqBqzRUhWX4L6sg1nxYIuynG7pDFeU1k_/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -881,6 +881,15 @@
                 .replace(/\\/g, "\\\\").replace(/'/g, "\\'")
                 .replace(/\r/g, "\\r").replace(/\n/g, "\\n") + "'";
         }
+        function normalizeQuestionDate(value) {
+            const s = String(value || '').trim();
+            if (!s) return '';
+            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+            const m = s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})$/);
+            if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+            return '';
+        }
+
         function toLocalDateTimeInput(value) {
             const date = new Date(value);
             if (!Number.isFinite(date.getTime())) return "";
@@ -1266,7 +1275,7 @@
                                     answer: response.answer || ""
                                 });
                                 scoreInput.value = String(reviewed.score);
-                                aiResult.textContent = `Автоматично розрахована AI-оцінка: ${reviewed.score} / ${reviewed.maxScore}\nНатисніть «Зберегти оцінку», щоб підтвердити її.`;
+                                aiResult.textContent = `${reviewed.score} / ${reviewed.maxScore}`;
                                 aiResult.classList.remove("hidden");
                             } catch (err) { aiResult.textContent = err.message || "Не вдалося перевірити відповідь."; aiResult.classList.remove("hidden"); }
                             finally { aiBtn.disabled = false; aiBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>AI-перевірка (лише числова оцінка)'; }
@@ -1318,6 +1327,9 @@
                 showNotification(err.message || "Не вдалося перевірити код доступу.");
             }
         }
+
+        let catalogRenderTimer = null;
+        function scheduleCatalogRender() { clearTimeout(catalogRenderTimer); catalogRenderTimer = setTimeout(renderTestsList, 120); }
 
         function renderTestsList() {
             const container = document.getElementById('tests-grid');
@@ -2231,7 +2243,7 @@
                     specificFieldsHtml = `
                         <div class="pt-2 border-t theme-border space-y-1">
                             <label class="block text-xs font-bold theme-text-secondary">Правильна дата для автоматичної перевірки (РРРР-ММ-ДД)</label>
-                            <input type="date" value="${escapeHtml(q.correctDate || '')}" oninput="builderQuestions[${idx}].correctDate = this.value" onchange="builderQuestions[${idx}].correctDate = this.value" class="w-full sm:w-1/2 p-2.5 rounded-lg border theme-border theme-bg-main text-xs font-bold">
+                            <input type="date" value="${escapeHtml(normalizeQuestionDate(q.correctDate || ''))}" oninput="builderQuestions[${idx}].correctDate = this.value" onchange="builderQuestions[${idx}].correctDate = normalizeQuestionDate(this.value)" class="w-full sm:w-1/2 p-2.5 rounded-lg border theme-border theme-bg-main text-xs font-bold">
                         </div>
                     `;
                 }
@@ -2376,6 +2388,7 @@
             try {
                 questions = builderQuestions.map(q => {
                     const item = {...q};
+                    if (item.type === "date") item.correctDate = normalizeQuestionDate(item.correctDate);
                     if (item.type === "code") {
                         const optsText = String(item.inputOptionsText !== undefined ? item.inputOptionsText : JSON.stringify(item.inputOptions || {})).trim() || "{}";
                         item.inputOptions = JSON.parse(optsText);
