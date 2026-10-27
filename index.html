@@ -935,7 +935,6 @@
                 try {
                     await apiRequest("saveProgress", {attemptId:window.currentAttemptId, answers:userAnswers});
                 } catch (err) {
-                    // Show no toast for every keystroke; final submit still reports persistent errors.
                     console.warn("Progress autosave failed:", err.message || err);
                 }
             }, 650);
@@ -962,7 +961,6 @@
             errBox.textContent = "";
             errBox.classList.add('hidden');
 
-            // Corrected: the old double-escaped expression rejected common email addresses.
             if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || password.length < 10) {
                 const message = "Перевірте електронну пошту та введіть пароль щонайменше з 10 символів.";
                 errBox.textContent = message; errBox.classList.remove('hidden'); showNotification(message);
@@ -1019,7 +1017,6 @@
             if (!API_URL) { applyCurrentUserUI(); return false; }
             const hadToken = Boolean(authToken);
             try {
-                // Guests may browse only the public catalog. Taking real tests still requires login.
                 const data = await apiRequest(hadToken ? "bootstrap" : "catalog");
                 if (hadToken && data.user) currentUser = data.user;
                 const demo = testsDatabase.find(t => t.id === DEMO_TEST_ID);
@@ -1035,7 +1032,6 @@
                     localStorage.removeItem("artesolymp_remember_token");
                     currentUser = {name:"Гість",email:"",role:"Учень",description:""};
                     applyCurrentUserUI();
-                    // A stale session falls back to the anonymous catalog rather than hiding it.
                     if (hadToken) return refreshFromServer();
                 }
                 showNotification("Не вдалося синхронізувати дані: " + message);
@@ -1044,7 +1040,7 @@
         }
 
         async function logoutUser() {
-            try { if (authToken) await apiRequest("logout"); } catch (_) { /* local logout still works if the network is unavailable */ }
+            try { if (authToken) await apiRequest("logout"); } catch (_) {}
             authToken = "";
             sessionStorage.removeItem("artesolymp_token");
             localStorage.removeItem("artesolymp_remember_token");
@@ -1317,7 +1313,6 @@
             }
         }
 
-        /* PUBLIC CATALOG: private tests are intentionally absent; search/favorites work locally. */
         function renderTestsList() {
             const container = document.getElementById('tests-grid');
             if (!container) return;
@@ -1377,12 +1372,11 @@
             });
         }
 
-        /* LIVE TEST SESSION WITH IN-TEST TABS & EXACT TIMER */
         async function startTestSession(testId, isPreview = false, testPassword = "") {
             let restoredAnswers = {};
             let test = null;
             if (isPreview) {
-                test = testId; // Teacher's local builder preview.
+                test = testId;
             } else {
                 const requested = (testId && typeof testId === "object")
                     ? testId : (testsDatabase.find(t => t.id === testId) ||
@@ -1454,9 +1448,6 @@
             try {
                 const ok = await startTestSession(targetId, false, password);
                 if (ok) hideTestPasswordModal();
-                else if (!document.getElementById('modal-test-password').classList.contains('hidden')) {
-                    // keep modal open on validation/network error
-                }
             } catch (e) {
                 err.textContent = e.message || "Не вдалося перевірити пароль.";
                 err.classList.remove('hidden');
@@ -1465,7 +1456,6 @@
             }
         }
 
-        /* Dynamic Deadline Timer: дд:гг:хх:сс / гг:хх:сс / хх:сс */
         function startLiveTimer() {
             clearInterval(timerInterval);
             const deadlineMs = new Date(activeTest.deadline).getTime();
@@ -1505,7 +1495,6 @@
             timerInterval = setInterval(updateTimer, 1000);
         }
 
-        /* IN-TEST TABS LOGIC */
         function renderInTestTabs() {
             const container = document.getElementById('test-section-tabs');
             container.innerHTML = '';
@@ -1606,7 +1595,6 @@
                 </div>
             `;
 
-            // TYPE 1: INFO BLOCK
             if (q.type === 'info') {
                 html += `
                     <div class="p-6 rounded-2xl theme-accent-bg-light border theme-border space-y-2">
@@ -1617,7 +1605,6 @@
                     </div>
                 `;
             }
-            // TYPE 2: CODE. Participant mode runs server-side hidden tests only; only counts return.
             else if (q.type === 'code') {
                 const allowedLangs = q.allowedLangs || ["python"];
                 const selectedLang = userAnswers[`lang_${q.id}`] || allowedLangs[0];
@@ -1656,7 +1643,6 @@
                     </div>
                 `;
             }
-            // TYPE 3: SINGLE CHOICE
             else if (q.type === 'single') {
                 html += `<div class="space-y-3 pt-2">`;
                 (q.options || []).forEach((opt, idx) => {
@@ -1670,7 +1656,6 @@
                 });
                 html += `</div>`;
             }
-            // TYPE 4: MULTIPLE CHOICE
             else if (q.type === 'multiple') {
                 html += `<div class="space-y-3 pt-2">`;
                 const ansArr = Array.isArray(userAnswers[q.id]) ? userAnswers[q.id] : [];
@@ -1685,14 +1670,12 @@
                 });
                 html += `</div>`;
             }
-            // TYPE 5: TEXT
             else if (q.type === 'text') {
                 const val = userAnswers[q.id] || '';
                 html += `
                     <textarea oninput="userAnswers[${jsString(q.id)}] = this.value; queueProgressSave(); renderPills(); renderInTestTabs();" placeholder="Введіть відповідь..." class="w-full h-32 p-4 rounded-2xl border theme-border theme-bg-card text-sm focus:outline-none resize-none">${escapeHtml(val)}</textarea>
                 `;
             }
-            // TYPE 6: DATE
             else if (q.type === 'date') {
                 const val = userAnswers[q.id] || '';
                 html += `
@@ -1743,7 +1726,6 @@
                         outputEl.classList.toggle('text-amber-600', total > 0 && passed < total);
                     }
                 } else {
-                    // Raw execution output is available only in the teacher's local builder preview.
                     const r = data.result || {};
                     outputEl.textContent = `${r.ok ? '✅ Код завершився' : '❌ Помилка виконання'}\n\nВивід print():\n${r.stdout || '(порожньо)'}${r.stderr ? '\n\nПомилки stderr:\n' + r.stderr : ''}${r.error ? '\n\n' + r.error : ''}`;
                 }
@@ -1861,7 +1843,6 @@
                 }
             }
 
-            // Local scoring is only used for the deliberately public demonstration olympiad and preview.
             if (!serverSubmitted) {
                 activeTest.questions.forEach(q => {
                     let score = 0;
@@ -1918,7 +1899,6 @@
             await finishTest();
         }
 
-        /* BUILDER WITH PREVIEW & IMAGES */
         function showCreatorModal() {
             if (!requireLogin()) return;
             if (currentUser.role !== "Учитель") {
@@ -2030,7 +2010,7 @@
                 options: ["Варіант 1", "Варіант 2"],
                 correct: 0,
                 allowedLangs: ["python"],
-                correctDate: "2026-01-01",
+                correctDate: "",
                 referenceCode: "",
                 inputFormat: "i<0 100> i<0 100> i<0 100>\ni<0 1000000>",
                 inputKind: "numbers",
@@ -2083,6 +2063,8 @@
                 if (!q.timeLimitMs) q.timeLimitMs = 3000;
             } else if (newType === 'text') {
                 if (q.aiPrompt === undefined) q.aiPrompt = "";
+            } else if (newType === 'date') {
+                if (q.correctDate === undefined) q.correctDate = "";
             }
             renderBuilderQuestions();
         }
@@ -2138,6 +2120,7 @@
             };
             reader.readAsDataURL(file);
         }
+
         function renderBuilderQuestions() {
             const container = document.getElementById('builder-questions-list');
             document.getElementById('builder-q-count').innerText = builderQuestions.length;
@@ -2279,7 +2262,6 @@
                     </div>
                     <textarea oninput="builderQuestions[${idx}].description = this.value" placeholder="Опис питання..." class="w-full p-2.5 rounded-xl border theme-border theme-bg-main text-xs h-12 resize-none focus:outline-none">${escapeHtml(q.description)}</textarea>
                     
-                    <!-- Image Attachment Input -->
                     <div class="flex items-center gap-2 pt-1">
                         <input type="text" value="${escapeHtml(q.imageUrl || '')}" oninput="builderQuestions[${idx}].imageUrl = this.value" placeholder="URL зображення (наприклад: https://...)" class="w-full p-2 rounded-lg border theme-border theme-bg-main text-xs focus:outline-none">
                         <label class="cursor-pointer px-3 py-2 rounded-lg border theme-border theme-bg-main text-xs font-bold whitespace-nowrap hover:border-sky-400">
@@ -2345,7 +2327,6 @@
             } catch (err) { out.textContent = 'Не вдалося виконати код: ' + (err.message || err); }
         }
 
-        /* BUILDER PREVIEW FUNCTION */
         function builderPreviewTest() {
             const title = document.getElementById('builder-title').value.trim() || "Прев'ю Олімпіади";
             const desc = document.getElementById('builder-desc').value.trim();
@@ -2371,7 +2352,6 @@
             startTestSession(previewTestObj, true);
         }
 
-        /* BUILDER PUBLISH FUNCTION WITH PUBLISHED MODAL & ENTRY CODE */
         function builderSaveTest() {
             const title = document.getElementById('builder-title').value.trim();
             const desc = document.getElementById('builder-desc').value.trim();
