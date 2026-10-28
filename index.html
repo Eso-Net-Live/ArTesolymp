@@ -10,6 +10,20 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/pascal/pascal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+    <style>
+        .CodeMirror { font-family: 'Fira Code', monospace; font-size: 13.5px; border-radius: 0 0 1rem 1rem; }
+        .diff-mark { background:#ef4444; color:#fff; border-radius:2px; padding:0 1px; }
+    </style>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -676,7 +690,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbzO6ANuy3gTFIA2N5rVWmIjq8fTJafsHgJ3p1ITwrHeH30S4VHMLl1emTZycNKmWpCa/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbyS6ueDMnTLdEF2DnTf2avRJPiH5ct7eryG5NgF2Qx4hKRi0Qd7PozBOl8sqjxybBTN/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -1625,16 +1639,20 @@
                 `;
             }
             else if (q.type === 'code') {
-                const allowedLangs = q.allowedLangs || ["python"];
+                const allowedLangs = ALL_CODE_LANGS;
                 const selectedLang = userAnswers[`lang_${q.id}`] || allowedLangs[0];
                 userAnswers[`lang_${q.id}`] = selectedLang;
-                const currentCode = userAnswers[q.id] || `# Напишіть розв'язок мовою ${selectedLang}\n`;
+                const currentCode = userAnswers[q.id] || (CODE_LANGS[selectedLang] || CODE_LANGS.python).tpl;
                 const previewRunner = isPreviewSession ? `
                     <div class="rounded-xl border theme-border p-3 space-y-2">
                         <label class="block text-xs font-bold theme-text-secondary">Ручна перевірка для автора (лише прев'ю)</label>
                         ${q.inputFormat ? `<p class="text-[11px] theme-text-secondary">Формат входу: <code class="font-code">${escapeHtml(q.inputFormat)}</code></p>` : ''}
                         <textarea id="code-test-input-${q.id}" rows="3" placeholder="Тестовий input() для перевірки в прев'ю" class="w-full p-3 rounded-lg border theme-border theme-bg-card font-code text-xs">${escapeHtml(q.manualTestInput || '')}</textarea>
-                        <button onclick="runCodeCheck(${jsString(q.id)})" class="theme-btn-primary px-4 py-2.5 rounded-lg text-xs font-bold"><i class="fa-solid fa-play mr-1"></i>Запустити ручний тест</button>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="runCodeCheck(${jsString(q.id)})" class="theme-btn-primary px-4 py-2.5 rounded-lg text-xs font-bold"><i class="fa-solid fa-play mr-1"></i>Запустити ручний тест</button>
+                            <button onclick="runTestSets(${jsString(q.id)})" class="theme-btn-primary px-4 py-2.5 rounded-lg text-xs font-bold"><i class="fa-solid fa-vials mr-1"></i>Запустити тестові набори</button>
+                        </div>
+                        <div id="code-sets-output-${q.id}" class="hidden rounded-lg border theme-border p-3"></div>
                         <pre id="code-test-output-${q.id}" class="hidden whitespace-pre-wrap break-words rounded-lg bg-slate-950 text-slate-100 p-3 font-code text-xs"></pre>
                     </div>` : (activeTest.id === DEMO_TEST_ID ? `
                     <div class="rounded-xl border theme-border theme-accent-bg-light p-4 text-sm"><i class="fa-solid fa-circle-info theme-accent-color mr-2"></i>Це демонстраційне завдання. Для запуску серверних прихованих тестів відкрийте реальне завдання з програмування.</div>` : (q.codeScoreMode === 'manual' ? `
@@ -1651,8 +1669,8 @@
                     <div class="space-y-3">
                         <div class="flex items-center justify-between bg-slate-900 px-4 py-2 rounded-t-2xl border-b border-slate-800 text-xs text-slate-300">
                             <span class="font-code"><i class="fa-solid fa-code text-sky-400 mr-2"></i>editor</span>
-                            <select aria-label="Мова програмування" onchange="userAnswers['lang_${q.id}'] = this.value; queueProgressSave(); renderQuestion();" class="bg-slate-800 text-sky-400 font-bold px-2 py-2 rounded border border-slate-700 text-xs">
-                                ${allowedLangs.map(l => `<option value="${escapeHtml(l)}" ${selectedLang === l ? 'selected' : ''}>${escapeHtml(l.toUpperCase())}</option>`).join('')}
+                            <select aria-label="Мова програмування" onchange="setCodeLang(${jsString(q.id)}, this.value)" class="bg-slate-800 text-sky-400 font-bold px-2 py-2 rounded border border-slate-700 text-xs">
+                                ${allowedLangs.map(l => `<option value="${escapeHtml(l)}" ${selectedLang === l ? 'selected' : ''}>${escapeHtml(CODE_LANGS[l].label)}</option>`).join('')}
                             </select>
                         </div>
                         <div class="rounded-b-2xl overflow-hidden border theme-border">
@@ -1706,6 +1724,7 @@
             }
 
             container.innerHTML = html;
+            initCodeEditors();
 
             document.getElementById('btn-prev').disabled = currentQuestionIndex === 0;
             if (currentQuestionIndex === activeTest.questions.length - 1) {
@@ -1778,6 +1797,99 @@
             return parts.length ? '\n\n' + parts.join('   ') : '';
         }
 
+        /* ===== Мови, редактор CodeMirror, тестові набори ===== */
+        const CODE_LANGS = {
+            python:     {label:'Python',     mode:'python',          tpl:"# Напишіть розв'язок мовою Python\ns = input()\nprint(s)\n"},
+            cpp:        {label:'C++',        mode:'text/x-c++src',   tpl:"#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    string s;\n    getline(cin, s);\n    cout << s << endl;\n    return 0;\n}\n"},
+            pascal:     {label:'Pascal',     mode:'text/x-pascal',   tpl:"program Solution;\nvar\n  s: string;\nbegin\n  readln(s);\n  writeln(s);\nend.\n"},
+            csharp:     {label:'C#',         mode:'text/x-csharp',   tpl:"using System;\n\nclass Program {\n    static void Main() {\n        string s = Console.ReadLine();\n        Console.WriteLine(s);\n    }\n}\n"},
+            javascript: {label:'JavaScript', mode:'javascript',      tpl:"const lines = require('fs').readFileSync(0, 'utf8').split('\\n');\nconsole.log(lines[0]);\n"},
+            java:       {label:'Java',       mode:'text/x-java',     tpl:"import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        System.out.println(sc.nextLine());\n    }\n}\n"}
+        };
+        const ALL_CODE_LANGS = Object.keys(CODE_LANGS);
+
+        function setCodeLang(qId, lang) {
+            const cur = userAnswers[qId];
+            if (cur === undefined || cur === '' || Object.values(CODE_LANGS).some(l => l.tpl === cur)) delete userAnswers[qId];
+            userAnswers['lang_' + qId] = lang;
+            queueProgressSave(); renderQuestion();
+        }
+
+        function initCodeEditors() {
+            if (typeof CodeMirror === 'undefined') return;
+            document.querySelectorAll('textarea[id^="code-input-"]').forEach(ta => {
+                const qId = ta.id.slice('code-input-'.length);
+                const lang = CODE_LANGS[userAnswers['lang_' + qId]] || CODE_LANGS.python;
+                const cm = CodeMirror.fromTextArea(ta, {
+                    mode: lang.mode, theme: 'material-darker', lineNumbers: true, indentUnit: 4, tabSize: 4,
+                    indentWithTabs: false, matchBrackets: true, autoCloseBrackets: true, styleActiveLine: false,
+                    extraKeys: {
+                        Tab: c => c.somethingSelected() ? c.indentMore() : c.replaceSelection('    ', 'end'),
+                        'Shift-Tab': c => c.indentLess(), 'Ctrl-/': 'toggleComment', 'Cmd-/': 'toggleComment'
+                    }
+                });
+                cm.setSize('100%', 340);
+                cm.on('change', () => { ta.value = cm.getValue(); ta.dispatchEvent(new Event('input')); });
+                ta._cm = cm;
+            });
+        }
+
+        function diffMark(a, b) {
+            let i = 0; while (i < a.length && i < b.length && a[i] === b[i]) i++;
+            const cut = s => s.length > 300 ? s.slice(0, 300) + '…' : s;
+            const mark = (s) => i >= s.length ? escapeHtml(cut(s)) + '<mark class="diff-mark">⏎</mark>'
+                : escapeHtml(cut(s.slice(0, i))) + '<mark class="diff-mark">' + escapeHtml(s.slice(i, i + 1) || '∅') + '</mark>' + escapeHtml(cut(s.slice(i + 1)));
+            return [mark(a), mark(b)];
+        }
+
+        function renderTestSets(qId, out, data) {
+            const tests = data.tests || [];
+            const passed = Number(data.passed) || 0, total = Number(data.total) || 0;
+            let html = '';
+            if (data.executionError) html += `<div class="text-xs text-amber-500 mb-2">⚠ ${escapeHtml(data.executionError)}</div>`;
+            html += `<div class="flex flex-wrap items-center gap-3 mb-2"><span class="text-sm font-bold">Пройдено: ${passed}/${total}</span>
+                <span class="px-2 py-1 rounded-lg text-xs font-bold ${passed === total && total ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-black'}">⭐ Учасник отримав би: ${data.score}/${data.maxScore} балів</span></div>
+                <div id="code-sets-sum-${qId}"></div>`;
+            const failed = tests.filter(t => !t.ok);
+            if (failed.length) html += `<button onclick="useShortestCounterexample(${jsString(qId)})" class="mt-2 mb-2 px-3 py-1.5 rounded-lg border theme-border text-xs font-bold">🎯 Найкоротший контрприклад → у ручний тест</button>`;
+            html += `<div class="overflow-x-auto"><table class="w-full text-[11px] font-code border-collapse"><thead><tr class="text-left theme-text-secondary"><th class="p-1">#</th><th class="p-1">Вхід</th><th class="p-1">Еталон (викладач)</th><th class="p-1">Учасник</th><th class="p-1">мс</th></tr></thead><tbody>`;
+            tests.forEach(t => {
+                const [e, a] = t.ok ? [escapeHtml(t.expected), escapeHtml(t.actual)] : diffMark(String(t.expected), String(t.error ? '⚠ ' + t.error : t.actual));
+                html += `<tr class="${t.ok ? '' : 'bg-red-500/10'} border-t theme-border align-top"><td class="p-1">${t.ok ? '✅' : '❌'} ${t.n}</td>
+                    <td class="p-1 whitespace-pre-wrap break-all">${escapeHtml(t.input)}</td><td class="p-1 whitespace-pre-wrap break-all">${e}</td>
+                    <td class="p-1 whitespace-pre-wrap break-all">${a}</td><td class="p-1">${t.timeMs || ''}</td></tr>`;
+            });
+            html += '</tbody></table></div>';
+            out.innerHTML = html;
+            out._tests = tests;
+            const sum = document.getElementById('code-sets-sum-' + qId);
+            if (sum) renderVerdictStrip(sum, passed, total);
+        }
+
+        function useShortestCounterexample(qId) {
+            const out = document.getElementById('code-sets-output-' + qId), inp = document.getElementById('code-test-input-' + qId);
+            const bad = ((out && out._tests) || []).filter(t => !t.ok).sort((a, b) => a.input.length - b.input.length)[0];
+            if (bad && inp) { inp.value = bad.input; inp.focus(); }
+        }
+
+        async function runTestSets(qId) {
+            const q = (activeTest.questions || []).find(x => String(x.id) === String(qId));
+            const codeEl = document.getElementById('code-input-' + qId), out = document.getElementById('code-sets-output-' + qId);
+            if (!q || !codeEl || !out) return;
+            out.classList.remove('hidden');
+            out.innerHTML = '<div class="text-xs">⏳ Порівнюємо код учасника з еталоном викладача на тестових наборах…</div>';
+            try {
+                const inputs = q.testInputs || (q.testInputsText || '').split(/\r?\n---\r?\n/).map(x => x.trim()).filter(Boolean);
+                let opts = q.inputOptions; if (!opts && q.inputOptionsText) { try { opts = JSON.parse(q.inputOptionsText); } catch (_) {} }
+                const data = await apiRequest('runCodeCheck', {preview: true, testSets: true, code: codeEl.value,
+                    language: userAnswers['lang_' + qId] || 'python',
+                    question: {referenceCode: q.referenceCode || '', inputFormat: q.inputFormat || '', inputKind: q.inputKind || 'numbers',
+                        inputOptions: opts || {}, testInputs: inputs, hiddenTestCount: q.hiddenTestCount || 100,
+                        timeLimitMs: q.timeLimitMs, memoryLimitMb: q.memoryLimitMb, points: q.points, codeScoreMode: q.codeScoreMode}});
+                renderTestSets(qId, out, data);
+            } catch (err) { out.textContent = 'Не вдалося виконати тестові набори: ' + (err.message || err); }
+        }
+
         async function runCodeCheck(qId) {
             const codeEl = document.getElementById(`code-input-${qId}`);
             const inputEl = isPreviewSession ? document.getElementById(`code-test-input-${qId}`) : null;
@@ -1786,7 +1898,7 @@
             outputEl.classList.remove('hidden');
             outputEl.textContent = isPreviewSession ? 'Виконується тестовий код…' : 'Перевіряємо приховані тести на сервері…';
             try {
-                const payload = {code: codeEl.value};
+                const payload = {code: codeEl.value, language: userAnswers['lang_' + qId] || 'python'};
                 if (isPreviewSession) { payload.preview = true; payload.input = inputEl ? inputEl.value : ''; }
                 else {
                     if (!window.currentAttemptId) throw new Error('Спочатку відкрийте реальне проходження тесту.');
@@ -2030,7 +2142,7 @@
                 builderQuestions = (t.questions || []).map(q => ({...q,
                     inputOptionsText: JSON.stringify(q.inputOptions || {}, null, 2),
                     testInputsText: (q.testInputs || []).join("\n---\n"),
-                    allowedLangs: q.type === "code" && q.referenceCode ? ["python"] : (q.allowedLangs || ["python"]),
+                    allowedLangs: ALL_CODE_LANGS,
                     manualTestInput: "",
                     correctDate: q.correctDate || ""
                 }));
@@ -2130,7 +2242,7 @@
             } else if (newType === 'info') {
                 q.points = 0;
             } else if (newType === 'code') {
-                q.allowedLangs = ["python"];
+                q.allowedLangs = ALL_CODE_LANGS;
                 if (q.referenceCode === undefined) q.referenceCode = "";
                 if (q.inputFormat === undefined) q.inputFormat = "i<0 100> i<0 100> i<0 100>\ni<0 1000000>";
                 if (!q.inputKind) q.inputKind = "numbers";
@@ -2459,7 +2571,7 @@
                         item.testInputs = testInputsText.split(/\r?\n---\r?\n/).map(x => x.trim()).filter(Boolean);
                         if (item.testInputs.length > (Number(item.hiddenTestCount) || 100)) throw new Error(`У питанні «${item.title}» спеціальних наборів більше, ніж прихованих тестів.`);
                         if (item.referenceCode && item.codeScoreMode !== "manual" && !item.inputFormat.trim() && item.testInputs.length < (Number(item.hiddenTestCount) || 100)) throw new Error(`У питанні «${item.title}» додайте форматування входу або заповніть усі приховані тестові набори.`);
-                        item.allowedLangs = ["python"];
+                        item.allowedLangs = ALL_CODE_LANGS;
                     }
                     delete item.inputOptionsText; delete item.testInputsText; delete item.manualTestInput;
                     return item;
