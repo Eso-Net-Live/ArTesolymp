@@ -20,6 +20,38 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/search.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/searchcursor.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/brace-fold.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/indent-fold.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/anyword-hint.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/monokai.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/eclipse.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/solarized.min.css">
+    <style>
+        .cm-tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px 8px;background:#0f172a;border-bottom:1px solid #1e293b;font-size:11px;color:#cbd5e1}
+        .cm-tools button,.cm-tools select{background:#1e293b;color:#7dd3fc;border:1px solid #334155;border-radius:8px;padding:3px 8px;font-weight:700;cursor:pointer}
+        .cm-tools button:hover{border-color:#38bdf8}
+        .cm-tools .cm-stat{margin-left:auto;opacity:.75;font-family:'Fira Code',monospace}
+        .cm-full{position:fixed!important;inset:0;z-index:90;background:#020617;display:flex;flex-direction:column;border-radius:0!important}
+        .cm-full .CodeMirror{flex:1;height:auto!important;border-radius:0}
+        #top-progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,#38bdf8,#22c55e);z-index:100;transition:width .3s}
+        #quick-bar{position:fixed;right:14px;bottom:14px;z-index:60;display:none;flex-direction:column;gap:8px}
+        #quick-bar button{width:44px;height:44px;border-radius:14px;font-size:18px;box-shadow:0 6px 18px rgba(0,0,0,.25);background:var(--bg-card,#fff);border:1px solid var(--border-color,#bae6fd)}
+        .q-flag{outline:2px solid #f59e0b}
+        body.focus-mode header,body.focus-mode nav{display:none!important}
+        .confetti{position:fixed;top:-10px;width:8px;height:12px;z-index:200;animation:cf 2.6s linear forwards}
+        @keyframes cf{to{transform:translateY(105vh) rotate(720deg);opacity:.8}}
+    </style>
     <style>
         .CodeMirror { font-family: 'Fira Code', monospace; font-size: 13.5px; border-radius: 0 0 1rem 1rem; }
         .diff-mark { background:#ef4444; color:#fff; border-radius:2px; padding:0 1px; }
@@ -690,7 +722,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbx696nveKjLTz5mW5oSH9n9VQw0CWVBVITkZHh8CgxONGmS3JlWtKANN5TWRZaWgnkk/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbwfknsd5lE3iDPfO28sxKIEHoIuMIV7Q1WC87mt6tKLLRNQDD4qTwO7cl43UUt0bdGD/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -1449,7 +1481,7 @@
             }
             if (!test || !Array.isArray(test.questions)) { showNotification("У тесті немає доступних питань."); return false; }
             activeTest = test;
-            userAnswers = restoredAnswers;
+            userAnswers = restoredAnswers; window.bestCode = {}; window.flagged = new Set();
             isPreviewSession = isPreview;
             activeTabName = (test.tabs && test.tabs.length > 0) ? test.tabs[0] : "";
 
@@ -1845,10 +1877,15 @@
         function renderTestSets(qId, out, data) {
             const tests = data.tests || [];
             const passed = Number(data.passed) || 0, total = Number(data.total) || 0;
+            window.bestCode = window.bestCode || {};
+            const prev = window.bestCode[qId];
+            if (!prev || (total && passed / total > prev.passed / (prev.total || 1))) window.bestCode[qId] = {passed, total, score: Number(data.score) || 0, maxScore: Number(data.maxScore) || 0};
+            const bestNow = window.bestCode[qId];
             let html = '';
             if (data.executionError) html += `<div class="text-xs text-amber-500 mb-2">⚠ ${escapeHtml(data.executionError)}</div>`;
             html += `<div class="flex flex-wrap items-center gap-3 mb-2"><span class="text-sm font-bold">Пройдено: ${passed}/${total}</span>
-                <span class="px-2 py-1 rounded-lg text-xs font-bold ${passed === total && total ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-black'}">⭐ Учасник отримав би: ${data.score}/${data.maxScore} балів</span></div>
+                <span class="px-2 py-1 rounded-lg text-xs font-bold ${passed === total && total ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-black'}">⭐ Учасник отримав би: ${data.score}/${data.maxScore} балів</span>
+                <span class="px-2 py-1 rounded-lg text-xs font-bold bg-sky-600 text-white">🏆 Найкращий результат: ${bestNow.score}/${bestNow.maxScore} (${bestNow.passed}/${bestNow.total})</span></div>
                 <div id="code-sets-sum-${qId}"></div>`;
             const failed = tests.filter(t => !t.ok);
             if (failed.length) html += `<button onclick="useShortestCounterexample(${jsString(qId)})" class="mt-2 mb-2 px-3 py-1.5 rounded-lg border theme-border text-xs font-bold">🎯 Найкоротший контрприклад → у ручний тест</button>`;
@@ -1917,6 +1954,7 @@
                         outputEl.classList.toggle('text-emerald-600', total > 0 && passed === total);
                         outputEl.classList.toggle('text-amber-600', total > 0 && passed < total);
                         renderVerdictStrip(outputEl, passed, total);
+                        if (data.bestTotal) outputEl.textContent += ` 🏆 Найкращий: ${data.bestPassed}/${data.bestTotal} — саме він піде в оцінку, якщо фінальна перевірка буде гіршою.`;
                     }
                 } else {
                     const r = data.result || {};
@@ -2049,6 +2087,9 @@
                         if (correctArr !== "" && userArr === correctArr) score = points;
                     } else if (q.type === 'date' && String(userAnswers[q.id] || "") === String(q.correctDate || "")) {
                         score = points;
+                    } else if (q.type === 'code') {
+                        const b = (window.bestCode || {})[q.id];
+                        if (b && b.total) score = q.codeScoreMode === 'all_or_nothing' ? (b.passed === b.total ? points : 0) : Math.round(points * (b.passed / b.total) * 100) / 100;
                     }
                     totalPoints += score;
                     const item = document.createElement('div');
@@ -2635,5 +2676,137 @@
             if (API_URL) refreshFromServer();
         };
     </script>
+<script>
+/* ===== Розширення: покращений редактор коду та нові функції сайту ===== */
+(function () {
+    const getPref = (k, d) => { try { const v = localStorage.getItem('at_' + k); return v === null ? d : v; } catch (_) { return d; } };
+    const setPref = (k, v) => { try { localStorage.setItem('at_' + k, v); } catch (_) {} };
+    const EXT = {python:'py', cpp:'cpp', pascal:'pas', csharp:'cs', javascript:'js', java:'java'};
+    const THEMES = ['material-darker', 'dracula', 'monokai', 'eclipse', 'solarized dark'];
+
+    window.initCodeEditors = function () {
+        if (typeof CodeMirror === 'undefined') return;
+        document.querySelectorAll('textarea[id^="code-input-"]').forEach(ta => {
+            if (ta._cm) return;
+            const qId = ta.id.slice('code-input-'.length);
+            const lang = CODE_LANGS[userAnswers['lang_' + qId]] || CODE_LANGS.python;
+            const run = () => (typeof isPreviewSession !== 'undefined' && isPreviewSession ? runTestSets : runCodeCheck)(qId);
+            const cm = CodeMirror.fromTextArea(ta, {
+                mode: lang.mode, theme: getPref('theme', 'material-darker'), lineNumbers: true, indentUnit: 4, tabSize: 4,
+                indentWithTabs: false, matchBrackets: true, autoCloseBrackets: true, styleActiveLine: true,
+                lineWrapping: getPref('wrap', '0') === '1', foldGutter: true,
+                gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
+                extraKeys: {
+                    Tab: c => c.somethingSelected() ? c.indentMore() : c.replaceSelection('    ', 'end'),
+                    'Shift-Tab': c => c.indentLess(), 'Ctrl-/': 'toggleComment', 'Cmd-/': 'toggleComment',
+                    'Ctrl-Space': c => c.showHint({hint: CodeMirror.hint.anyword, completeSingle: false}),
+                    'Ctrl-F': 'findPersistent', 'Ctrl-H': 'replace', 'Ctrl-G': 'jumpToLine',
+                    'Ctrl-Enter': run, 'Cmd-Enter': run,
+                    'Ctrl-D': c => { const l = c.getCursor().line; c.replaceRange(c.getLine(l) + '\n', {line: l, ch: 0}); },
+                    'Alt-Up': c => { const l = c.getCursor().line; if (l > 0) { const t = c.getLine(l - 1); c.replaceRange(c.getLine(l) + '\n' + t, {line: l - 1, ch: 0}, {line: l, ch: c.getLine(l).length}); c.setCursor({line: l - 1, ch: c.getCursor().ch}); } },
+                    'Alt-Down': c => { const l = c.getCursor().line; if (l < c.lastLine()) { const t = c.getLine(l + 1); c.replaceRange(t + '\n' + c.getLine(l), {line: l, ch: 0}, {line: l + 1, ch: t.length}); c.setCursor({line: l + 1, ch: c.getCursor().ch}); } },
+                    Esc: c => { const b = c.getWrapperElement().parentNode; if (b.classList.contains('cm-full')) b.querySelector('[data-a=full]').click(); }
+                }
+            });
+            cm.getWrapperElement().style.fontSize = getPref('fs', '14') + 'px';
+            cm.setSize('100%', 340);
+            cm.on('change', () => { ta.value = cm.getValue(); ta.dispatchEvent(new Event('input')); });
+            ta._cm = cm;
+
+            const box = document.createElement('div');
+            const wrap = cm.getWrapperElement();
+            wrap.parentNode.insertBefore(box, wrap);
+            const tools = document.createElement('div'); tools.className = 'cm-tools';
+            tools.innerHTML = `<button data-a="fs-" title="Менший шрифт">A−</button><button data-a="fs+" title="Більший шрифт">A+</button>
+                <select data-a="theme" title="Тема редактора">${THEMES.map(t => `<option ${t === getPref('theme', 'material-darker') ? 'selected' : ''}>${t}</option>`).join('')}</select>
+                <button data-a="wrap" title="Перенос рядків">↩ Перенос</button><button data-a="undo" title="Ctrl+Z">↶</button><button data-a="redo" title="Ctrl+Y">↷</button>
+                <button data-a="find" title="Пошук Ctrl+F">🔍</button><button data-a="fmt" title="Вирівняти відступи">⇥ Відступи</button>
+                <button data-a="copy">⎘ Копіювати</button><button data-a="dl">⭳ Файл</button><button data-a="reset">⟲ Скинути</button>
+                <button data-a="full" title="Esc — вихід">⛶ Повний екран</button><span class="cm-stat"></span>`;
+            box.append(tools, wrap);
+            const stat = tools.querySelector('.cm-stat');
+            const upd = () => { const c = cm.getCursor(); stat.textContent = `Рд ${c.line + 1}:${c.ch + 1} · ${cm.lineCount()} рд · ${cm.getValue().length} симв · Ctrl+Enter — тести`; };
+            cm.on('cursorActivity', upd); cm.on('change', upd); upd();
+            tools.addEventListener('click', e => {
+                const a = e.target.dataset && e.target.dataset.a; if (!a) return;
+                const curL = userAnswers['lang_' + qId] || 'python';
+                if (a === 'fs+' || a === 'fs-') { const n = Math.max(10, Math.min(28, Number(getPref('fs', '14')) + (a === 'fs+' ? 1 : -1))); setPref('fs', n); document.querySelectorAll('.CodeMirror').forEach(w => { w.style.fontSize = n + 'px'; if (w.CodeMirror) w.CodeMirror.refresh(); }); }
+                if (a === 'wrap') { const v = !cm.getOption('lineWrapping'); cm.setOption('lineWrapping', v); setPref('wrap', v ? '1' : '0'); }
+                if (a === 'undo') cm.undo(); if (a === 'redo') cm.redo();
+                if (a === 'find') cm.execCommand('findPersistent');
+                if (a === 'fmt') cm.operation(() => { for (let i = 0; i < cm.lineCount(); i++) cm.indentLine(i, 'smart'); });
+                if (a === 'copy') { navigator.clipboard && navigator.clipboard.writeText(cm.getValue()).then(() => showNotification('Код скопійовано')); }
+                if (a === 'dl') { const l = document.createElement('a'); l.href = URL.createObjectURL(new Blob([cm.getValue()], {type: 'text/plain'})); l.download = 'solution.' + (EXT[curL] || 'txt'); l.click(); URL.revokeObjectURL(l.href); }
+                if (a === 'reset' && confirm('Скинути код до шаблону? Поточний код буде втрачено.')) cm.setValue((CODE_LANGS[curL] || CODE_LANGS.python).tpl);
+                if (a === 'full') { const on = box.classList.toggle('cm-full'); cm.setSize('100%', on ? '100%' : 340); cm.refresh(); cm.focus(); }
+            });
+            tools.querySelector('[data-a=theme]').addEventListener('change', e => { setPref('theme', e.target.value); document.querySelectorAll('.CodeMirror').forEach(w => w.CodeMirror && w.CodeMirror.setOption('theme', e.target.value)); });
+            ta.addEventListener('keydown', () => {});
+        });
+    };
+
+    /* ----- Нові функції сайту ----- */
+    window.flagged = window.flagged || new Set();
+    const inTest = () => { const s = document.getElementById('section-test'); return s && !s.classList.contains('hidden') && typeof activeTest !== 'undefined' && activeTest && activeTest.questions; };
+    const answerable = () => activeTest.questions.filter(q => q.type !== 'info');
+    const unanswered = () => answerable().filter(q => !checkIsAnswered(q));
+
+    const bar = document.createElement('div'); bar.id = 'top-progress'; document.body.appendChild(bar);
+    const quick = document.createElement('div'); quick.id = 'quick-bar';
+    quick.innerHTML = `<button id="qb-flag" title="Позначити питання (Alt+F)">🚩</button><button id="qb-focus" title="Режим фокусу (Alt+M)">🎯</button><button id="qb-help" title="Гарячі клавіші">⌨</button>`;
+    document.body.appendChild(quick);
+
+    function toggleFlag() { if (!inTest()) return; const q = activeTest.questions[currentQuestionIndex]; const id = String(q.id); window.flagged.has(id) ? window.flagged.delete(id) : window.flagged.add(id); renderPills(); }
+    document.getElementById('qb-flag').onclick = toggleFlag;
+    document.getElementById('qb-focus').onclick = () => document.body.classList.toggle('focus-mode');
+    document.getElementById('qb-help').onclick = () => alert('Гарячі клавіші:\nAlt + ← / → — попереднє / наступне питання\nAlt + F — позначити питання 🚩\nAlt + M — режим фокусу\nУ редакторі коду:\nCtrl+Enter — запустити тести\nCtrl+F / Ctrl+H — пошук / заміна\nCtrl+G — перейти до рядка\nCtrl+Space — автодоповнення\nCtrl+D — дублювати рядок\nAlt+↑/↓ — перемістити рядок\nCtrl+/ — коментар\nEsc — вийти з повного екрана');
+
+    function refreshExtras() {
+        const show = !!inTest(); quick.style.display = show ? 'flex' : 'none';
+        if (!show) { bar.style.width = '0'; return; }
+        const all = answerable(); const done = all.length - unanswered().length;
+        bar.style.width = (all.length ? Math.round(done / all.length * 100) : 100) + '%';
+        const cont = document.getElementById('question-pills'), qs = getTabQuestions();
+        [...cont.children].forEach((p, i) => { if (qs[i] && window.flagged.has(String(qs[i].id)) && !p.classList.contains('q-flag')) { p.classList.add('q-flag'); p.insertAdjacentText('beforeend', ' 🚩'); } });
+    }
+    const _rp = window.renderPills; window.renderPills = function () { _rp(); try { refreshExtras(); } catch (_) {} };
+    setInterval(() => { try { refreshExtras(); } catch (_) {} }, 1500);
+
+    document.addEventListener('keydown', e => {
+        if (!inTest() || !e.altKey) return;
+        if (e.key === 'ArrowRight') { e.preventDefault(); navigateQuestion(1); }
+        else if (e.key === 'ArrowLeft') { e.preventDefault(); navigateQuestion(-1); }
+        else if (e.key.toLowerCase() === 'f') { e.preventDefault(); toggleFlag(); }
+        else if (e.key.toLowerCase() === 'm') { e.preventDefault(); document.body.classList.toggle('focus-mode'); }
+    });
+    window.addEventListener('beforeunload', e => { if (inTest() && window.currentAttemptId) { e.preventDefault(); e.returnValue = ''; } });
+
+    const fb = document.getElementById('btn-finish');
+    if (fb) fb.setAttribute('onclick', 'confirmFinish()');
+    window.confirmFinish = function () {
+        const left = unanswered().length, fl = window.flagged.size;
+        const msg = (left ? `Без відповіді: ${left}. ` : '') + (fl ? `Позначено 🚩: ${fl}. ` : '');
+        if (!msg || confirm(msg + 'Все одно завершити?')) finishTest();
+    };
+
+    function confetti() { const c = ['#38bdf8', '#22c55e', '#f59e0b', '#ef4444', '#a855f7']; for (let i = 0; i < 60; i++) { const d = document.createElement('div'); d.className = 'confetti'; d.style.left = Math.random() * 100 + 'vw'; d.style.background = c[i % 5]; d.style.animationDelay = Math.random() * .8 + 's'; document.body.appendChild(d); setTimeout(() => d.remove(), 3800); } }
+    const _ft = window.finishTest;
+    window.finishTest = async function () {
+        document.body.classList.remove('focus-mode');
+        await _ft.apply(this, arguments);
+        try {
+            const m = (document.getElementById('final-score').innerText || '').match(/([\d.,]+)\s*\/\s*([\d.,]+)/);
+            if (!m) return; const got = parseFloat(m[1].replace(',', '.')), max = parseFloat(m[2].replace(',', '.')); if (!max) return;
+            const pct = Math.round(got / max * 1000) / 10;
+            let box = document.getElementById('results-actions');
+            if (!box) { box = document.createElement('div'); box.id = 'results-actions'; box.className = 'flex flex-wrap justify-center gap-2 pt-2'; document.getElementById('final-percentage').parentNode.appendChild(box); }
+            box.innerHTML = `<span class="px-3 py-1.5 rounded-xl text-sm font-bold theme-accent-bg-light">${pct}%</span>
+                <button class="px-3 py-1.5 rounded-xl text-xs font-bold border theme-border" onclick="navigator.clipboard.writeText('Мій результат: ${got} / ${max} (${pct}%)').then(()=>showNotification('Скопійовано'))">⎘ Копіювати результат</button>
+                <button class="px-3 py-1.5 rounded-xl text-xs font-bold border theme-border" onclick="window.print()">🖨 Друк</button>`;
+            if (pct >= 80) confetti();
+        } catch (_) {}
+    };
+})();
+</script>
 </body>
 </html>
