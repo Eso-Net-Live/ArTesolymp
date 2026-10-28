@@ -114,6 +114,19 @@
             #toast-notification > div { width: 100%; }
             .mobile-stack { flex-direction: column; align-items: stretch; }
         }
+
+        /* ---- Code verdict strip + confetti ---- */
+        .verdict-strip { display:flex; flex-wrap:wrap; gap:4px; margin-top:10px; }
+        .verdict-cell { width:14px; height:14px; border-radius:4px; opacity:0; transform:scale(.3);
+            animation: verdict-pop .35s cubic-bezier(.34,1.56,.64,1) forwards; }
+        .verdict-cell.ok { background:#10b981; box-shadow:0 0 8px rgba(16,185,129,.55); }
+        .verdict-cell.bad { background:#ef4444; box-shadow:0 0 8px rgba(239,68,68,.45); }
+        @keyframes verdict-pop { to { opacity:1; transform:scale(1); } }
+        .verdict-title { margin-top:8px; font-weight:800; font-size:13px; }
+        .run-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+        .run-chip { font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px;
+            background:rgba(148,163,184,.18); border:1px solid rgba(148,163,184,.35); }
+        #confetti-canvas { position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:9999; }
     </style>
 </head>
 <body class="theme-bg-main theme-text-primary min-h-screen flex flex-col justify-between transition-colors duration-300">
@@ -188,7 +201,7 @@
                 <div class="relative z-10 max-w-3xl space-y-6">
                     <span class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-bold theme-badge">
                         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Платформа ArTesolymp v6.5 • Google Sheets + Apps Script
+                        Платформа ArTesolymp v6.4 • Google Sheets + Apps Script
                     </span>
                     <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
                         Онлайн-тестування та олімпіади <span class="theme-accent-color">в реальному часі</span>
@@ -223,7 +236,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_220px] gap-3 pt-2">
                     <label class="relative block">
                         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 theme-text-secondary"></i>
-                        <input id="catalog-search" oninput="scheduleTestsListRender()" type="search" autocomplete="off" placeholder="Пошук за назвою або предметом…" class="w-full pl-10 pr-4 py-3 rounded-xl border theme-border theme-bg-card text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        <input id="catalog-search" oninput="renderTestsList()" type="search" autocomplete="off" placeholder="Пошук за назвою або предметом…" class="w-full pl-10 pr-4 py-3 rounded-xl border theme-border theme-bg-card text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
                     </label>
                     <select id="catalog-filter" onchange="renderTestsList()" aria-label="Фільтр каталогу" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm font-semibold">
                         <option value="all">Усі публічні</option>
@@ -397,7 +410,7 @@
     <footer class="border-t theme-border py-6 px-4 theme-bg-card text-center text-xs theme-text-secondary mt-12 transition-colors duration-300">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
             <div>
-                <p class="font-bold theme-text-primary">ArTesolymp &copy; 2026. Платформа тестувань у реальному часі · v6.5.</p>
+                <p class="font-bold theme-text-primary">ArTesolymp &copy; 2026. Платформа тестувань у реальному часі.</p>
                 <p class="mt-0.5">Вебклієнт ArTesolymp • дані синхронізуються через Google Apps Script.</p>
             </div>
             <div class="flex items-center gap-4">
@@ -663,7 +676,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbwU2CKyE0e0K1mTOVN8O65WP0_lHq64V_7u4LMZKsn99EYoV1EMoUOC9EedMop9l62U/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbzO6ANuy3gTFIA2N5rVWmIjq8fTJafsHgJ3p1ITwrHeH30S4VHMLl1emTZycNKmWpCa/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -802,10 +815,7 @@
         let builderTabs = ["Основний розділ"];
         let builderEditingTestId = null;
         let isPreviewSession = false;
-        let previewAiGrades = {};
         let pendingPasswordTestId = "";
-        let catalogRenderFrame = 0;
-        let progressRenderFrame = 0;
 
         function getFavoriteTestIds() {
             try { const value = JSON.parse(localStorage.getItem("artesolymp_favorites") || "[]"); return Array.isArray(value) ? value.map(String) : []; }
@@ -888,31 +898,6 @@
             const date = new Date(value);
             if (!Number.isFinite(date.getTime())) return "";
             return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-        }
-        function normalizeClientDateOnly(value) {
-            const raw = String(value == null ? "" : value).trim().replace(/\+$/, "").trim();
-            if (!raw) return "";
-            let year, month, day, match;
-            match = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-            if (match) { year = Number(match[1]); month = Number(match[2]); day = Number(match[3]); }
-            else {
-                match = raw.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{1,4})$/);
-                if (!match) return "";
-                day = Number(match[1]); month = Number(match[2]); year = Number(match[3]);
-            }
-            if (!Number.isInteger(year) || year < 1 || year > 9999 || !Number.isInteger(month) || !Number.isInteger(day)) return "";
-            const date = new Date(0);
-            date.setUTCHours(0, 0, 0, 0);
-            date.setUTCFullYear(year, month - 1, day);
-            if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return "";
-            return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-        }
-
-        function normalizeClientYear(value) {
-            const raw = String(value == null ? "" : value).trim();
-            if (!/^\d{1,4}$/.test(raw)) return "";
-            const year = Number(raw);
-            return Number.isInteger(year) && year >= 1 && year <= 9999 ? String(year) : "";
         }
 
         function showNotification(msg) {
@@ -1217,23 +1202,6 @@
                 title.className = "font-bold text-xs mb-2";
                 title.textContent = `${response.title} · ${response.score}/${response.maxScore} б.`;
                 card.appendChild(title);
-                if (response.type === "text" && response.details && response.details.aiGradingPending) {
-                    const aiPending = document.createElement("div");
-                    aiPending.className = "text-[11px] text-amber-600 mb-2";
-                    aiPending.textContent = "Автоматична AI-перевірка не завершилася. Відповідь збережена: повторіть перевірку ШІ або виставте бал вручну.";
-                    card.appendChild(aiPending);
-                } else if (response.type === "text" && response.details && response.details.aiGraded) {
-                    const aiStatus = document.createElement("div");
-                    aiStatus.className = "text-[11px] theme-text-secondary mb-2";
-                    aiStatus.textContent = "Автоматично оцінено ШІ." + (response.details.gradingSource === "AI-review" ? " Повторну оцінку збережено." : "");
-                    card.appendChild(aiStatus);
-                    if (response.details.aiFeedback) {
-                        const aiFeedback = document.createElement("div");
-                        aiFeedback.className = "text-[11px] theme-text-secondary mb-2 whitespace-pre-wrap";
-                        aiFeedback.textContent = "Пояснення AI: " + response.details.aiFeedback;
-                        card.appendChild(aiFeedback);
-                    }
-                }
                 if (response.type === "code" && response.details && Number(response.details.totalTests) > 0) {
                     const testStatus = document.createElement("div");
                     testStatus.className = "text-[11px] theme-text-secondary mb-2";
@@ -1295,7 +1263,7 @@
                         instructions.className = "w-full p-2 rounded-lg border theme-border theme-bg-card text-xs";
                         const aiBtn = document.createElement("button");
                         aiBtn.className = "px-3 py-2 rounded-lg border theme-border text-xs font-bold hover:border-sky-400";
-                        aiBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Повторно оцінити ШІ (зберегти бал)';
+                        aiBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>AI-перевірка (лише числова оцінка)';
                         const aiResult = document.createElement("div");
                         aiResult.className = "hidden rounded-lg theme-accent-bg-light border theme-border p-3 text-xs whitespace-pre-wrap font-bold";
                         aiBtn.onclick = async () => {
@@ -1311,11 +1279,10 @@
                                     answer: response.answer || ""
                                 });
                                 scoreInput.value = String(reviewed.score);
-                                aiResult.textContent = `Оцінка ШІ: ${reviewed.score} / ${reviewed.maxScore}. Бал автоматично збережено в результатах.${reviewed.feedback ? '\n' + reviewed.feedback : ''}`;
+                                aiResult.textContent = `Автоматично розрахована AI-оцінка: ${reviewed.score} / ${reviewed.maxScore}\nНатисніть «Зберегти оцінку», щоб підтвердити її.`;
                                 aiResult.classList.remove("hidden");
-                                showNotification("AI-оцінку збережено. Загальний бал оновлено.");
                             } catch (err) { aiResult.textContent = err.message || "Не вдалося перевірити відповідь."; aiResult.classList.remove("hidden"); }
-                            finally { aiBtn.disabled = false; aiBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Повторно оцінити ШІ (зберегти бал)'; }
+                            finally { aiBtn.disabled = false; aiBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>AI-перевірка (лише числова оцінка)'; }
                         };
                         aiRow.append(instructions, aiBtn, aiResult);
                         card.appendChild(aiRow);
@@ -1363,25 +1330,6 @@
             } catch (err) {
                 showNotification(err.message || "Не вдалося перевірити код доступу.");
             }
-        }
-
-        function scheduleTestsListRender() {
-            if (catalogRenderFrame) cancelAnimationFrame(catalogRenderFrame);
-            catalogRenderFrame = requestAnimationFrame(() => {
-                catalogRenderFrame = 0;
-                renderTestsList();
-            });
-        }
-
-        function scheduleProgressRender() {
-            if (progressRenderFrame) cancelAnimationFrame(progressRenderFrame);
-            progressRenderFrame = requestAnimationFrame(() => {
-                progressRenderFrame = 0;
-                if (activeTest) {
-                    renderPills();
-                    renderInTestTabs();
-                }
-            });
         }
 
         function renderTestsList() {
@@ -1489,7 +1437,6 @@
             activeTest = test;
             userAnswers = restoredAnswers;
             isPreviewSession = isPreview;
-            previewAiGrades = {};
             activeTabName = (test.tabs && test.tabs.length > 0) ? test.tabs[0] : "";
 
             document.getElementById('active-test-title').querySelector('span').innerText = test.title;
@@ -1663,7 +1610,7 @@
                     </div>
                     <h3 class="text-xl md:text-2xl font-bold leading-snug">${escapeHtml(q.title)}</h3>
                     ${q.description ? `<p class="text-sm theme-text-secondary leading-relaxed">${escapeHtml(q.description)}</p>` : ''}
-                    ${q.imageUrl ? `<div class="pt-2"><img src="${escapeHtml(q.imageUrl)}" class="max-h-64 rounded-2xl border theme-border object-cover shadow-md" alt="Question Image" loading="lazy" decoding="async" onerror="this.style.display='none'"></div>` : ''}
+                    ${q.imageUrl ? `<div class="pt-2"><img src="${escapeHtml(q.imageUrl)}" class="max-h-64 rounded-2xl border theme-border object-cover shadow-md" alt="Question Image" onerror="this.style.display='none'"></div>` : ''}
                 </div>
             `;
 
@@ -1709,7 +1656,7 @@
                             </select>
                         </div>
                         <div class="rounded-b-2xl overflow-hidden border theme-border">
-                            <textarea id="code-input-${q.id}" aria-label="Код відповіді" oninput="userAnswers[${jsString(q.id)}] = this.value; queueProgressSave(); scheduleProgressRender();" class="w-full h-48 p-4 font-code text-sm bg-slate-950 text-sky-300 focus:outline-none resize-y">${escapeHtml(currentCode)}</textarea>
+                            <textarea id="code-input-${q.id}" aria-label="Код відповіді" oninput="userAnswers[${jsString(q.id)}] = this.value; queueProgressSave(); renderPills(); renderInTestTabs();" class="w-full h-48 p-4 font-code text-sm bg-slate-950 text-sky-300 focus:outline-none resize-y">${escapeHtml(currentCode)}</textarea>
                         </div>
                         ${previewRunner}
                     </div>
@@ -1745,26 +1692,15 @@
             else if (q.type === 'text') {
                 const val = userAnswers[q.id] || '';
                 html += `
-                    <textarea oninput="userAnswers[${jsString(q.id)}] = this.value; delete previewAiGrades[${jsString(q.id)}]; queueProgressSave(); scheduleProgressRender();" placeholder="Введіть відповідь..." class="w-full h-32 p-4 rounded-2xl border theme-border theme-bg-card text-sm focus:outline-none resize-none">${escapeHtml(val)}</textarea>
-                    ${isPreviewSession ? `<div class="space-y-2"><button type="button" onclick="previewTextAnswerAI(${jsString(q.id)})" class="px-4 py-2 rounded-xl border theme-border text-xs font-bold hover:border-sky-400"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Перевірити текст через AI (прев’ю)</button><div id="preview-ai-result-${escapeHtml(q.id)}" class="hidden rounded-xl border theme-border theme-accent-bg-light p-3 text-xs whitespace-pre-wrap"></div></div>` : ''}
+                    <textarea oninput="userAnswers[${jsString(q.id)}] = this.value; queueProgressSave(); renderPills(); renderInTestTabs();" placeholder="Введіть відповідь..." class="w-full h-32 p-4 rounded-2xl border theme-border theme-bg-card text-sm focus:outline-none resize-none">${escapeHtml(val)}</textarea>
                 `;
             }
             else if (q.type === 'date') {
-                const val = normalizeClientDateOnly(userAnswers[q.id] || '');
+                const val = userAnswers[q.id] || '';
                 html += `
                     <div class="max-w-xs space-y-2">
                         <label class="block text-xs font-bold theme-text-secondary uppercase">Оберіть точну дату:</label>
-                        <input type="date" value="${escapeHtml(val)}" onchange="userAnswers[${jsString(q.id)}] = this.value; queueProgressSave(); scheduleProgressRender();" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm font-bold focus:outline-none">
-                        <p class="text-[11px] theme-text-secondary">Працюють також історичні дати до 1000 року.</p>
-                    </div>
-                `;
-            }
-            else if (q.type === 'year') {
-                const val = normalizeClientYear(userAnswers[q.id] || '');
-                html += `
-                    <div class="max-w-xs space-y-2">
-                        <label class="block text-xs font-bold theme-text-secondary uppercase">Введіть рік (наприклад, 988):</label>
-                        <input type="number" inputmode="numeric" min="1" max="9999" step="1" value="${escapeHtml(val)}" placeholder="Наприклад, 988" oninput="userAnswers[${jsString(q.id)}] = this.value; queueProgressSave(); scheduleProgressRender();" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm font-bold focus:outline-none">
+                        <input type="date" value="${escapeHtml(val)}" onchange="userAnswers[${jsString(q.id)}] = this.value; queueProgressSave(); renderPills(); renderInTestTabs();" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm font-bold focus:outline-none">
                     </div>
                 `;
             }
@@ -1781,26 +1717,65 @@
             }
         }
 
-        async function previewTextAnswerAI(qId) {
-            if (!isPreviewSession || !activeTest) return;
-            const q = activeTest.questions.find(item => String(item.id) === String(qId));
-            const answer = String(userAnswers[qId] || "").trim();
-            const out = document.getElementById(`preview-ai-result-${qId}`);
-            if (!q || !out) return;
-            out.classList.remove("hidden");
-            if (!answer) { out.textContent = "Спочатку введіть текст відповіді."; return; }
-            out.textContent = "AI оцінює зміст відповіді…";
-            try {
-                const reviewed = await apiRequest("previewTextAnswer", {
-                    question: {title:q.title, description:q.description, points:q.points, aiPrompt:q.aiPrompt || "", aiKeywords:q.aiKeywords || []},
-                    answer
+        // ---------- Веселі штуки: конфеті, вердикти, статистика запуску ----------
+        function launchConfetti() {
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            const old = document.getElementById('confetti-canvas'); if (old) old.remove();
+            const cv = document.createElement('canvas'); cv.id = 'confetti-canvas';
+            cv.width = window.innerWidth; cv.height = window.innerHeight; document.body.appendChild(cv);
+            const ctx = cv.getContext('2d'), colors = ['#10b981','#38bdf8','#f59e0b','#ef4444','#a78bfa','#f472b6'];
+            const parts = Array.from({length: 140}, () => ({
+                x: cv.width / 2 + (Math.random() - .5) * 120, y: cv.height * .65,
+                vx: (Math.random() - .5) * 16, vy: -Math.random() * 15 - 6,
+                size: 5 + Math.random() * 6, rot: Math.random() * 6.28, vr: (Math.random() - .5) * .4,
+                color: colors[Math.floor(Math.random() * colors.length)]
+            }));
+            let frames = 0;
+            (function tick() {
+                ctx.clearRect(0, 0, cv.width, cv.height);
+                parts.forEach(p => {
+                    p.vy += .35; p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.vx *= .99;
+                    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+                    ctx.fillStyle = p.color; ctx.globalAlpha = Math.max(0, 1 - frames / 170);
+                    ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2); ctx.restore();
                 });
-                previewAiGrades[String(qId)] = reviewed;
-                out.textContent = `Оцінка AI: ${reviewed.score} / ${reviewed.maxScore} б.\n${reviewed.feedback || "Оцінювання завершено."}\n\nЗмініть текст — і запустіть перевірку ще раз.`;
-            } catch (err) {
-                delete previewAiGrades[String(qId)];
-                out.textContent = "Не вдалося оцінити відповідь: " + (err.message || err) + "\nПеревірте налаштування GROQ_API_KEY у властивостях Apps Script.";
+                if (++frames < 170) requestAnimationFrame(tick); else cv.remove();
+            })();
+        }
+
+        function verdictTitle(passed, total) {
+            if (!total) return '';
+            if (passed === total) return ['🏆 Ідеально! Усі тести зелені', '🚀 Чистий код — космічна швидкість!', '😎 Хакер схвалює: 100%'][Math.floor(Math.random() * 3)];
+            const ratio = passed / total;
+            if (ratio >= .8) return '🔥 Майже ідеально — лишилась пара підступних тестів';
+            if (ratio >= .5) return '🧐 Більше половини є. Перевір крайні випадки (0, 1, мінімум, максимум)';
+            if (passed > 0) return '🐛 Баг десь поруч. Спробуй вручну крайні значення';
+            return '🧪 Жоден тест не пройшов — перевір формат читання input() та виводу';
+        }
+
+        function renderVerdictStrip(outputEl, passed, total) {
+            let box = document.getElementById(outputEl.id + '-verdict');
+            if (!box) { box = document.createElement('div'); box.id = outputEl.id + '-verdict'; outputEl.insertAdjacentElement('afterend', box); }
+            box.textContent = '';
+            if (!(total > 0)) return;
+            const strip = document.createElement('div'); strip.className = 'verdict-strip';
+            strip.setAttribute('aria-label', `Пройдено ${passed} з ${total} тестів`);
+            for (let i = 0; i < total; i++) {
+                const cell = document.createElement('span');
+                cell.className = 'verdict-cell ' + (i < passed ? 'ok' : 'bad');
+                cell.style.animationDelay = (i * 25) + 'ms';
+                strip.appendChild(cell);
             }
+            const title = document.createElement('div'); title.className = 'verdict-title'; title.textContent = verdictTitle(passed, total);
+            box.appendChild(strip); box.appendChild(title);
+            if (passed === total) setTimeout(launchConfetti, Math.min(total * 25, 900));
+        }
+
+        function runStatsText(r) {
+            const parts = [];
+            if (r && r.timeMs) parts.push(`⏱ ${r.timeMs} мс`);
+            if (r && r.memoryKb) parts.push(`💾 ${(r.memoryKb / 1024).toFixed(1)} МБ`);
+            return parts.length ? '\n\n' + parts.join('   ') : '';
         }
 
         async function runCodeCheck(qId) {
@@ -1829,10 +1804,11 @@
                         outputEl.textContent = `Пройдено тестів: ${passed}/${total}${data.used !== undefined ? ` · Запуск ${data.used}${data.maxChecks > 0 ? '/' + data.maxChecks : ''}` : ''}. Вхідні дані та вихід приховано.`;
                         outputEl.classList.toggle('text-emerald-600', total > 0 && passed === total);
                         outputEl.classList.toggle('text-amber-600', total > 0 && passed < total);
+                        renderVerdictStrip(outputEl, passed, total);
                     }
                 } else {
                     const r = data.result || {};
-                    outputEl.textContent = `${r.ok ? '✅ Код завершився' : '❌ Помилка виконання'}\n\nВивід print():\n${r.stdout || '(порожньо)'}${r.stderr ? '\n\nПомилки stderr:\n' + r.stderr : ''}${r.error ? '\n\n' + r.error : ''}`;
+                    outputEl.textContent = `${r.ok ? '✅ Код завершився' : '❌ Помилка виконання'}\n\nВивід print():\n${r.stdout || '(порожньо)'}${r.stderr ? '\n\nПомилки stderr:\n' + r.stderr : ''}${r.error ? '\n\n' + r.error : ''}${runStatsText(r)}`;
                 }
             } catch (err) {
                 outputEl.textContent = 'Не вдалося виконати перевірку: ' + (err.message || err);
@@ -1930,24 +1906,14 @@
                         title.textContent = item.title || 'Питання';
                         const sub = document.createElement('span');
                         sub.className = 'text-[10px] theme-text-secondary';
-                        sub.textContent = item.aiGradingPending
-                            ? `AI не завершив оцінювання; відповідь збережено, а бал очікує перевірки. ${item.aiError || ''}`
-                            : item.type === 'code' && item.totalTests
-                                ? `Python: ${item.passedTests || 0}/${item.totalTests} прихованих тестів`
-                                : item.type === 'text'
-                                    ? `Оцінено ШІ.${item.aiFeedback ? ' ' + item.aiFeedback : ''}`
-                                    : `Тип: ${item.type || 'питання'}`;
+                        sub.textContent = item.type === 'code' && item.totalTests ? `Python: ${item.passedTests || 0}/${item.totalTests} прихованих тестів` : `Тип: ${item.type || 'питання'}`;
                         left.append(title, sub);
                         const score = document.createElement('span');
                         score.className = `font-bold ${Number(item.score) > 0 ? 'text-emerald-500' : 'theme-text-secondary'}`;
-                        score.textContent = item.aiGradingPending ? `Очікує / ${item.maxScore} б.` : `${item.score} / ${item.maxScore} б.`;
+                        score.textContent = `${item.score} / ${item.maxScore} б.`;
                         card.append(left, score);
                         breakdown.appendChild(card);
                     });
-                    const pendingAi = (submitted.breakdown || []).filter(item => item.aiGradingPending);
-                    if (pendingAi.length) {
-                        document.getElementById('final-percentage').innerText = `Учасник: ${currentUser.name} · попередній результат: ${pendingAi.length} відповідь(і) ще очікують оцінювання`;
-                    }
                     await loadProfile();
                 } catch (err) {
                     showNotification("Не вдалося зберегти результат на сервері: " + err.message);
@@ -1969,12 +1935,8 @@
                         const userArr = (Array.isArray(userAnswers[q.id]) ? userAnswers[q.id] : []).map(Number).sort((a,b)=>a-b).join(',');
                         const correctArr = (Array.isArray(q.correct) ? q.correct : [q.correct]).map(Number).sort((a,b)=>a-b).join(',');
                         if (correctArr !== "" && userArr === correctArr) score = points;
-                    } else if (q.type === 'date' && normalizeClientDateOnly(userAnswers[q.id]) && normalizeClientDateOnly(userAnswers[q.id]) === normalizeClientDateOnly(q.correctDate)) {
+                    } else if (q.type === 'date' && String(userAnswers[q.id] || "") === String(q.correctDate || "")) {
                         score = points;
-                    } else if (q.type === 'year' && normalizeClientYear(userAnswers[q.id]) && normalizeClientYear(userAnswers[q.id]) === normalizeClientYear(q.correctYear)) {
-                        score = points;
-                    } else if (q.type === 'text' && String(userAnswers[q.id] || '').trim() && previewAiGrades[String(q.id)]) {
-                        score = Math.max(0, Math.min(points, Number(previewAiGrades[String(q.id)].score) || 0));
                     }
                     totalPoints += score;
                     const item = document.createElement('div');
@@ -1989,14 +1951,7 @@
                     left.append(title, sub);
                     const scoreBadge = document.createElement('span');
                     scoreBadge.className = `font-bold ${score > 0 ? 'text-emerald-500' : 'theme-text-secondary'}`;
-                    const previewTextPending = isPreviewSession && q.type === 'text' && String(userAnswers[q.id] || '').trim() && !previewAiGrades[String(q.id)];
-                    scoreBadge.textContent = previewTextPending ? 'AI не перевірено' : `${score} / ${points} б.`;
-                    if (isPreviewSession && q.type === 'text' && previewAiGrades[String(q.id)] && previewAiGrades[String(q.id)].feedback) {
-                        const feedback = document.createElement('span');
-                        feedback.className = 'block text-[10px] theme-text-secondary mt-1';
-                        feedback.textContent = previewAiGrades[String(q.id)].feedback;
-                        left.appendChild(feedback);
-                    }
+                    scoreBadge.textContent = `${score} / ${points} б.`;
                     item.append(left, scoreBadge);
                     breakdown.appendChild(item);
                 });
@@ -2138,7 +2093,6 @@
                 correct: 0,
                 allowedLangs: ["python"],
                 correctDate: "",
-                correctYear: "",
                 referenceCode: "",
                 inputFormat: "i<0 100> i<0 100> i<0 100>\ni<0 1000000>",
                 inputKind: "numbers",
@@ -2193,8 +2147,6 @@
                 if (q.aiPrompt === undefined) q.aiPrompt = "";
             } else if (newType === 'date') {
                 if (q.correctDate === undefined) q.correctDate = "";
-            } else if (newType === 'year') {
-                if (q.correctYear === undefined) q.correctYear = "";
             }
             renderBuilderQuestions();
         }
@@ -2347,23 +2299,14 @@
                     specificFieldsHtml = `
                         <div class="pt-2 border-t theme-border space-y-1">
                             <label class="block text-xs font-bold theme-text-secondary">Критерії для AI-перевірки (інструкція викладача)</label>
-                            <p class="text-[11px] theme-text-secondary">Найкраще вказати еталонну відповідь, синоніми та правила часткових балів. ШІ оцінює зміст, а не лише дослівний збіг.</p>
-                            <textarea oninput="builderQuestions[${idx}].aiPrompt=this.value" class="w-full p-3 rounded-lg border theme-border theme-bg-main text-xs h-24" placeholder="Еталонна відповідь: Четвертий Універсал. Приймайте рівнозначні формулювання. Повний бал — за правильну суть; 0 — лише за неправильну відповідь.">${escapeHtml(q.aiPrompt || '')}</textarea>
+                            <textarea oninput="builderQuestions[${idx}].aiPrompt=this.value" class="w-full p-3 rounded-lg border theme-border theme-bg-main text-xs h-20" placeholder="Наприклад: оцінити точність, повноту й використання термінів...">${escapeHtml(q.aiPrompt || '')}</textarea>
                         </div>
                     `;
                 } else if (q.type === 'date') {
                     specificFieldsHtml = `
                         <div class="pt-2 border-t theme-border space-y-1">
-                            <label class="block text-xs font-bold theme-text-secondary">Правильна дата (рік 0001–9999; формат зберігається автоматично)</label>
-                            <input type="date" value="${escapeHtml(normalizeClientDateOnly(q.correctDate || ''))}" oninput="builderQuestions[${idx}].correctDate = this.value" onchange="builderQuestions[${idx}].correctDate = this.value" class="w-full sm:w-1/2 p-2.5 rounded-lg border theme-border theme-bg-main text-xs font-bold" required>
-                            <p class="text-[10px] theme-text-secondary">Для запитань лише про рік використовуйте тип «Рік», а не «Дата».</p>
-                        </div>
-                    `;
-                } else if (q.type === 'year') {
-                    specificFieldsHtml = `
-                        <div class="pt-2 border-t theme-border space-y-1">
-                            <label class="block text-xs font-bold theme-text-secondary">Правильний рік (1–9999)</label>
-                            <input type="number" min="1" max="9999" step="1" value="${escapeHtml(normalizeClientYear(q.correctYear || ''))}" oninput="builderQuestions[${idx}].correctYear = this.value" onchange="builderQuestions[${idx}].correctYear = this.value" class="w-full sm:w-1/2 p-2.5 rounded-lg border theme-border theme-bg-main text-xs font-bold" required>
+                            <label class="block text-xs font-bold theme-text-secondary">Правильна дата для автоматичної перевірки (РРРР-ММ-ДД)</label>
+                            <input type="date" value="${escapeHtml(q.correctDate || '')}" oninput="builderQuestions[${idx}].correctDate = this.value" onchange="builderQuestions[${idx}].correctDate = this.value" class="w-full sm:w-1/2 p-2.5 rounded-lg border theme-border theme-bg-main text-xs font-bold">
                         </div>
                     `;
                 }
@@ -2393,7 +2336,6 @@
                                 <option value="multiple" ${q.type === 'multiple' ? 'selected' : ''}>3. Декілька правильних</option>
                                 <option value="text" ${q.type === 'text' ? 'selected' : ''}>4. Текстова відповідь (оцінює вчитель)</option>
                                 <option value="date" ${q.type === 'date' ? 'selected' : ''}>5. Введення дати</option>
-                                <option value="year" ${q.type === 'year' ? 'selected' : ''}>6. Введення року (історія)</option>
                             </select>
                         </div>
                     </div>
@@ -2460,7 +2402,7 @@
                 const data = await apiRequest('runCodeCheck', {preview:true, code:q.referenceCode || '', input:q.manualTestInput || '',
                     timeLimitMs:Number(q.timeLimitMs)||3000, memoryLimitMb:Number(q.memoryLimitMb)||156});
                 const r = data.result || {};
-                out.textContent = `${r.ok ? '✅ Код завершився' : '❌ Помилка виконання'}\n\nВивід print():\n${r.stdout || '(порожньо)'}${r.stderr ? '\n\nПомилки stderr:\n' + r.stderr : ''}${r.error ? '\n\n' + r.error : ''}`;
+                out.textContent = `${r.ok ? '✅ Код завершився' : '❌ Помилка виконання'}\n\nВивід print():\n${r.stdout || '(порожньо)'}${r.stderr ? '\n\nПомилки stderr:\n' + r.stderr : ''}${r.error ? '\n\n' + r.error : ''}${runStatsText(r)}`;
             } catch (err) { out.textContent = 'Не вдалося виконати код: ' + (err.message || err); }
         }
 
@@ -2509,14 +2451,6 @@
             try {
                 questions = builderQuestions.map(q => {
                     const item = {...q};
-                    if (item.type === "date") {
-                        item.correctDate = normalizeClientDateOnly(item.correctDate);
-                        if (!item.correctDate) throw new Error(`У питанні «${item.title}» вкажіть правильну дату у полі календаря.`);
-                    }
-                    if (item.type === "year") {
-                        item.correctYear = normalizeClientYear(item.correctYear);
-                        if (!item.correctYear) throw new Error(`У питанні «${item.title}» вкажіть правильний рік (1–9999).`);
-                    }
                     if (item.type === "code") {
                         const optsText = String(item.inputOptionsText !== undefined ? item.inputOptionsText : JSON.stringify(item.inputOptions || {})).trim() || "{}";
                         item.inputOptions = JSON.parse(optsText);
