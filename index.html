@@ -149,7 +149,7 @@
             #auth-nav-btn, #profile-nav-btn { padding: 9px !important; }
             #modal-creator > div { max-height: calc(100dvh - 16px); overflow-y: auto; margin: 0; padding: 16px; }
             #modal-auth > div, #modal-access-code > div, #modal-published > div,
-            #modal-desktop > div, #modal-test-password > div { max-height: calc(100dvh - 24px); overflow-y: auto; }
+            #modal-desktop > div, #modal-test-password > div, #modal-create-choice > div { max-height: calc(100dvh - 24px); overflow-y: auto; }
             #question-card-container { min-height: 0 !important; padding: 16px !important; }
             #question-card-container textarea { font-size: 16px; }
             #btn-prev, #btn-next, #btn-finish { min-height: 44px; padding-left: 14px !important; padding-right: 14px !important; }
@@ -218,6 +218,10 @@
                     </div>
                 </div>
 
+                <button onclick="showDocs()" id="docs-nav-btn" aria-label="Документація" title="Документація" class="flex items-center gap-2 px-2.5 sm:px-3.5 py-2 rounded-xl text-sm font-semibold border theme-border theme-bg-card hover:border-sky-400 transition-all shadow-sm">
+                    <i class="fa-solid fa-book theme-accent-color"></i> <span class="hidden sm:inline">Документація</span>
+                </button>
+
                 <!-- User Profile / Auth Button -->
                 <button onclick="showAuthModal()" id="auth-nav-btn" aria-label="Вхід або реєстрація" title="Вхід або реєстрація" class="flex items-center gap-2 px-2.5 sm:px-3.5 py-2 rounded-xl text-sm font-semibold border theme-border theme-bg-card hover:border-sky-400 transition-all shadow-sm">
                     <i class="fa-solid fa-user-circle theme-accent-color text-base"></i>
@@ -247,7 +251,7 @@
                 <div class="relative z-10 max-w-3xl space-y-6">
                     <span class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-bold theme-badge">
                         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Платформа ArTesolymp v6.4 • Google Sheets + Apps Script
+                        Платформа ArTesolymp v7.0 • Google Sheets + Apps Script
                     </span>
                     <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
                         Онлайн-тестування та олімпіади <span class="theme-accent-color">в реальному часі</span>
@@ -261,6 +265,9 @@
                         </button>
                         <button onclick="showCreatorModal()" class="px-6 py-3.5 rounded-2xl text-sm font-bold border theme-border theme-bg-card hover:border-sky-400 flex items-center gap-2 transition-all">
                             <i class="fa-solid fa-plus-circle theme-accent-color"></i> Конструктор тестів
+                        </button>
+                        <button onclick="showDocs()" class="px-6 py-3.5 rounded-2xl text-sm font-bold border theme-border theme-bg-card hover:border-sky-400 flex items-center gap-2 transition-all">
+                            <i class="fa-solid fa-book theme-accent-color"></i> Документація
                         </button>
                         <button onclick="downloadClientHtml()" class="px-6 py-3.5 rounded-2xl text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 shadow-lg transition-all">
                             <i class="fa-solid fa-file-code text-base"></i> Зберегти HTML-клієнт
@@ -308,6 +315,7 @@
                         <p id="profile-summary" class="text-sm theme-text-secondary mt-1">Увійдіть, щоб керувати проходженнями та створеними роботами.</p>
                     </div>
                     <div class="flex items-center gap-2">
+                        <button id="profile-results-btn" onclick="openResultsModal()" class="hidden px-4 py-2 rounded-xl text-sm font-bold border theme-border hover:border-sky-400"><i class="fa-solid fa-table theme-accent-color mr-1"></i> Переглянути результати учнів</button>
                         <button onclick="loadProfile()" class="theme-btn-primary px-4 py-2 rounded-xl text-sm font-bold">Оновити</button>
                         <button onclick="logoutUser()" class="px-4 py-2 rounded-xl text-sm font-bold border theme-border hover:border-red-400 text-red-500">Вийти</button>
                     </div>
@@ -343,6 +351,195 @@
                 <div class="rounded-2xl border theme-border p-4 mt-5">
                     <h3 class="font-bold mb-3">Результати учасників (для вчителя — лише власні тести)</h3>
                     <div id="teacher-results" class="space-y-2 text-sm theme-text-secondary">Доступно після входу в акаунт учителя.</div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ================= ДОКУМЕНТАЦІЯ ================= -->
+        <div id="section-docs" class="hidden">
+            <div class="grid lg:grid-cols-[240px_minmax(0,1fr)] gap-6">
+                <aside class="lg:sticky lg:top-24 self-start rounded-2xl border theme-border theme-bg-card p-4 text-sm space-y-1">
+                    <div class="font-extrabold mb-2"><i class="fa-solid fa-book theme-accent-color mr-1"></i> Зміст</div>
+                    <a href="javascript:showDocs('doc-start')" class="block py-1 hover:theme-accent-color">1. Швидкий старт</a>
+                    <a href="javascript:showDocs('doc-student')" class="block py-1">2. Для учня</a>
+                    <a href="javascript:showDocs('doc-teacher')" class="block py-1">3. Акаунт учителя</a>
+                    <a href="javascript:showDocs('doc-create')" class="block py-1">4. Створення тесту</a>
+                    <a href="javascript:showDocs('doc-types')" class="block py-1">5. Типи питань</a>
+                    <a href="javascript:showDocs('doc-media')" class="block py-1">6. Фото, відео, YouTube</a>
+                    <a href="javascript:showDocs('doc-code')" class="block py-1">7. Завдання з кодом</a>
+                    <a href="javascript:showDocs('doc-json')" class="block py-1">8. Формат JSON</a>
+                    <a href="javascript:showDocs('doc-export')" class="block py-1">9. Експорт тесту в JSON</a>
+                    <a href="javascript:showDocs('doc-results')" class="block py-1">10. Результати та CSV</a>
+                    <a href="javascript:showDocs('doc-faq')" class="block py-1">11. Часті питання</a>
+                    <button onclick="showSection('landing')" class="mt-3 w-full px-3 py-2 rounded-xl border theme-border text-xs font-bold hover:border-sky-400"><i class="fa-solid fa-arrow-left mr-1"></i> На головну</button>
+                </aside>
+
+                <div class="space-y-6 min-w-0">
+                    <div class="rounded-3xl theme-bg-card border theme-border p-6 md:p-8 shadow-xl">
+                        <h2 class="text-3xl font-black">Документація ArTesolymp</h2>
+                        <p class="theme-text-secondary mt-2">Повний посібник: як проходити тести, створювати їх, додавати відео, імпортувати/експортувати JSON та аналізувати результати.</p>
+                    </div>
+
+                    <section id="doc-start" class="rounded-2xl theme-bg-card border theme-border p-6 space-y-3 scroll-mt-24">
+                        <h3 class="text-xl font-extrabold">1. Швидкий старт</h3>
+                        <ol class="list-decimal pl-5 space-y-1 text-sm">
+                            <li>Натисніть <b>«Вхід / Реєстрація»</b> у верхньому правому куті та створіть акаунт (учня або учителя).</li>
+                            <li>Учень: натисніть <b>«Ввести код доступу»</b> і введіть код, який дав учитель — або оберіть публічну олімпіаду з каталогу.</li>
+                            <li>Учитель: натисніть <b>«Конструктор тестів»</b> → оберіть спосіб створення → опублікуйте → роздайте код доступу учням.</li>
+                            <li>Результати учнів дивіться у <b>Профілі → «Переглянути результати учнів»</b>.</li>
+                        </ol>
+                    </section>
+
+                    <section id="doc-student" class="rounded-2xl theme-bg-card border theme-border p-6 space-y-3 scroll-mt-24">
+                        <h3 class="text-xl font-extrabold">2. Для учня</h3>
+                        <ul class="list-disc pl-5 space-y-1 text-sm">
+                            <li><b>Код доступу</b> — введіть у вікні «Ввести код доступу». Приватні тести доступні лише за кодом; публічні видно в каталозі.</li>
+                            <li><b>Пароль тесту</b> — якщо вчитель його встановив, система попросить його перед стартом.</li>
+                            <li><b>Розділи (вкладки)</b> — питання згруповані за розділами; перемикайтеся вкладками та номерами питань («пігулками») над питанням.</li>
+                            <li><b>Автозбереження</b> — відповіді зберігаються автоматично; можна повернутися до питання й змінити відповідь до завершення.</li>
+                            <li><b>Дедлайн</b> — після закінчення терміну тест закривається. Повторна спроба можлива лише якщо вчитель її дозволив.</li>
+                            <li><b>Завершення</b> — кнопка «Завершити» покаже попередження про питання без відповіді; після підтвердження відповіді відправляються на перевірку.</li>
+                            <li><b>Відео в питаннях</b> — відтворюється прямо на сторінці (YouTube, Vimeo, Google Drive або файл).</li>
+                            <li><b>Історія</b> — усі ваші проходження зберігаються в Профілі; зайве можна прибрати з історії.</li>
+                        </ul>
+                    </section>
+
+                    <section id="doc-teacher" class="rounded-2xl theme-bg-card border theme-border p-6 space-y-3 scroll-mt-24">
+                        <h3 class="text-xl font-extrabold">3. Акаунт учителя</h3>
+                        <p class="text-sm">Під час реєстрації оберіть роль «Учитель». Запит підтверджує адміністратор платформи; до цього часу акаунт працює як учнівський. Після підтвердження стають доступні конструктор, експорт JSON і перегляд результатів учнів.</p>
+                    </section>
+
+                    <section id="doc-create" class="rounded-2xl theme-bg-card border theme-border p-6 space-y-3 scroll-mt-24">
+                        <h3 class="text-xl font-extrabold">4. Створення тесту: три способи</h3>
+                        <p class="text-sm">Після натискання «Конструктор тестів» відкривається вибір:</p>
+                        <div class="grid md:grid-cols-3 gap-3 text-sm">
+                            <div class="rounded-xl border theme-border p-3"><b>З нуля</b><p class="theme-text-secondary text-xs mt-1">Порожній конструктор. Задайте назву, код, дедлайн, доступ, розділи, додайте питання.</p></div>
+                            <div class="rounded-xl border theme-border p-3"><b>Шаблони</b><p class="theme-text-secondary text-xs mt-1">Обираєте заготовку → вона відкривається в конструкторі, де ви змінюєте тексти, відповіді й бали.</p></div>
+                            <div class="rounded-xl border theme-border p-3"><b>Завантажити з JSON</b><p class="theme-text-secondary text-xs mt-1">Файл або вставлений текст. Система перевіряє дані та виправляє помилки значеннями за замовчуванням.</p></div>
+                        </div>
+                        <h4 class="font-bold pt-2">Параметри тесту</h4>
+                        <ul class="list-disc pl-5 space-y-1 text-sm">
+                            <li><b>Код доступу</b> — 4–40 символів (латиниця, цифри, _ -). Порожній → генерується автоматично.</li>
+                            <li><b>Дедлайн</b> — дата й час закриття. Порожній → +1 рік.</li>
+                            <li><b>Доступ</b> — приватний (лише за кодом) або публічний (у каталозі).</li>
+                            <li><b>Режим</b> — «Тест» або «Олімпіада»; <b>Повторне проходження</b> — дозволити чи ні.</li>
+                            <li><b>Пароль</b> — необов'язково, 4–128 символів; на сервері зберігається лише хеш.</li>
+                            <li><b>Прев'ю</b> — кнопка «Перевірити тест» дозволяє пройти тест перед публікацією.</li>
+                            <li>Тест, який уже проходили, редагувати не можна — створіть <b>копію</b> у Профілі й змінюйте її (так історія відповідей не псується).</li>
+                        </ul>
+                    </section>
+
+                    <section id="doc-types" class="rounded-2xl theme-bg-card border theme-border p-6 space-y-3 scroll-mt-24">
+                        <h3 class="text-xl font-extrabold">5. Типи питань</h3>
+                        <div class="overflow-x-auto"><table class="w-full text-sm border-collapse">
+                            <thead><tr class="theme-accent-bg-light text-xs"><th class="border theme-border px-3 py-2 text-left">Тип (JSON)</th><th class="border theme-border px-3 py-2 text-left">Назва</th><th class="border theme-border px-3 py-2 text-left">Як оцінюється</th></tr></thead>
+                            <tbody>
+                                <tr><td class="border theme-border px-3 py-2 font-code">0</td><td class="border theme-border px-3 py-2">Інфо-блок</td><td class="border theme-border px-3 py-2">Без балів — лише текст/медіа (вступ, умова, відео).</td></tr>
+                                <tr><td class="border theme-border px-3 py-2 font-code">1</td><td class="border theme-border px-3 py-2">Кодування</td><td class="border theme-border px-3 py-2">Автоматично — приховані тести проти еталонного коду; або вручну.</td></tr>
+                                <tr><td class="border theme-border px-3 py-2 font-code">2</td><td class="border theme-border px-3 py-2">Одна правильна</td><td class="border theme-border px-3 py-2">Автоматично; <code>correct</code> — номер варіанта (з 0).</td></tr>
+                                <tr><td class="border theme-border px-3 py-2 font-code">3</td><td class="border theme-border px-3 py-2">Декілька правильних</td><td class="border theme-border px-3 py-2">Автоматично; <code>correct</code> — масив номерів, напр. <code>[0,2]</code>.</td></tr>
+                                <tr><td class="border theme-border px-3 py-2 font-code">4</td><td class="border theme-border px-3 py-2">Текстова відповідь</td><td class="border theme-border px-3 py-2">Оцінює вчитель; поле <code>AIinstruction</code> — підказка для оцінювання з ШІ.</td></tr>
+                                <tr><td class="border theme-border px-3 py-2 font-code">5</td><td class="border theme-border px-3 py-2">Дата</td><td class="border theme-border px-3 py-2">Автоматично; <code>correct</code> — дата <code>ДД-ММ-РРРР</code>.</td></tr>
+                            </tbody></table></div>
+                    </section>
+
+                    <section id="doc-media" class="rounded-2xl theme-bg-card border theme-border p-6 space-y-3 scroll-mt-24">
+                        <h3 class="text-xl font-extrabold">6. Фото, відео та YouTube</h3>
+                        <p class="text-sm">До кожного питання можна додати <b>одне</b> медіа. У конструкторі є поле посилання та кнопки <b>«Фото»</b> і <b>«Відео»</b>:</p>
+                        <ul class="list-disc pl-5 space-y-1 text-sm">
+                            <li><b>YouTube</b> — вставте будь-яке посилання: <code>youtube.com/watch?v=…</code>, <code>youtu.be/…</code>, <code>/shorts/…</code>. Можна вказати час старту: <code>?t=90</code> або <code>?t=1m30s</code>.</li>
+                            <li><b>Vimeo</b> — посилання <code>vimeo.com/123456789</code>.</li>
+                            <li><b>Пряме відео</b> — посилання на файл <code>.mp4</code>, <code>.webm</code>, <code>.ogg</code>, <code>.mov</code>.</li>
+                            <li><b>Google Drive</b> — посилання <code>drive.google.com/file/d/…</code> (файл має бути відкритий «усім, хто має посилання»).</li>
+                            <li><b>Завантаження відео-файлу</b> (кнопка «Відео», до <b>20 МБ</b>) — файл зберігається на Google Drive власника скрипта в папці <code>ArTesolymp_videos</code>, а в питанні лишається лише посилання. Для більших відео використовуйте YouTube.</li>
+                            <li><b>Фото</b> — посилання або файл; великі зображення автоматично стискаються.</li>
+                        </ul>
+                        <p class="text-xs theme-text-secondary">У JSON усі ці варіанти записуються в одне поле <code>urlOrFile</code>.</p>
+                    </section>
+
+                    <section id="doc-code" class="rounded-2xl theme-bg-card border theme-border p-6 space-y-3 scroll-mt-24">
+                        <h3 class="text-xl font-extrabold">7. Завдання з кодом</h3>
+                        <ul class="list-disc pl-5 space-y-1 text-sm">
+                            <li>Учасник пише код, який читає <code>input()</code> і виводить <code>print()</code>. Ви задаєте <b>еталонний код</b> — відповіді порівнюються з його виводом.</li>
+                            <li><b>Формат входу</b>: <code>i&lt;мін макс&gt;</code> — ціле, <code>f&lt;мін макс&gt;</code> — дробове, <code>s&lt;мін макс&gt;</code> — рядок довжини від…до, <code>s[1]</code> — слово зі списку «fixJsonWords», <code>m&lt;…&gt;</code> — змішане. Новий рядок формату = новий рядок входу. Приклад: <code>i&lt;1 100&gt;</code>.</li>
+                            <li><b>Тип входу</b> (<code>typeInput</code>): <code>int</code> (числа), <code>fix string</code> (конкретні слова), <code>string</code> (випадкові рядки), <code>mixing</code> (суміш).</li>
+                            <li><b>Спеціальні тести</b> (<code>specHideTest</code>) — власні набори входу, розділені рядком <code>---</code>. Решта до <code>TestsCount</code> генерується за форматом.</li>
+                            <li><b>Режими балів</b> (<code>partialScore</code>): <code>true</code> — частково за кількість пройдених тестів; <code>false</code> — все або нічого; <code>null</code> — перевіряє вчитель.</li>
+                            <li><b>Ліміти</b>: <code>Memory</code> (МБ, 1–900), <code>Timeout</code> (мс, 100–15000), <code>MaximumTest</code> — скільки разів учень може запускати перевірку, <code>TestsCount</code> — приховані тести (1–100).</li>
+                        </ul>
+                    </section>
+
+                    <section id="doc-json" class="rounded-2xl theme-bg-card border theme-border p-6 space-y-4 scroll-mt-24">
+                        <h3 class="text-xl font-extrabold">8. Формат JSON</h3>
+                        <p class="text-sm">Файл можна написати вручну, згенерувати або отримати експортом (розділ 9). Дозволені коментарі <code>// …</code> та <code>/* … */</code>, а також зайві коми. <b>Якщо параметр неправильний або відсутній — підставляється значення за замовчуванням</b> (звіт про зміни показується під час імпорту).</p>
+                        <h4 class="font-bold">Тест</h4>
+                        <div class="overflow-x-auto"><table class="w-full text-xs border-collapse">
+                            <thead><tr class="theme-accent-bg-light"><th class="border theme-border px-2 py-1.5 text-left">Поле</th><th class="border theme-border px-2 py-1.5 text-left">Значення</th><th class="border theme-border px-2 py-1.5 text-left">За замовчуванням</th></tr></thead>
+                            <tbody>
+                                <tr><td class="border theme-border px-2 py-1.5 font-code">name</td><td class="border theme-border px-2 py-1.5">Назва, до 180 символів</td><td class="border theme-border px-2 py-1.5">«Новий тест»</td></tr>
+                                <tr><td class="border theme-border px-2 py-1.5 font-code">code</td><td class="border theme-border px-2 py-1.5">Код доступу, 4–40: латиниця, цифри, _ -</td><td class="border theme-border px-2 py-1.5">генерується</td></tr>
+                                <tr><td class="border theme-border px-2 py-1.5 font-code">discription</td><td class="border theme-border px-2 py-1.5">Опис (також приймається <code>description</code>); <code>\n</code> — новий рядок</td><td class="border theme-border px-2 py-1.5">порожньо</td></tr>
+                                <tr><td class="border theme-border px-2 py-1.5 font-code">deadline</td><td class="border theme-border px-2 py-1.5"><code>ДД-ММ-РРРРTГГ:ХХ</code>, існуюча дата в майбутньому</td><td class="border theme-border px-2 py-1.5">+1 рік</td></tr>
+                                <tr><td class="border theme-border px-2 py-1.5 font-code">isOlymp</td><td class="border theme-border px-2 py-1.5">true — олімпіада, false — тест</td><td class="border theme-border px-2 py-1.5">false</td></tr>
+                                <tr><td class="border theme-border px-2 py-1.5 font-code">reattempt</td><td class="border theme-border px-2 py-1.5">Дозволити повторне проходження</td><td class="border theme-border px-2 py-1.5">false</td></tr>
+                                <tr><td class="border theme-border px-2 py-1.5 font-code">private</td><td class="border theme-border px-2 py-1.5">true — лише за кодом, false — публічний</td><td class="border theme-border px-2 py-1.5">true</td></tr>
+                                <tr><td class="border theme-border px-2 py-1.5 font-code">password</td><td class="border theme-border px-2 py-1.5">Рядок 4–128 символів або <code>null</code></td><td class="border theme-border px-2 py-1.5">null (без пароля)</td></tr>
+                                <tr><td class="border theme-border px-2 py-1.5 font-code">sections</td><td class="border theme-border px-2 py-1.5">Масив назв розділів</td><td class="border theme-border px-2 py-1.5">["Основний розділ"]</td></tr>
+                                <tr><td class="border theme-border px-2 py-1.5 font-code">questions</td><td class="border theme-border px-2 py-1.5">Масив питань (1–300)</td><td class="border theme-border px-2 py-1.5"><b>обов'язково</b></td></tr>
+                            </tbody></table></div>
+                        <h4 class="font-bold">Питання</h4>
+                        <div class="overflow-x-auto"><table class="w-full text-xs border-collapse">
+                            <thead><tr class="theme-accent-bg-light"><th class="border theme-border px-2 py-1.5 text-left">Поле</th><th class="border theme-border px-2 py-1.5 text-left">Для типів</th><th class="border theme-border px-2 py-1.5 text-left">Значення (за замовчуванням)</th></tr></thead>
+                            <tbody>
+                                <tr><td class="border theme-border px-2 py-1.5 font-code">type</td><td class="border theme-border px-2 py-1.5">усі</td><td class="border theme-border px-2 py-1.5">0–5 (4)</td></tr>
+                                <tr><td class="border theme-border px-2 py-1.5 font-code">score</td><td class="border theme-border px-2 py-1.5">усі</td><td class="border theme-border px-2 py-1.5">0–100000 (10; для типу 0 завжди 0)</td></tr>
+                                <tr><td class="border theme-border px-2 py-1.5 font-code">sections</td><td class="border theme-border px-2 py-1.5">усі</td><td class="border theme-border px-2 py-1.5">індекс у масиві <code>sections</code>, з 0 (0)</td></tr>
+                                <tr><td class="border theme-border px-2 py-1.5 font-code">name / discription</td><td class="border theme-border px-2 py-1.5">усі</td><td class="border theme-border px-2 py-1.5">назва («Питання N») / умова (порожньо)</td></tr>
+                                <tr><td class="border theme-border px-2 py-1.5 font-code">urlOrFile</td><td class="border theme-border px-2 py-1.5">усі</td><td class="border theme-border px-2 py-1.5">фото / відео / YouTube / Vimeo / Drive (порожньо)</td></tr>
+                                <tr><td class="border theme-border px-2 py-1.5 font-code">answers, correct</td><td class="border theme-border px-2 py-1.5">2, 3</td><td class="border theme-border px-2 py-1.5">варіанти (мін. 2); правильний індекс або масив індексів (0 / [0])</td></tr>
+                                <tr><td class="border theme-border px-2 py-1.5 font-code">correct</td><td class="border theme-border px-2 py-1.5">5</td><td class="border theme-border px-2 py-1.5"><code>ДД-ММ-РРРР</code> (не задано)</td></tr>
+                                <tr><td class="border theme-border px-2 py-1.5 font-code">AIinstruction</td><td class="border theme-border px-2 py-1.5">4</td><td class="border theme-border px-2 py-1.5">інструкція для оцінювання (порожньо)</td></tr>
+                                <tr><td class="border theme-border px-2 py-1.5 font-code">code, typeInput, partialScore, formatInput, fixJsonWords, specHideTest, TestsCount, MaximumTest, Memory, Timeout</td><td class="border theme-border px-2 py-1.5">1</td><td class="border theme-border px-2 py-1.5">див. розділ 7 (int; true; —; {}; —; 100; 20; 156; 3000)</td></tr>
+                            </tbody></table></div>
+                        <div class="flex items-center justify-between gap-2">
+                            <h4 class="font-bold">Повний приклад</h4>
+                            <button onclick="copyDocsExample()" class="px-3 py-1.5 rounded-lg border theme-border text-xs font-bold hover:border-sky-400"><i class="fa-regular fa-copy mr-1"></i> Копіювати</button>
+                        </div>
+                        <pre id="docs-json-example" class="text-[11px] font-code p-3 rounded-xl border theme-border theme-bg-main overflow-x-auto max-h-96"></pre>
+                    </section>
+
+                    <section id="doc-export" class="rounded-2xl theme-bg-card border theme-border p-6 space-y-3 scroll-mt-24">
+                        <h3 class="text-xl font-extrabold">9. Експорт тесту в JSON</h3>
+                        <p class="text-sm">У Профілі, у списку «Мої створені тести й олімпіади», поруч із кнопкою <b>«Редагувати»</b> є кнопка <b>«Завантажити JSON»</b>. Файл містить усе, окрім пароля (на сервері він зберігається лише як хеш — у файл потрапляє <code>"password": null</code>). Такий файл можна імпортувати на іншому акаунті, зберігати як резервну копію або редагувати вручну.</p>
+                        <p class="text-xs theme-text-secondary">Увага: файл містить правильні відповіді та еталонний код — не передавайте його учням.</p>
+                    </section>
+
+                    <section id="doc-results" class="rounded-2xl theme-bg-card border theme-border p-6 space-y-3 scroll-mt-24">
+                        <h3 class="text-xl font-extrabold">10. Результати учнів і CSV</h3>
+                        <ul class="list-disc pl-5 space-y-1 text-sm">
+                            <li>Профіль → <b>«Переглянути результати учнів»</b> → оберіть тест або олімпіаду зі списку.</li>
+                            <li>Таблиця: <b>Місце · Користувач · питання 1…N · Результат</b>. Колір клітинки — відсоток набраних балів (червоний → жовтий → зелений). Наведіть курсор, щоб побачити «бали / максимум» та назву питання.</li>
+                            <li><b>Сортування</b>: за місцем (зростання/спадання) та за іменем (А→Я / Я→А). Однакові бали ділять одне місце.</li>
+                            <li><b>Краща спроба / Усі спроби</b> — якщо дозволено повторне проходження.</li>
+                            <li><b>У відсотках</b> — перемикач відображення. Внизу — рядок «Середнє», зверху — статистика (учасники, середній, найвищий, найнижчий, медіана, успішність).</li>
+                            <li><b>«Завантажити CSV»</b> — один клік; файл враховує поточне сортування й пошук, роздільник «;», UTF-8 — відкривається в Excel/Google Sheets.</li>
+                            <li>Щоб перевірити відповіді й виставити бали вручну — розділ профілю «Результати учасників» → «Відповіді / оцінювання».</li>
+                        </ul>
+                    </section>
+
+                    
+
+                    <section id="doc-faq" class="rounded-2xl theme-bg-card border theme-border p-6 space-y-3 scroll-mt-24">
+                        <h3 class="text-xl font-extrabold">11. Часті питання</h3>
+                        <div class="space-y-3 text-sm">
+                            <div><b>Відео не відтворюється.</b><p class="theme-text-secondary">YouTube: перевірте, що власник дозволив вбудовування. Drive: відкрийте доступ «усім, хто має посилання». Файл: використовуйте MP4 (H.264).</p></div>
+                            <div><b>Імпорт JSON видає помилку.</b><p class="theme-text-secondary">Найчастіше — пропущена лапка/дужка або порожній масив <code>questions</code>. Повідомлення покаже причину. Інші неточності виправляються автоматично.</p></div>
+                            <div><b>Чому дедлайн замінився?</b><p class="theme-text-secondary">Дата не існує (наприклад, 31-09) або вже минула. Перевірте формат <code>ДД-ММ-РРРРTГГ:ХХ</code>.</p></div>
+                            <div><b>Не можу відредагувати тест.</b><p class="theme-text-secondary">Його вже проходили. Створіть копію в Профілі та редагуйте її.</p></div>
+                            <div><b>У результатах 0 за текстове питання.</b><p class="theme-text-secondary">Воно ще не оцінене вчителем. Оцініть у Профілі й оновіть таблицю.</p></div>
+                        </div>
+                    </section>
                 </div>
             </div>
         </div>
@@ -680,6 +877,103 @@
         </div>
     </div>
 
+
+    <!-- MODAL: ВИБІР СПОСОБУ СТВОРЕННЯ ТЕСТУ -->
+    <div id="modal-create-choice" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto hidden">
+        <div class="theme-bg-card border theme-border rounded-3xl max-w-3xl w-full p-6 md:p-8 space-y-5 shadow-2xl relative my-8">
+            <button onclick="hideCreateChoice()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600" aria-label="Закрити"><i class="fa-solid fa-xmark text-xl"></i></button>
+
+            <div id="cc-panel-choice" class="space-y-5">
+                <div>
+                    <h3 class="text-xl font-extrabold">Створення тесту або олімпіади</h3>
+                    <p class="text-xs theme-text-secondary">Оберіть, з чого почати. Усе можна буде відредагувати в конструкторі перед публікацією.</p>
+                </div>
+                <div class="grid sm:grid-cols-3 gap-3">
+                    <button onclick="startBlankBuilder()" class="text-left p-5 rounded-2xl border theme-border hover:border-sky-400 hover:-translate-y-0.5 transition-all space-y-2">
+                        <div class="w-11 h-11 rounded-xl theme-btn-primary flex items-center justify-center text-lg"><i class="fa-solid fa-pen-ruler"></i></div>
+                        <div class="font-bold">З нуля</div>
+                        <div class="text-xs theme-text-secondary">Порожній конструктор: додавайте розділи й питання самостійно.</div>
+                    </button>
+                    <button onclick="renderTemplates(); ccPanel('templates')" class="text-left p-5 rounded-2xl border theme-border hover:border-sky-400 hover:-translate-y-0.5 transition-all space-y-2">
+                        <div class="w-11 h-11 rounded-xl theme-btn-primary flex items-center justify-center text-lg"><i class="fa-solid fa-table-cells-large"></i></div>
+                        <div class="font-bold">Шаблони</div>
+                        <div class="text-xs theme-text-secondary">Готові заготовки: швидкий тест, контрольна, олімпіада з програмування, відео-тест.</div>
+                    </button>
+                    <button onclick="ccPanel('json')" class="text-left p-5 rounded-2xl border theme-border hover:border-sky-400 hover:-translate-y-0.5 transition-all space-y-2">
+                        <div class="w-11 h-11 rounded-xl theme-btn-primary flex items-center justify-center text-lg"><i class="fa-solid fa-file-import"></i></div>
+                        <div class="font-bold">Завантажити з JSON</div>
+                        <div class="text-xs theme-text-secondary">Імпортуйте файл або вставте JSON (також тест, раніше завантажений із профілю).</div>
+                    </button>
+                </div>
+                <p class="text-[11px] theme-text-secondary">Потрібна допомога? <button onclick="hideCreateChoice(); showDocs('doc-create')" class="theme-accent-color font-bold underline">Відкрити документацію</button></p>
+            </div>
+
+            <div id="cc-panel-templates" class="space-y-4 hidden">
+                <div class="flex items-center gap-2">
+                    <button onclick="ccPanel('choice')" class="px-3 py-1.5 rounded-lg border theme-border text-xs font-bold"><i class="fa-solid fa-arrow-left"></i> Назад</button>
+                    <h3 class="text-lg font-extrabold">Шаблони</h3>
+                </div>
+                <div id="tpl-list" class="grid sm:grid-cols-2 gap-3"></div>
+            </div>
+
+            <div id="cc-panel-json" class="space-y-3 hidden">
+                <div class="flex items-center gap-2">
+                    <button onclick="ccPanel('choice')" class="px-3 py-1.5 rounded-lg border theme-border text-xs font-bold"><i class="fa-solid fa-arrow-left"></i> Назад</button>
+                    <h3 class="text-lg font-extrabold">Імпорт із JSON</h3>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <label class="cursor-pointer px-4 py-2 rounded-xl theme-btn-primary text-xs font-bold">
+                        <i class="fa-solid fa-upload mr-1"></i> Обрати файл .json
+                        <input type="file" accept=".json,application/json,text/plain" class="hidden" onchange="importJsonFromFile(event)">
+                    </label>
+                    <button onclick="downloadJsonExample()" class="px-4 py-2 rounded-xl border theme-border text-xs font-bold hover:border-sky-400"><i class="fa-solid fa-download mr-1"></i> Завантажити приклад</button>
+                    <button onclick="hideCreateChoice(); showDocs('doc-json')" class="px-4 py-2 rounded-xl border theme-border text-xs font-bold hover:border-sky-400"><i class="fa-solid fa-book mr-1"></i> Опис формату</button>
+                </div>
+                <textarea id="jsonimp-text" spellcheck="false" placeholder='або вставте JSON сюди: { "name": "...", "questions": [ ... ] }' class="w-full h-56 p-3 rounded-xl border theme-border theme-bg-main text-xs font-code focus:outline-none focus:ring-2 focus:ring-sky-500"></textarea>
+                <div id="jsonimp-report" class="hidden"></div>
+                <div class="flex justify-end">
+                    <button onclick="runJsonImport(document.getElementById('jsonimp-text').value)" class="theme-btn-primary px-5 py-2.5 rounded-xl font-bold text-sm"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Перевірити та імпортувати</button>
+                </div>
+                <p class="text-[11px] theme-text-secondary">Коментарі <code>// ...</code> та зайві коми дозволені. Неправильні параметри автоматично замінюються значеннями за замовчуванням — звіт покаже, що саме змінено.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: РЕЗУЛЬТАТИ УЧНІВ -->
+    <div id="modal-results" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start justify-center p-3 sm:p-6 overflow-y-auto hidden">
+        <div class="theme-bg-card border theme-border rounded-3xl w-full max-w-6xl p-4 sm:p-6 space-y-4 shadow-2xl relative my-4">
+            <button onclick="hideResultsModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600" aria-label="Закрити"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <div class="flex items-center gap-3 pr-8">
+                <div class="w-11 h-11 rounded-2xl theme-btn-primary flex items-center justify-center text-lg"><i class="fa-solid fa-table"></i></div>
+                <div>
+                    <h3 class="text-xl font-extrabold">Результати учнів</h3>
+                    <p class="text-xs theme-text-secondary">Колір клітинки показує частку набраних балів: від червоного (0%) до зеленого (100%).</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-2">
+                <select id="res-test" onchange="buildResults()" class="md:col-span-5 p-2.5 rounded-xl border theme-border theme-bg-card text-sm font-semibold" aria-label="Тест або олімпіада"></select>
+                <select id="res-sort" onchange="renderResults()" class="md:col-span-3 p-2.5 rounded-xl border theme-border theme-bg-card text-sm" aria-label="Сортування">
+                    <option value="place_asc">За місцем: 1 → N (зростання)</option>
+                    <option value="place_desc">За місцем: N → 1 (спадання)</option>
+                    <option value="name_asc">За іменем: А → Я (зростання)</option>
+                    <option value="name_desc">За іменем: Я → А (спадання)</option>
+                </select>
+                <select id="res-mode" onchange="buildResults()" class="md:col-span-2 p-2.5 rounded-xl border theme-border theme-bg-card text-sm" aria-label="Спроби">
+                    <option value="best">Краща спроба</option>
+                    <option value="all">Усі спроби</option>
+                </select>
+                <input id="res-search" oninput="renderResults()" type="search" placeholder="Пошук учня…" class="md:col-span-2 p-2.5 rounded-xl border theme-border theme-bg-card text-sm">
+            </div>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <label class="flex items-center gap-2 text-xs font-semibold"><input id="res-percent" type="checkbox" onchange="renderResults()"> Показувати у відсотках</label>
+                <button onclick="downloadResultsCsv()" class="theme-btn-primary px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2"><i class="fa-solid fa-file-csv"></i> Завантажити CSV</button>
+            </div>
+            <div id="res-stats" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2"></div>
+            <div id="res-body" class="overflow-x-auto rounded-2xl border theme-border"></div>
+            <p class="text-[11px] theme-text-secondary">Відповіді, які ще очікують ручної перевірки вчителем, враховуються як 0 балів — після оцінювання (у профілі) оновіть таблицю. CSV відкривається в Excel (роздільник «;», кодування UTF-8).</p>
+        </div>
+    </div>
+
     <!-- MODAL: SAVE HTML CLIENT -->
     <div id="modal-desktop" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="theme-bg-card border theme-border rounded-3xl max-w-lg w-full p-6 md:p-8 space-y-6 shadow-2xl relative">
@@ -722,7 +1016,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbzJVbbeCvFZ9C7Xp4V-sT2eWRYn0F_WQXItcer4Gz6JEIWc6xTXzLxSBVVOH8T9VLbf/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbzfzTsBgirR7TkTAudwMXZadk_xascMc3qfEebSuNtsv0r2oqiCt2Ac97mXGay3WTvj/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -923,7 +1217,7 @@
 
         /* NAVIGATION & MODALS */
         function showSection(sec) {
-            ['landing','profile','test','results'].forEach(name => {
+            ['landing','profile','test','results','docs'].forEach(name => {
                 const el = document.getElementById(`section-${name}`);
                 if (el) el.classList.toggle('hidden', name !== sec);
             });
@@ -1143,6 +1437,9 @@
                 const data = await apiRequest("profile");
                 currentUser = data.user || currentUser;
                 applyCurrentUserUI();
+                window.__teacherResults = data.teacherResults || [];
+                window.__createdTests = data.created || [];
+                document.getElementById("profile-results-btn").classList.toggle("hidden", (data.user || {}).role !== "Учитель");
                 document.getElementById("profile-summary").textContent =
                     `${data.user.name} • ${data.user.email} • ${data.user.role}` +
                     (data.user.requestedRole === "Учитель" ? " • Запит на роль учителя очікує підтвердження адміністратора" : "");
@@ -1169,11 +1466,27 @@
                     edit.textContent = "Редагувати";
                     edit.onclick = () => editOwnTest(t.id);
                     controls.appendChild(edit);
+                    const dlJson = document.createElement("button");
+                    dlJson.className = "text-xs theme-accent-color font-bold";
+                    dlJson.innerHTML = '<i class="fa-solid fa-download mr-1"></i>Завантажити JSON';
+                    dlJson.title = "Завантажити тест у форматі JSON";
+                    dlJson.onclick = () => downloadTestJson(t.id);
+                    controls.appendChild(dlJson);
                     const copy = document.createElement("button");
                     copy.className = "text-xs theme-accent-color font-bold";
                     copy.textContent = "Створити копію";
                     copy.onclick = () => duplicateTest(t.id);
                     controls.appendChild(copy);
+                    const resBtn = document.createElement("button");
+                    resBtn.className = "text-xs theme-accent-color font-bold";
+                    resBtn.innerHTML = '<i class="fa-solid fa-table mr-1"></i>Результати';
+                    resBtn.onclick = () => openResultsModal(t.id);
+                    controls.appendChild(resBtn);
+                    const codeBtn = document.createElement("button");
+                    codeBtn.className = "text-xs theme-accent-color font-bold";
+                    codeBtn.innerHTML = '<i class="fa-regular fa-copy mr-1"></i>Копіювати код';
+                    codeBtn.onclick = () => { if (t.code) navigator.clipboard.writeText(t.code).then(() => showNotification(`Код ${t.code} скопійовано!`)); };
+                    controls.appendChild(codeBtn);
                     const del = document.createElement("button");
                     del.className = "text-xs text-red-500 font-bold";
                     del.textContent = "Видалити";
@@ -1656,7 +1969,7 @@
                     </div>
                     <h3 class="text-xl md:text-2xl font-bold leading-snug">${escapeHtml(q.title)}</h3>
                     ${q.description ? `<p class="text-sm theme-text-secondary leading-relaxed">${escapeHtml(q.description)}</p>` : ''}
-                    ${q.imageUrl ? `<div class="pt-2"><img src="${escapeHtml(q.imageUrl)}" class="max-h-64 rounded-2xl border theme-border object-cover shadow-md" alt="Question Image" onerror="this.style.display='none'"></div>` : ''}
+                    ${q.imageUrl ? `<div class="pt-2">${mediaHtml(q.imageUrl, false)}</div>` : ''}
                 </div>
             `;
 
@@ -2494,14 +2807,7 @@
                     </div>
                     <textarea oninput="builderQuestions[${idx}].description = this.value" placeholder="Опис питання..." class="w-full p-2.5 rounded-xl border theme-border theme-bg-main text-xs h-12 resize-none focus:outline-none">${escapeHtml(q.description)}</textarea>
                     
-                    <div class="flex items-center gap-2 pt-1">
-                        <input type="text" value="${escapeHtml(q.imageUrl || '')}" oninput="builderQuestions[${idx}].imageUrl = this.value" placeholder="URL зображення (наприклад: https://...)" class="w-full p-2 rounded-lg border theme-border theme-bg-main text-xs focus:outline-none">
-                        <label class="cursor-pointer px-3 py-2 rounded-lg border theme-border theme-bg-main text-xs font-bold whitespace-nowrap hover:border-sky-400">
-                            <i class="fa-solid fa-upload mr-1"></i>Файл
-                            <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(${idx}, event)">
-                        </label>
-                    </div>
-                    ${q.imageUrl ? `<div class="relative w-20 h-20 rounded-lg overflow-hidden border theme-border"><img src="${escapeHtml(q.imageUrl)}" class="w-full h-full object-cover"><button onclick="builderQuestions[${idx}].imageUrl=''; renderBuilderQuestions();" class="absolute top-0 right-0 bg-red-600 text-white p-1 text-[10px]"><i class="fa-solid fa-xmark"></i></button></div>` : ''}
+                    ${builderMediaBlock(idx, q)}
 
                     ${specificFieldsHtml}
                 `;
@@ -2807,6 +3113,711 @@
         } catch (_) {}
     };
 })();
+</script>
+<script>
+/* =====================================================================
+ *  ArTesolymp — розширення v7: медіа (відео/YouTube), вибір способу
+ *  створення тесту, імпорт/експорт JSON, документація, таблиця результатів
+ * ===================================================================== */
+(function () {
+    "use strict";
+    const $ = id => document.getElementById(id);
+    const esc = v => escapeHtml(v);
+    const pad = n => String(n).padStart(2, "0");
+    const TYPE_NAMES = ["info", "code", "single", "multiple", "text", "date"];
+    const MAX_VIDEO_MB = 20;
+
+    /* ------------------------------------------------------------------
+     * 1. МЕДІА: фото / відео / YouTube / Vimeo / Google Drive
+     * ------------------------------------------------------------------ */
+    function ytStart(s) {
+        const m = s.match(/[?&#](?:t|start)=([0-9hms]+)/i);
+        if (!m) return 0;
+        const v = m[1];
+        if (/^\d+$/.test(v)) return Number(v);
+        const p = v.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/i);
+        return p ? (Number(p[1] || 0) * 3600 + Number(p[2] || 0) * 60 + Number(p[3] || 0)) : 0;
+    }
+    function parseMedia(raw) {
+        const s = String(raw || "").trim();
+        if (!s) return null;
+        if (/^data:image\//i.test(s)) return { kind: "image", src: s };
+        if (/^data:video\//i.test(s)) return { kind: "video", src: s };
+        let m = s.match(/^drive:([A-Za-z0-9_-]{10,})$/i) || s.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([A-Za-z0-9_-]{10,})/i);
+        if (m) return { kind: "drive", id: m[1] };
+        m = s.match(/(?:youtube\.com\/(?:watch\?(?:[^#]*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/|youtube-nocookie\.com\/embed\/)([A-Za-z0-9_-]{11})/i);
+        if (m) return { kind: "youtube", id: m[1], start: ytStart(s) };
+        m = s.match(/vimeo\.com\/(?:video\/)?(\d{5,})/i);
+        if (m) return { kind: "vimeo", id: m[1] };
+        if (/^https?:\/\//i.test(s)) {
+            if (/\.(mp4|webm|ogv|ogg|mov|m4v)(\?|#|$)/i.test(s)) return { kind: "video", src: s };
+            return { kind: "image", src: s };
+        }
+        return null;
+    }
+    function mediaKindLabel(raw) {
+        const m = parseMedia(raw);
+        return !m ? "" : ({ image: "Фото", video: "Відео", youtube: "YouTube", vimeo: "Vimeo", drive: "Відео (Drive)" })[m.kind];
+    }
+    function mediaHtml(raw, small) {
+        const m = parseMedia(raw);
+        if (!m) return "";
+        const frameCls = small
+            ? "w-44 aspect-video rounded-lg overflow-hidden border theme-border bg-black"
+            : "w-full max-w-3xl aspect-video rounded-2xl overflow-hidden border theme-border shadow-md bg-black";
+        const iframe = src => `<div class="${frameCls}"><iframe src="${esc(src)}" class="w-full h-full" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; encrypted-media; picture-in-picture; fullscreen" title="Відео до питання"></iframe></div>`;
+        if (m.kind === "youtube") return iframe(`https://www.youtube-nocookie.com/embed/${m.id}?rel=0${m.start ? "&start=" + m.start : ""}`);
+        if (m.kind === "vimeo") return iframe(`https://player.vimeo.com/video/${m.id}`);
+        if (m.kind === "drive") return iframe(`https://drive.google.com/file/d/${m.id}/preview`);
+        if (m.kind === "video") return small
+            ? `<video src="${esc(m.src)}" class="w-44 rounded-lg border theme-border bg-black" muted preload="metadata"></video>`
+            : `<video src="${esc(m.src)}" class="w-full max-w-3xl max-h-[28rem] rounded-2xl border theme-border shadow-md bg-black" controls preload="metadata" playsinline></video>`;
+        return small
+            ? `<img src="${esc(m.src)}" class="w-20 h-20 object-cover rounded-lg border theme-border" alt="Зображення" onerror="this.style.display='none'">`
+            : `<img src="${esc(m.src)}" class="max-h-64 rounded-2xl border theme-border object-cover shadow-md" alt="Зображення до питання" onerror="this.style.display='none'">`;
+    }
+    window.parseMedia = parseMedia;
+    window.mediaHtml = mediaHtml;
+    window.mediaKindLabel = mediaKindLabel;
+
+    function bufToB64(buf) {
+        const bytes = new Uint8Array(buf);
+        let bin = "";
+        for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+        return btoa(bin);
+    }
+    let videoBusy = false;
+    window.handleVideoUpload = async function (qIdx, event) {
+        const input = event.target;
+        const file = input.files && input.files[0];
+        input.value = "";
+        if (!file) return;
+        if (!requireLogin()) return;
+        if (videoBusy) { showNotification("Дочекайтесь завершення попереднього завантаження відео."); return; }
+        if (!/^video\/(mp4|webm|ogg|quicktime)$/i.test(file.type)) { showNotification("Підтримуються відео MP4, WebM, OGG та MOV."); return; }
+        if (file.size > MAX_VIDEO_MB * 1048576) { showNotification(`Відео завелике (максимум ${MAX_VIDEO_MB} МБ). Завантажте його на YouTube й вставте посилання.`); return; }
+        const CHUNK = 393216; // кратно 3 → base64-частини можна склеювати
+        const total = Math.ceil(file.size / CHUNK);
+        const uploadId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+        const setProg = t => { const el = $("vid-prog-" + qIdx); if (el) el.textContent = t; };
+        videoBusy = true;
+        try {
+            let last = null;
+            for (let i = 0; i < total; i++) {
+                const data = bufToB64(await file.slice(i * CHUNK, (i + 1) * CHUNK).arrayBuffer());
+                for (let attempt = 1; ; attempt++) {
+                    try {
+                        last = await apiRequest("uploadVideoChunk", { uploadId, index: i, total, name: file.name, mime: file.type, data });
+                        break;
+                    } catch (err) {
+                        if (attempt >= 3) throw err;
+                        await new Promise(r => setTimeout(r, 900 * attempt));
+                    }
+                }
+                setProg(`Завантаження ${Math.round(((i + 1) / total) * 100)}%`);
+            }
+            if (!last || !last.url) throw new Error("Сервер не повернув посилання на відео.");
+            builderQuestions[qIdx].imageUrl = last.url;
+            renderBuilderQuestions();
+            showNotification("Відео завантажено на Google Drive та додано до питання.");
+        } catch (err) {
+            setProg("");
+            showNotification(err.message || "Не вдалося завантажити відео.");
+        } finally { videoBusy = false; }
+    };
+    window.builderMediaBlock = function (idx, q) {
+        const kind = mediaKindLabel(q.imageUrl);
+        return `
+        <div class="space-y-2 pt-1">
+            <div class="flex flex-wrap items-center gap-2">
+                <input type="text" value="${esc(String(q.imageUrl || "").startsWith("data:") ? "" : (q.imageUrl || ""))}"
+                    oninput="builderQuestions[${idx}].imageUrl = this.value"
+                    onchange="builderQuestions[${idx}].imageUrl = this.value; renderBuilderQuestions();"
+                    placeholder="Посилання: фото, відео (.mp4/.webm), YouTube, Vimeo або Google Drive"
+                    class="flex-1 min-w-[12rem] p-2 rounded-lg border theme-border theme-bg-main text-xs focus:outline-none">
+                <label class="cursor-pointer px-3 py-2 rounded-lg border theme-border theme-bg-main text-xs font-bold whitespace-nowrap hover:border-sky-400">
+                    <i class="fa-solid fa-image mr-1"></i>Фото
+                    <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(${idx}, event)">
+                </label>
+                <label class="cursor-pointer px-3 py-2 rounded-lg border theme-border theme-bg-main text-xs font-bold whitespace-nowrap hover:border-sky-400" title="Відео до ${MAX_VIDEO_MB} МБ зберігається на Google Drive">
+                    <i class="fa-solid fa-film mr-1"></i>Відео
+                    <input type="file" accept="video/mp4,video/webm,video/ogg,video/quicktime" class="hidden" onchange="handleVideoUpload(${idx}, event)">
+                </label>
+                <span id="vid-prog-${idx}" class="text-[11px] theme-accent-color font-bold"></span>
+            </div>
+            ${q.imageUrl ? `<div class="flex items-start gap-3">
+                <div class="relative">${mediaHtml(q.imageUrl, true)}
+                    <button onclick="builderQuestions[${idx}].imageUrl=''; renderBuilderQuestions();" class="absolute top-0 right-0 bg-red-600 text-white px-1.5 py-1 text-[10px] rounded-bl-lg" title="Прибрати медіа"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <span class="text-[11px] theme-badge px-2 py-0.5 rounded font-bold">${esc(kind || "Невідомий формат")}</span>
+            </div>` : ""}
+        </div>`;
+    };
+
+    /* ------------------------------------------------------------------
+     * 2. JSON: розбір (з коментарями), імпорт, експорт
+     * ------------------------------------------------------------------ */
+    function cleanJson(src) {
+        let s = String(src || "").replace(/^\uFEFF/, "");
+        let out = "", i = 0, inStr = false;
+        while (i < s.length) {                       // 1) прибрати коментарі поза рядками
+            const c = s[i], n = s[i + 1];
+            if (inStr) {
+                out += c;
+                if (c === "\\") { out += s[i + 1] || ""; i += 2; continue; }
+                if (c === '"') inStr = false;
+                i++; continue;
+            }
+            if (c === '"') { inStr = true; out += c; i++; continue; }
+            if (c === "/" && n === "/") { while (i < s.length && s[i] !== "\n") i++; continue; }
+            if (c === "/" && n === "*") { i += 2; while (i < s.length && !(s[i] === "*" && s[i + 1] === "/")) i++; i += 2; continue; }
+            out += c; i++;
+        }
+        s = out; out = ""; i = 0; inStr = false;
+        while (i < s.length) {                       // 2) прибрати "висячі" коми
+            const c = s[i];
+            if (inStr) {
+                out += c;
+                if (c === "\\") { out += s[i + 1] || ""; i += 2; continue; }
+                if (c === '"') inStr = false;
+                i++; continue;
+            }
+            if (c === '"') { inStr = true; out += c; i++; continue; }
+            if (c === ",") {
+                let j = i + 1;
+                while (j < s.length && /\s/.test(s[j])) j++;
+                if (s[j] === "}" || s[j] === "]") { i++; continue; }
+            }
+            out += c; i++;
+        }
+        return out;
+    }
+    const isObj = v => v && typeof v === "object" && !Array.isArray(v);
+    const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+    const pick = (o, ...keys) => { for (const k of keys) if (has(o, k) && o[k] !== undefined) return o[k]; return undefined; };
+
+    function parseDMY(v) {
+        const s = String(v).trim();
+        let m = s.match(/^(\d{1,2})[-./](\d{1,2})[-./](\d{4})(?:[T\s](\d{1,2}):(\d{2}))?$/), d, mo, y, h = 0, mi = 0;
+        if (m) { d = +m[1]; mo = +m[2]; y = +m[3]; if (m[4] !== undefined) { h = +m[4]; mi = +m[5]; } }
+        else {
+            m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T\s](\d{1,2}):(\d{2}))?/);
+            if (!m) return null;
+            y = +m[1]; mo = +m[2]; d = +m[3]; if (m[4] !== undefined) { h = +m[4]; mi = +m[5]; }
+        }
+        const dt = new Date(y, mo - 1, d, h, mi);
+        if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d || h > 23 || mi > 59) return null;
+        return { y, mo, d, h, mi, dt };
+    }
+    const KIND_ALIAS = { int: "numbers", ints: "numbers", integer: "numbers", number: "numbers", numbers: "numbers", num: "numbers",
+        fixstring: "fixed_strings", fixstrings: "fixed_strings", fixedstring: "fixed_strings", fixedstrings: "fixed_strings", fixed: "fixed_strings", fix: "fixed_strings",
+        string: "strings", strings: "strings", str: "strings",
+        mixing: "mixed", mixed: "mixed", mix: "mixed" };
+    const KIND_OUT = { numbers: "int", fixed_strings: "fix string", strings: "string", mixed: "mixing" };
+
+    /** Повертає {test, warnings}; кидає Error лише при некоректному JSON. Неправильні параметри → значення за замовчуванням. */
+    window.parseTestJson = function (text) {
+        let root;
+        try { root = JSON.parse(cleanJson(text)); }
+        catch (e) { throw new Error("Некоректний JSON: " + (e.message || e)); }
+        if (!isObj(root)) throw new Error("Корінь JSON має бути об'єктом { ... }.");
+        const warnings = [];
+        const warn = m => warnings.push(m);
+
+        let title = String(pick(root, "name", "title") ?? "").trim().slice(0, 180);
+        if (!title) { title = "Новий тест"; warn("name: порожньо — використано «Новий тест»."); }
+
+        let code = String(pick(root, "code") ?? "").trim();
+        if (code && !/^[A-Za-z0-9_-]{4,40}$/.test(code)) { warn(`code «${code}»: дозволено 4–40 символів (латиниця, цифри, _ -) — код згенеровано автоматично.`); code = ""; }
+
+        const description = String(pick(root, "discription", "description") ?? "").slice(0, 5000);
+
+        let deadline = "";
+        const rawDl = pick(root, "deadline");
+        if (rawDl !== undefined && rawDl !== null && rawDl !== "") {
+            const p = parseDMY(rawDl);
+            if (!p) warn(`deadline «${rawDl}»: такої дати/формату не існує (потрібно ДД-ММ-РРРРTГГ:ХХ) — дедлайн за замовчуванням (+1 рік).`);
+            else if (p.dt.getTime() <= Date.now()) warn(`deadline «${rawDl}» вже минув — дедлайн за замовчуванням (+1 рік).`);
+            else deadline = `${p.y}-${pad(p.mo)}-${pad(p.d)}T${pad(p.h)}:${pad(p.mi)}`;
+        }
+
+        const boolOf = (key, def, ...alts) => {
+            const v = pick(root, key, ...alts);
+            if (v === undefined || v === null) return def;
+            if (typeof v === "boolean") return v;
+            if (v === 1 || v === "1" || String(v).toLowerCase() === "true") return true;
+            if (v === 0 || v === "0" || String(v).toLowerCase() === "false") return false;
+            warn(`${key}: очікується true/false — використано ${def}.`);
+            return def;
+        };
+        const isOlymp = boolOf("isOlymp", false, "isOlympiad");
+        const reattempt = boolOf("reattempt", false);
+        const priv = boolOf("private", true);
+
+        let password = pick(root, "password");
+        if (password === undefined || password === null || password === "") password = "";
+        else {
+            password = String(password);
+            if (password.length < 4 || password.length > 128) { warn("password: потрібно 4–128 символів — пароль не встановлено."); password = ""; }
+        }
+
+        let sections = pick(root, "sections");
+        if (!Array.isArray(sections)) sections = [];
+        sections = sections.map(x => String(x ?? "").trim().slice(0, 120)).filter(Boolean);
+        if (!sections.length) { sections = ["Основний розділ"]; }
+
+        const rawQs = pick(root, "questions");
+        if (!Array.isArray(rawQs) || !rawQs.length) throw new Error("Масив questions порожній або відсутній — додайте хоча б одне питання.");
+        if (rawQs.length > 300) throw new Error("В одному тесті не може бути понад 300 питань.");
+
+        const clampInt = (v, lo, hi, def, label, n) => {
+            if (v === undefined || v === null || v === "") return def;
+            const x = Math.floor(Number(v));
+            if (!Number.isFinite(x) || x < lo || x > hi) { warn(`Питання №${n}, ${label}: допустимо ${lo}–${hi} — використано ${def}.`); return def; }
+            return x;
+        };
+
+        const questions = rawQs.map((r, i) => {
+            const n = i + 1;
+            if (!isObj(r)) { warn(`Питання №${n}: не є об'єктом — замінено порожнім текстовим питанням.`); r = {}; }
+            let tRaw = pick(r, "type");
+            let type = typeof tRaw === "number" || /^\d+$/.test(String(tRaw)) ? TYPE_NAMES[Number(tRaw)] : String(tRaw ?? "").toLowerCase();
+            if (!TYPE_NAMES.includes(type)) { warn(`Питання №${n}, type «${tRaw ?? ""}»: має бути 0–5 — використано 4 (текстова відповідь).`); type = "text"; }
+
+            let secIdx = pick(r, "sections", "section");
+            secIdx = Number(secIdx);
+            if (!Number.isInteger(secIdx) || secIdx < 0 || secIdx >= sections.length) {
+                if (pick(r, "sections", "section") !== undefined) warn(`Питання №${n}, sections: індекс поза межами списку розділів — використано 0.`);
+                secIdx = 0;
+            }
+
+            let points = Number(pick(r, "score", "points"));
+            if (type === "info") points = 0;
+            else if (!Number.isFinite(points) || points < 0 || points > 100000) {
+                if (pick(r, "score", "points") !== undefined) warn(`Питання №${n}, score: неприпустиме значення — використано 10.`);
+                points = 10;
+            }
+
+            let qTitle = String(pick(r, "name", "title") ?? "").trim().slice(0, 500);
+            if (!qTitle) { qTitle = `Питання ${n}`; warn(`Питання №${n}: порожня назва — «${qTitle}».`); }
+
+            const q = {
+                id: Date.now() + i, tabName: sections[secIdx], title: qTitle,
+                description: String(pick(r, "discription", "description") ?? "").slice(0, 5000),
+                imageUrl: String(pick(r, "urlOrFile", "url", "media") ?? "").trim(),
+                type, points,
+                options: ["Варіант 1", "Варіант 2"], correct: 0, allowedLangs: ["python"], correctDate: "",
+                referenceCode: "", inputFormat: "i<0 100> i<0 100> i<0 100>\ni<0 1000000>", inputKind: "numbers", inputOptions: {},
+                inputOptionsText: "{}", testInputs: [], testInputsText: "", codeScoreMode: "partial", hiddenTestCount: 100,
+                maxChecks: 20, memoryLimitMb: 156, timeLimitMs: 3000, aiPrompt: "", manualTestInput: ""
+            };
+            if (q.imageUrl && !parseMedia(q.imageUrl)) { warn(`Питання №${n}, urlOrFile: посилання не розпізнано — медіа прибрано.`); q.imageUrl = ""; }
+
+            if (type === "single" || type === "multiple") {
+                let ans = pick(r, "answers", "options");
+                if (!Array.isArray(ans) || ans.length < 2) { warn(`Питання №${n}, answers: потрібно щонайменше 2 варіанти — використано «Варіант 1/2».`); ans = ["Варіант 1", "Варіант 2"]; }
+                q.options = ans.slice(0, 100).map(x => String(x ?? "").slice(0, 350));
+                const cr = pick(r, "correct");
+                const inRange = x => Number.isInteger(x) && x >= 0 && x < q.options.length;
+                if (type === "single") {
+                    let c = Array.isArray(cr) ? cr[0] : cr;
+                    c = typeof c === "string" && c.trim() !== "" ? Number(c) : c;
+                    if (!inRange(c)) { if (cr !== undefined) warn(`Питання №${n}, correct: індекс поза межами answers — використано 0.`); c = 0; }
+                    q.correct = c;
+                } else {
+                    let arr = Array.isArray(cr) ? cr : (cr === undefined || cr === null ? [] : [cr]);
+                    arr = [...new Set(arr.map(Number).filter(inRange))];
+                    if (!arr.length) { warn(`Питання №${n}, correct: немає коректних індексів — використано [0].`); arr = [0]; }
+                    q.correct = arr;
+                }
+            } else if (type === "text") {
+                q.aiPrompt = String(pick(r, "AIinstruction", "aiInstruction", "aiPrompt") ?? "").slice(0, 3000);
+            } else if (type === "date") {
+                const cd = pick(r, "correct", "correctDate");
+                if (cd !== undefined && cd !== null && cd !== "") {
+                    const p = parseDMY(cd);
+                    if (!p) warn(`Питання №${n}, correct «${cd}»: такої дати не існує (формат ДД-ММ-РРРР) — правильну дату не задано.`);
+                    else q.correctDate = `${p.y}-${pad(p.mo)}-${pad(p.d)}`;
+                }
+            } else if (type === "code") {
+                q.referenceCode = String(pick(r, "code", "referenceCode") ?? "").slice(0, 30000);
+                const kRaw = pick(r, "typeInput", "inputKind");
+                if (kRaw !== undefined) {
+                    const key = String(kRaw).toLowerCase().replace(/[^a-z]/g, "");
+                    if (KIND_ALIAS[key]) q.inputKind = KIND_ALIAS[key];
+                    else warn(`Питання №${n}, typeInput «${kRaw}»: очікується int / fix string / string / mixing — використано int.`);
+                }
+                if (has(r, "partialScore")) {
+                    const ps = r.partialScore;
+                    if (ps === null) q.codeScoreMode = "manual";
+                    else if (ps === true || ps === "true") q.codeScoreMode = "partial";
+                    else if (ps === false || ps === "false") q.codeScoreMode = "all_or_nothing";
+                    else warn(`Питання №${n}, partialScore: очікується true/false/null — використано true.`);
+                }
+                const fmt = pick(r, "formatInput", "inputFormat");
+                if (fmt !== undefined && fmt !== null) q.inputFormat = String(fmt).slice(0, 3000);
+                const fw = pick(r, "fixJsonWords", "inputOptions");
+                if (isObj(fw)) q.inputOptions = fw;
+                else if (fw !== undefined && fw !== null) warn(`Питання №${n}, fixJsonWords: очікується об'єкт {"1":["так","ні"]} — використано {}.`);
+                q.inputOptionsText = JSON.stringify(q.inputOptions, null, 2);
+                const sp = pick(r, "specHideTest", "testInputs");
+                if (Array.isArray(sp)) q.testInputs = sp.map(x => String(x ?? "").trim()).filter(Boolean);
+                else if (typeof sp === "string") q.testInputs = sp.split(/\r?\n---\r?\n/).map(x => x.trim()).filter(Boolean);
+                q.testInputs = q.testInputs.slice(0, 100);
+                q.testInputsText = q.testInputs.join("\n---\n");
+                q.hiddenTestCount = clampInt(pick(r, "TestsCount", "hiddenTestCount"), 1, 100, 100, "TestsCount", n);
+                q.maxChecks = clampInt(pick(r, "MaximumTest", "maxChecks"), 0, 10000, 20, "MaximumTest", n);
+                q.memoryLimitMb = clampInt(pick(r, "Memory", "memoryLimitMb"), 1, 900, 156, "Memory", n);
+                q.timeLimitMs = clampInt(pick(r, "Timeout", "timeLimitMs"), 100, 15000, 3000, "Timeout", n);
+                if (q.testInputs.length > q.hiddenTestCount) {
+                    warn(`Питання №${n}: спеціальних тестів більше, ніж TestsCount — TestsCount збільшено до ${q.testInputs.length}.`);
+                    q.hiddenTestCount = q.testInputs.length;
+                }
+                if (q.codeScoreMode !== "manual" && q.referenceCode.trim() && !q.inputFormat.trim() && q.testInputs.length < q.hiddenTestCount) {
+                    if (q.testInputs.length) { q.hiddenTestCount = q.testInputs.length; warn(`Питання №${n}: немає formatInput — TestsCount зменшено до кількості наданих тестів (${q.testInputs.length}).`); }
+                    else warn(`Питання №${n}: додайте formatInput або specHideTest — інакше автоперевірка не працюватиме.`);
+                }
+            }
+            return q;
+        });
+
+        return {
+            warnings,
+            test: { title, description, code, deadline, kind: isOlymp ? "olympiad" : "test", allowRepeat: reattempt, isPublic: !priv, password, tabs: sections, questions }
+        };
+    };
+
+    function fmtDeadline(iso) {
+        const d = new Date(iso);
+        if (!Number.isFinite(d.getTime())) return "";
+        return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+    function dateToDMY(v) {
+        const m = String(v || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
+        return m ? `${m[3]}-${m[2]}-${m[1]}` : "";
+    }
+    function downloadFile(name, content, mime) {
+        const blob = new Blob([content], { type: mime });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    }
+    const safeName = s => String(s || "test").replace(/[\\/:*?"<>|\s]+/g, "_").slice(0, 60) || "test";
+
+    window.downloadTestJson = async function (testId) {
+        if (!requireLogin()) return;
+        try {
+            const data = await apiRequest("getTestForEdit", { testId });
+            const t = data.test;
+            const tabs = Array.isArray(t.tabs) && t.tabs.length ? t.tabs : ["Основний розділ"];
+            const out = {
+                name: t.title || "", code: t.code || "", discription: t.description || "",
+                deadline: fmtDeadline(t.deadline), isOlymp: t.kind === "olympiad", reattempt: !!t.allowRepeat,
+                private: !t.isPublic, password: null, sections: tabs, questions: []
+            };
+            (t.questions || []).forEach(q => {
+                const type = Math.max(0, TYPE_NAMES.indexOf(q.type));
+                const o = { type, score: Number(q.points) || 0, sections: Math.max(0, tabs.indexOf(q.tabName)), name: q.title || "", discription: q.description || "" };
+                if (q.type === "single" || q.type === "multiple") { o.answers = q.options || []; o.correct = q.correct; }
+                if (q.type === "date") o.correct = dateToDMY(q.correctDate);
+                o.urlOrFile = q.imageUrl || "";
+                if (q.type === "text") o.AIinstruction = q.aiPrompt || "";
+                if (q.type === "code") {
+                    o.code = q.referenceCode || "";
+                    o.typeInput = KIND_OUT[q.inputKind] || "int";
+                    o.partialScore = q.codeScoreMode === "manual" ? null : q.codeScoreMode !== "all_or_nothing";
+                    o.formatInput = q.inputFormat || "";
+                    o.fixJsonWords = q.inputOptions || {};
+                    o.specHideTest = (q.testInputs || []).join("\n---\n");
+                    o.TestsCount = q.hiddenTestCount; o.MaximumTest = q.maxChecks;
+                    o.Memory = q.memoryLimitMb; o.Timeout = q.timeLimitMs;
+                }
+                out.questions.push(o);
+            });
+            downloadFile(`${safeName(t.title)}.json`, JSON.stringify(out, null, 2), "application/json");
+            showNotification("JSON тесту завантажено. Пароль у файл не потрапляє (на сервері зберігається лише хеш).");
+        } catch (err) { showNotification(err.message || "Не вдалося експортувати тест."); }
+    };
+
+    /* ------------------------------------------------------------------
+     * 3. ВИБІР СПОСОБУ СТВОРЕННЯ: з нуля / шаблони / JSON
+     * ------------------------------------------------------------------ */
+    const origShowCreator = window.showCreatorModal;
+    window.showCreatorModal = function () {
+        if (!requireLogin()) return;
+        if (currentUser.role !== "Учитель") { showNotification("Створювати тести та олімпіади може лише акаунт учителя."); return; }
+        ccPanel("choice");
+        $("jsonimp-text").value = ""; $("jsonimp-report").classList.add("hidden");
+        $("modal-create-choice").classList.remove("hidden");
+    };
+    window.hideCreateChoice = () => $("modal-create-choice").classList.add("hidden");
+    window.ccPanel = function (name) {
+        ["choice", "templates", "json"].forEach(p => $("cc-panel-" + p).classList.toggle("hidden", p !== name));
+    };
+    window.startBlankBuilder = function () { hideCreateChoice(); origShowCreator(); };
+
+    function openBuilderWith(model) {
+        hideCreateChoice();
+        origShowCreator();                      // скидає та відкриває конструктор
+        $("builder-title").value = model.title;
+        $("builder-desc").value = model.description;
+        if (model.code) $("builder-code").value = model.code;
+        $("builder-deadline").value = model.deadline;
+        $("builder-visibility").value = model.isPublic ? "public" : "private";
+        $("builder-allow-repeat").value = model.allowRepeat ? "true" : "false";
+        $("builder-kind").value = model.kind;
+        $("builder-password").value = model.password || "";
+        builderTabs = model.tabs.slice();
+        builderQuestions = model.questions;
+        renderBuilderTabs(); renderBuilderQuestions();
+    }
+
+    const TEMPLATES = [
+        { icon: "fa-bolt", title: "Швидкий тест", desc: "3 питання: одна відповідь, кілька відповідей, текст.",
+          json: { name: "Швидкий тест", isOlymp: false, reattempt: true, private: true, sections: ["Питання"],
+            questions: [
+                { type: 2, score: 5, sections: 0, name: "Скільки буде 2 + 2?", discription: "", answers: ["3", "4", "5", "22"], correct: 1 },
+                { type: 3, score: 5, sections: 0, name: "Оберіть усі парні числа", discription: "", answers: ["2", "3", "4", "7"], correct: [0, 2] },
+                { type: 4, score: 10, sections: 0, name: "Поясніть, що таке алгоритм", discription: "Відповідь у 1–2 реченнях.", AIinstruction: "Повна відповідь = 10 балів, часткова = 5, помилкова = 0." }
+            ] } },
+        { icon: "fa-clipboard-check", title: "Контрольна робота", desc: "Інформаційний блок + 5 тестових питань у двох розділах.",
+          json: { name: "Контрольна робота", isOlymp: false, reattempt: false, private: true, sections: ["Теорія", "Практика"],
+            questions: [
+                { type: 0, score: 0, sections: 0, name: "Інструкція", discription: "У тесті 5 питань. Час обмежено дедлайном. Відповіді можна змінювати до завершення." },
+                { type: 2, score: 2, sections: 0, name: "Питання 1", discription: "", answers: ["Варіант A", "Варіант B", "Варіант C"], correct: 0 },
+                { type: 2, score: 2, sections: 0, name: "Питання 2", discription: "", answers: ["Так", "Ні"], correct: 0 },
+                { type: 3, score: 3, sections: 1, name: "Питання 3 (кілька відповідей)", discription: "", answers: ["A", "B", "C", "D"], correct: [0, 1] },
+                { type: 5, score: 3, sections: 1, name: "Вкажіть дату події", discription: "Формат у полі — календар.", correct: "01-09-2000" },
+                { type: 4, score: 5, sections: 1, name: "Розгорнута відповідь", discription: "", AIinstruction: "" }
+            ] } },
+        { icon: "fa-code", title: "Олімпіада з програмування", desc: "Режим олімпіади, 2 задачі на Python з автоматичними тестами.",
+          json: { name: "Олімпіада з програмування", isOlymp: true, reattempt: false, private: true, sections: ["Задачі"],
+            questions: [
+                { type: 0, score: 0, sections: 0, name: "Правила", discription: "Читайте з input(), виводьте через print(). Кількість перевірок обмежена." },
+                { type: 1, score: 50, sections: 0, name: "Сума двох чисел", discription: "Введіть два числа через пробіл — виведіть їх суму.", code: "a, b = map(int, input().split())\nprint(a + b)", typeInput: "int", partialScore: true, formatInput: "i<-1000 1000> i<-1000 1000>", fixJsonWords: {}, specHideTest: "", TestsCount: 20, MaximumTest: 20, Memory: 156, Timeout: 3000 },
+                { type: 1, score: 50, sections: 0, name: "Повторення літери", discription: "Введіть n — виведіть літеру 'b', повторену n разів.", code: "n = int(input())\nprint('b' * n)", typeInput: "int", partialScore: true, formatInput: "i<1 100>", fixJsonWords: {}, specHideTest: "1\n---\n5\n---\n100", TestsCount: 20, MaximumTest: 20, Memory: 156, Timeout: 3000 }
+            ] } },
+        { icon: "fa-circle-play", title: "Тест із відео", desc: "Інфо-блок для відео (YouTube/mp4) і питання за переглянутим.",
+          json: { name: "Тест за відео", isOlymp: false, reattempt: true, private: true, sections: ["Перегляд", "Перевірка"],
+            questions: [
+                { type: 0, score: 0, sections: 0, name: "Перегляньте відео", discription: "Вставте посилання на YouTube у поле медіа цього питання (або завантажте файл).", urlOrFile: "" },
+                { type: 2, score: 5, sections: 1, name: "Про що було відео?", discription: "", answers: ["Відповідь 1", "Відповідь 2", "Відповідь 3"], correct: 0 },
+                { type: 4, score: 10, sections: 1, name: "Опишіть головну ідею відео", discription: "", AIinstruction: "" }
+            ] } },
+        { icon: "fa-layer-group", title: "Усі типи питань", desc: "Демо з усіма 6 типами: інфо, код, одна/кілька відповідей, текст, дата.",
+          json: { name: "Демонстраційний тест", discription: "Приклад з усіма типами питань.", isOlymp: false, reattempt: true, private: true, sections: ["Вступ", "Основне", "Кодування"],
+            questions: [
+                { type: 0, score: 0, sections: 0, name: "Початок", discription: "Привіт! Це демонстраційний тест." },
+                { type: 2, score: 5, sections: 1, name: "Скільки буде 2+2?", discription: "", answers: ["2", "3", "4", "5"], correct: 2 },
+                { type: 3, score: 5, sections: 1, name: "Оберіть усі числа, що закінчуються на 2, 4, 6, 8, 0", discription: "", answers: ["2", "3", "4", "5"], correct: [0, 2] },
+                { type: 5, score: 5, sections: 1, name: "Вкажіть дату", discription: "", correct: "01-09-2000" },
+                { type: 4, score: 5, sections: 1, name: "Скільки буде 10+9?", discription: "", AIinstruction: "10+9=19. Правильно — 5 балів, інакше 0." },
+                { type: 1, score: 5, sections: 2, name: "Дублювання", discription: "Продублюйте 'b' n разів", code: "n = int(input(''))\nprint('b'*n)", typeInput: "int", partialScore: false, formatInput: "i<1 100>", fixJsonWords: {}, specHideTest: "5\n---\n29\n---\n10", TestsCount: 8, MaximumTest: 20, Memory: 126, Timeout: 3000 }
+            ] } }
+    ];
+    window.renderTemplates = function () {
+        $("tpl-list").innerHTML = TEMPLATES.map((t, i) => `
+            <button onclick="useTemplate(${i})" class="text-left p-4 rounded-2xl border theme-border theme-bg-card hover:border-sky-400 hover:-translate-y-0.5 transition-all flex gap-3">
+                <div class="w-10 h-10 shrink-0 rounded-xl theme-accent-bg-light theme-accent-color flex items-center justify-center"><i class="fa-solid ${t.icon}"></i></div>
+                <div><div class="font-bold text-sm">${esc(t.title)}</div><div class="text-xs theme-text-secondary mt-0.5">${esc(t.desc)}</div></div>
+            </button>`).join("");
+    };
+    window.useTemplate = function (i) {
+        try {
+            const { test } = parseTestJson(JSON.stringify(TEMPLATES[i].json));
+            openBuilderWith(test);
+            showNotification(`Шаблон «${TEMPLATES[i].title}» завантажено. Відредагуйте й опублікуйте.`);
+        } catch (err) { showNotification(err.message); }
+    };
+
+    let pendingImport = null;
+    window.runJsonImport = function (text) {
+        const rep = $("jsonimp-report");
+        pendingImport = null;
+        try {
+            const res = parseTestJson(text);
+            pendingImport = res.test;
+            if (!res.warnings.length) { openBuilderWith(res.test); showNotification(`Імпортовано: ${res.test.questions.length} пит. Перевірте та опублікуйте.`); return; }
+            rep.className = "rounded-xl border border-amber-400/60 bg-amber-500/10 p-3 text-xs space-y-2";
+            rep.innerHTML = `<div class="font-bold">✅ Прочитано ${res.test.questions.length} пит. · ⚠ ${res.warnings.length} параметр(ів) замінено значеннями за замовчуванням:</div>
+                <ul class="list-disc pl-5 space-y-0.5 max-h-40 overflow-y-auto">${res.warnings.map(w => `<li>${esc(w)}</li>`).join("")}</ul>
+                <button onclick="openPendingImport()" class="theme-btn-primary px-4 py-2 rounded-xl font-bold text-xs">Відкрити в конструкторі</button>`;
+        } catch (err) {
+            rep.className = "rounded-xl border border-red-500/60 bg-red-500/10 p-3 text-xs font-semibold text-red-500";
+            rep.textContent = "❌ " + err.message;
+        }
+        rep.classList.remove("hidden");
+    };
+    window.openPendingImport = function () { if (pendingImport) { openBuilderWith(pendingImport); showNotification("Імпортовано. Перевірте виправлені параметри."); } };
+    window.importJsonFromFile = function (ev) {
+        const f = ev.target.files && ev.target.files[0];
+        ev.target.value = "";
+        if (!f) return;
+        if (f.size > 8 * 1048576) { showNotification("JSON-файл завеликий (максимум 8 МБ)."); return; }
+        const r = new FileReader();
+        r.onload = () => { $("jsonimp-text").value = String(r.result || ""); runJsonImport(String(r.result || "")); };
+        r.onerror = () => showNotification("Не вдалося прочитати файл.");
+        r.readAsText(f, "utf-8");
+    };
+    window.downloadJsonExample = function () {
+        downloadFile("artesolymp_example.json", JSON.stringify(TEMPLATES[4].json, null, 2), "application/json");
+    };
+
+    /* ------------------------------------------------------------------
+     * 4. РЕЗУЛЬТАТИ УЧНІВ: таблиця, кольори, сортування, CSV
+     * ------------------------------------------------------------------ */
+    let RES = { cols: [], rows: [], title: "", testId: "" };
+    const num = v => (Math.round((Number(v) || 0) * 100) / 100);
+    const fmt = v => String(num(v));
+    function heat(ratio, strong) {
+        if (!Number.isFinite(ratio)) return "";
+        const r = Math.max(0, Math.min(1, ratio));
+        return `background:hsla(${Math.round(r * 120)},70%,45%,${strong ? 0.5 : 0.34})`;
+    }
+    window.openResultsModal = async function (preferTestId) {
+        if (!requireLogin()) return;
+        if (currentUser.role !== "Учитель") { showNotification("Результати учнів доступні лише підтвердженому вчителю."); return; }
+        $("modal-results").classList.remove("hidden");
+        $("res-body").innerHTML = '<div class="p-6 text-sm theme-text-secondary">Завантаження…</div>';
+        await loadProfile();
+        const created = window.__createdTests || [];
+        const sel = $("res-test");
+        const counts = {};
+        (window.__teacherResults || []).forEach(a => { counts[a.testId] = (counts[a.testId] || 0) + 1; });
+        sel.innerHTML = created.length
+            ? created.map(t => `<option value="${esc(t.id)}">${t.kind === "olympiad" ? "🏆" : "📝"} ${esc(t.title)} — ${counts[t.id] || 0} відповід.</option>`).join("")
+            : '<option value="">У вас ще немає тестів</option>';
+        if (preferTestId && created.some(t => t.id === preferTestId)) sel.value = preferTestId;
+        else if (created.length) {
+            const withData = created.find(t => counts[t.id]);
+            sel.value = (withData || created[0]).id;
+        }
+        buildResults();
+    };
+    window.hideResultsModal = () => $("modal-results").classList.add("hidden");
+
+    window.buildResults = function () {
+        const testId = $("res-test").value;
+        const mode = $("res-mode").value;           // best | all
+        const created = (window.__createdTests || []).find(t => t.id === testId);
+        RES = { cols: [], rows: [], title: created ? created.title : "", testId };
+        let atts = (window.__teacherResults || []).filter(a => a.testId === testId);
+        const seen = new Map();
+        atts.forEach(a => (a.responses || []).forEach(r => {
+            if (r.type === "info") return;
+            if (!seen.has(r.questionId)) { const c = { id: r.questionId, title: r.title, max: Number(r.maxScore) || 0 }; seen.set(r.questionId, c); RES.cols.push(c); }
+            else seen.get(r.questionId).max = Math.max(seen.get(r.questionId).max, Number(r.maxScore) || 0);
+        }));
+        if (mode === "best") {
+            const best = new Map();
+            atts.forEach(a => {
+                const k = String(a.participantEmail || a.participantName).toLowerCase();
+                const cur = best.get(k);
+                if (!cur || a.score > cur.score || (a.score === cur.score && new Date(a.finishedAt) > new Date(cur.finishedAt))) best.set(k, a);
+            });
+            atts = [...best.values()];
+        }
+        RES.rows = atts.map(a => {
+            const sc = {};
+            (a.responses || []).forEach(r => { sc[r.questionId] = Number(r.score) || 0; });
+            return { name: a.participantName || a.participantEmail || "—", email: a.participantEmail || "", total: Number(a.score) || 0, max: Number(a.maxScore) || 0, sc, finishedAt: a.finishedAt };
+        });
+        const sorted = [...RES.rows].sort((x, y) => y.total - x.total);
+        sorted.forEach((r, i) => { r.place = i > 0 && r.total === sorted[i - 1].total ? sorted[i - 1].place : i + 1; });
+        renderResults();
+    };
+
+    function sortedRows() {
+        const q = $("res-search").value.trim().toLowerCase();
+        let rows = RES.rows.filter(r => !q || r.name.toLowerCase().includes(q) || r.email.toLowerCase().includes(q));
+        const s = $("res-sort").value, cmpName = (a, b) => a.name.localeCompare(b.name, "uk", { sensitivity: "base" });
+        rows.sort((a, b) => {
+            switch (s) {
+                case "place_desc": return (b.place - a.place) || cmpName(a, b);
+                case "name_asc": return cmpName(a, b);
+                case "name_desc": return cmpName(b, a);
+                default: return (a.place - b.place) || cmpName(a, b);
+            }
+        });
+        return rows;
+    }
+    window.renderResults = function () {
+        const body = $("res-body"), pct = $("res-percent").checked;
+        if (!RES.rows.length) {
+            body.innerHTML = '<div class="p-8 text-center text-sm theme-text-secondary"><i class="fa-regular fa-folder-open text-3xl mb-2 block"></i>Для цього тесту ще немає завершених відповідей.</div>';
+            $("res-stats").innerHTML = ""; return;
+        }
+        const rows = sortedRows();
+        const cell = (v, max, strong) => {
+            const ratio = max > 0 ? v / max : NaN;
+            const txt = pct ? (max > 0 ? Math.round(ratio * 100) + "%" : "—") : fmt(v);
+            return `<td class="px-3 py-2 border theme-border text-center ${strong ? "font-extrabold" : ""}" style="${heat(ratio, strong)}" title="${fmt(v)} / ${fmt(max)}">${txt}</td>`;
+        };
+        const medal = p => p === 1 ? "🥇" : p === 2 ? "🥈" : p === 3 ? "🥉" : "";
+        let html = `<table class="w-full text-sm border-collapse"><thead><tr class="theme-accent-bg-light text-xs">
+            <th class="px-3 py-2 border theme-border text-center">Місце</th>
+            <th class="px-3 py-2 border theme-border text-left">Користувач</th>
+            ${RES.cols.map((c, i) => `<th class="px-3 py-2 border theme-border text-center whitespace-nowrap" title="${esc(c.title)} (макс. ${fmt(c.max)})">питання ${i + 1}<div class="font-normal opacity-60">/${fmt(c.max)}</div></th>`).join("")}
+            <th class="px-3 py-2 border theme-border text-center">Результат</th></tr></thead><tbody>`;
+        rows.forEach(r => {
+            html += `<tr><td class="px-3 py-2 border theme-border text-center font-bold">${medal(r.place)} ${r.place}</td>
+                <td class="px-3 py-2 border theme-border"><div class="font-semibold">${esc(r.name)}</div><div class="text-[10px] theme-text-secondary">${esc(r.email)}</div></td>`;
+            RES.cols.forEach(c => { html += cell(r.sc[c.id] || 0, c.max, false); });
+            html += cell(r.total, r.max, true) + "</tr>";
+        });
+        const avgRow = RES.cols.map(c => {
+            const a = RES.rows.reduce((s, r) => s + (r.sc[c.id] || 0), 0) / RES.rows.length;
+            return cell(a, c.max, false);
+        }).join("");
+        const avgTotal = RES.rows.reduce((s, r) => s + r.total, 0) / RES.rows.length;
+        const maxTotal = Math.max(...RES.rows.map(r => r.max));
+        html += `<tr class="font-bold theme-accent-bg-light"><td class="px-3 py-2 border theme-border"></td><td class="px-3 py-2 border theme-border">Середнє</td>${avgRow}${cell(avgTotal, maxTotal, true)}</tr></tbody></table>`;
+        body.innerHTML = html;
+        const totals = RES.rows.map(r => r.total).sort((a, b) => a - b);
+        const med = totals.length % 2 ? totals[(totals.length - 1) / 2] : (totals[totals.length / 2 - 1] + totals[totals.length / 2]) / 2;
+        const chip = (l, v) => `<div class="px-3 py-2 rounded-xl border theme-border"><div class="text-[10px] theme-text-secondary uppercase font-bold">${l}</div><div class="text-base font-extrabold">${v}</div></div>`;
+        $("res-stats").innerHTML = chip("Учасників", RES.rows.length) + chip("Середній бал", fmt(avgTotal) + (maxTotal ? ` / ${fmt(maxTotal)}` : ""))
+            + chip("Найвищий", fmt(totals[totals.length - 1])) + chip("Найнижчий", fmt(totals[0])) + chip("Медіана", fmt(med))
+            + chip("Успішність", maxTotal ? Math.round((avgTotal / maxTotal) * 100) + "%" : "—");
+    };
+
+    const csvCell = v => {
+        let s = String(v ?? "");
+        if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;       // захист від формул у Excel
+        return /[;"\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    };
+    window.downloadResultsCsv = function () {
+        if (!RES.rows.length) { showNotification("Немає результатів для завантаження."); return; }
+        const rows = sortedRows();
+        const dec = v => fmt(v).replace(".", ",");        // українська локаль Excel
+        const lines = [["Місце", "Користувач", ...RES.cols.map((c, i) => `питання ${i + 1}`), "Результат"].map(csvCell).join(";")];
+        rows.forEach(r => lines.push([r.place, r.name, ...RES.cols.map(c => dec(r.sc[c.id] || 0)), dec(r.total)].map(csvCell).join(";")));
+        downloadFile(`results_${safeName(RES.title)}.csv`, "\uFEFF" + lines.join("\r\n"), "text/csv;charset=utf-8");
+        showNotification(`CSV завантажено (${rows.length} учасн.).`);
+    };
+
+    /* ------------------------------------------------------------------
+     * 5. ДОКУМЕНТАЦІЯ
+     * ------------------------------------------------------------------ */
+    window.showDocs = function (anchor) {
+        showSection("docs");
+        window.scrollTo({ top: 0 });
+        if (anchor) { const el = $(anchor); if (el) setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 50); }
+    };
+    window.copyDocsExample = function () {
+        navigator.clipboard.writeText($("docs-json-example").textContent).then(() => showNotification("Приклад JSON скопійовано."));
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        renderTemplates();
+        const ex = $("docs-json-example");
+        if (ex) ex.textContent = JSON.stringify(TEMPLATES[4].json, null, 2);
+    });
+    if (document.readyState !== "loading") { renderTemplates(); const ex = $("docs-json-example"); if (ex) ex.textContent = JSON.stringify(TEMPLATES[4].json, null, 2); }
+})();
+
 </script>
 </body>
 </html>
