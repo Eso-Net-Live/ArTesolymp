@@ -3239,10 +3239,7 @@
                     <i class="fa-solid fa-image mr-1"></i>Фото
                     <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(${idx}, event)">
                 </label>
-                <label class="cursor-pointer px-3 py-2 rounded-lg border theme-border theme-bg-main text-xs font-bold whitespace-nowrap hover:border-sky-400" title="Відео до ${MAX_VIDEO_MB} МБ зберігається на Google Drive">
-                    <i class="fa-solid fa-film mr-1"></i>Відео
-                    <input type="file" accept="video/mp4,video/webm,video/ogg,video/quicktime" class="hidden" onchange="handleVideoUpload(${idx}, event)">
-                </label>
+               
                 <span id="vid-prog-${idx}" class="text-[11px] theme-accent-color font-bold"></span>
             </div>
             ${q.imageUrl ? `<div class="flex items-start gap-3">
