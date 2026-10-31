@@ -234,8 +234,8 @@
 
                 <!-- Desktop Client Button -->
                 <button onclick="showDesktopModal()" class="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold border theme-border theme-bg-card hover:border-sky-400 transition-all shadow-sm">
-                    <i class="fa-solid fa-file-code theme-accent-color"></i>
-                    <span class="hidden sm:inline">Клієнт HTML</span>
+                    <i class="fa-brands fa-windows theme-accent-color"></i>
+                    <span class="hidden sm:inline">Завантажити програму</span>
                 </button>
             </div>
         </div>
@@ -269,8 +269,8 @@
                         <button onclick="showDocs()" class="px-6 py-3.5 rounded-2xl text-sm font-bold border theme-border theme-bg-card hover:border-sky-400 flex items-center gap-2 transition-all">
                             <i class="fa-solid fa-book theme-accent-color"></i> Документація
                         </button>
-                        <button onclick="downloadClientHtml()" class="px-6 py-3.5 rounded-2xl text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 shadow-lg transition-all">
-                            <i class="fa-solid fa-file-code text-base"></i> Зберегти HTML-клієнт
+                        <button onclick="showDesktopModal()" class="px-6 py-3.5 rounded-2xl text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 shadow-lg transition-all">
+                            <i class="fa-brands fa-windows text-base"></i> Завантажити для Windows
                         </button>
                     </div>
                 </div>
@@ -657,7 +657,7 @@
                 <p class="mt-0.5">Вебклієнт ArTesolymp • дані синхронізуються через Google Apps Script.</p>
             </div>
             <div class="flex items-center gap-4">
-                <span class="hover:underline cursor-pointer font-bold text-blue-500" onclick="downloadClientHtml()"><i class="fa-solid fa-file-code mr-1"></i>Зберегти HTML-клієнт</span>
+                <span class="hover:underline cursor-pointer font-bold text-blue-500" onclick="showDesktopModal()"><i class="fa-brands fa-windows mr-1"></i>Завантажити для Windows</span>
                 <span>•</span>
                 <span class="hover:underline cursor-pointer" onclick="openAccessCodeModal()">Код доступу</span>
             </div>
@@ -974,32 +974,33 @@
         </div>
     </div>
 
-    <!-- MODAL: SAVE HTML CLIENT -->
+    <!-- MODAL: DOWNLOAD DESKTOP APP -->
     <div id="modal-desktop" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="theme-bg-card border theme-border rounded-3xl max-w-lg w-full p-6 md:p-8 space-y-6 shadow-2xl relative">
             <button onclick="hideDesktopModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600" aria-label="Закрити"><i class="fa-solid fa-xmark text-xl"></i></button>
             <div class="text-center space-y-3">
                 <div class="w-16 h-16 rounded-2xl theme-btn-primary mx-auto flex items-center justify-center text-3xl font-bold shadow-lg">
-                    <i class="fa-solid fa-file-code"></i>
+                    <i class="fa-brands fa-windows"></i>
                 </div>
-                <h3 class="text-2xl font-black">HTML-клієнт ArTesolymp</h3>
+                <h3 class="text-2xl font-black">ArTesolymp для Windows</h3>
                 <p class="text-sm theme-text-secondary leading-relaxed">
-                    Збережеться копія цієї вебсторінки у форматі <code class="font-code theme-accent-color font-bold">.html</code>. Для входу, реєстрації, синхронізації тестів і збереження результатів потрібен доступ до налаштованого Google Apps Script.
+                    Готова програма для комп'ютера — <b>не потребує встановлення</b>. Завантажте файл <code class="font-code theme-accent-color font-bold">.exe</code> і просто запустіть його. Для входу, реєстрації, синхронізації тестів і збереження результатів потрібен доступ до інтернету.
                 </p>
             </div>
             <div class="p-5 rounded-2xl theme-accent-bg-light border theme-border space-y-3">
                 <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-file-code text-2xl theme-accent-color"></i>
-                    <div>
-                        <span class="block font-bold text-sm">ArTesolymp_Client.html</span>
-                        <span class="text-[11px] theme-text-secondary">HTML-файл • працює в сучасному браузері</span>
+                    <i class="fa-solid fa-file text-2xl theme-accent-color"></i>
+                    <div class="flex-1 min-w-0">
+                        <span class="block font-bold text-sm">artesolymp.exe</span>
+                        <span class="text-[11px] theme-text-secondary">Windows • портативна версія, без встановлення</span>
                     </div>
+                    <span class="text-xs font-bold theme-accent-color whitespace-nowrap">28.2 МБ</span>
                 </div>
                 <button onclick="downloadClientHtml()" class="w-full theme-btn-primary py-3.5 rounded-xl font-bold text-sm shadow-xl flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-download"></i> Зберегти HTML-клієнт
+                    <i class="fa-solid fa-download"></i> Завантажувати
                 </button>
             </div>
-            <p class="text-xs theme-text-secondary">Якщо API URL змінювався після розгортання, оновіть константу <code>API_URL</code> у файлі перед використанням.</p>
+            <p class="text-xs theme-text-secondary">Після натискання кнопки завантаження почнеться автоматично. Якщо Windows покаже попередження SmartScreen — оберіть «Докладніше» → «Все одно виконати».</p>
         </div>
     </div>
 
@@ -1169,22 +1170,10 @@
             showNotification(favorites.has(String(testId)) ? "Додано до обраного." : "Прибрано з обраного.");
         }
 
+        const DESKTOP_APP_URL = "https://www.dropbox.com/scl/fi/nmdx1b210s80r0pak735h/artesolymp.exe?rlkey=k6mivp957airay4mg35kki8l5&st=34l1m4ve&dl=1";
         function downloadClientHtml() {
-            try {
-                const source = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
-                const blob = new Blob([source], { type: "text/html;charset=utf-8" });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                link.href = url;
-                link.download = "ArTesolymp_Client.html";
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
-                showNotification("HTML-клієнт збережено. Для синхронізації потрібен доступ до Google Apps Script.");
-            } catch (err) {
-                showNotification("Не вдалося зберегти HTML-клієнт. Спробуйте команду браузера «Зберегти сторінку як…».");
-            }
+            showNotification("Завантаження artesolymp.exe розпочато…");
+            window.location.href = DESKTOP_APP_URL;
         }
 
         /* THEME MANAGEMENT CLICK CONTROLS */
