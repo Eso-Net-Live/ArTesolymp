@@ -845,8 +845,8 @@
                             <input type="checkbox" id="builder-anti-cheat-enabled" onchange="updateBuilderAntiCheatUI()" class="w-4 h-4">
                             <i class="fa-solid fa-shield-halved theme-accent-color"></i> Анти-списування
                         </label>
-                        <span class="relative inline-flex items-center justify-center w-5 h-5 rounded-full border theme-border text-xs font-black cursor-help" title="Система, яка захищає від списування та спрацьовує після кількох хвилин без дії. Учасник має обмежену кількість попереджень. Під час вставлення стороннього коду в редактор вставлення блокується та фіксується попередження. Браузер не дозволяє непомітно очищати системний буфер обміну. Функція поки доступна лише для тестів і надалі буде покращуватися.">?</span>
-                        <span id="builder-anti-cheat-kind-note" class="text-[11px] theme-text-secondary">Доступно лише для режиму «Тест».</span>
+                        <span class="relative inline-flex items-center justify-center w-5 h-5 rounded-full border theme-border text-xs font-black cursor-help" title="Система, яка захищає від списування під час тесту або олімпіади. Спрацьовує після кількох хвилин без дії, враховує перемикання з вкладки та обмежує кількість попереджень. Під час вставлення стороннього коду в редактор вставлення блокується та фіксується попередження. Браузер не дозволяє непомітно очищати системний буфер обміну. Функція надалі буде покращуватися.">?</span>
+                        <span id="builder-anti-cheat-kind-note" class="text-[11px] theme-text-secondary">Доступно для режимів «Тест» і «Олімпіада».</span>
                     </div>
                     <div id="builder-anti-cheat-settings" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t theme-border">
                         <label class="text-xs font-semibold">Час без дії (хвилини)
@@ -1043,7 +1043,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbyg5ugZVkGakHtaM7CtEWa3QNMPWlfj0VXa3v6At8H8PJagwgtnK3mmZuz3YJxbdpb7/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbzCICH_RQ9pCWQTdKuFIbalJsinGsgu0mh2D4nLngnTtGKnvVUoBCXp9qcdEX5VtGyg/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -2507,15 +2507,18 @@
         }
 
         function updateBuilderAntiCheatUI() {
-            const isTest = document.getElementById('builder-kind')?.value === 'test';
+            const kind = document.getElementById('builder-kind')?.value || 'test';
+            const supportedMode = kind === 'test' || kind === 'olympiad';
             const checkbox = document.getElementById('builder-anti-cheat-enabled');
             const settings = document.getElementById('builder-anti-cheat-settings');
             const note = document.getElementById('builder-anti-cheat-kind-note');
             if (!checkbox || !settings) return;
-            checkbox.disabled = !isTest;
-            if (!isTest) checkbox.checked = false;
-            settings.classList.toggle('hidden', !isTest || !checkbox.checked);
-            if (note) note.textContent = isTest ? 'Функція працює під час проходження тесту.' : 'Анти-списування наразі доступне лише для режиму «Тест».';
+            checkbox.disabled = !supportedMode;
+            if (!supportedMode) checkbox.checked = false;
+            settings.classList.toggle('hidden', !supportedMode || !checkbox.checked);
+            if (note) note.textContent = supportedMode
+                ? 'Функція працює під час проходження тесту або олімпіади.'
+                : 'Анти-списування недоступне для цього типу роботи.';
         }
 
         function showCreatorModal() {
@@ -2571,7 +2574,7 @@
                 document.getElementById('builder-password-remove-wrap').classList.remove('hidden');
                 document.getElementById('builder-remove-password').checked = false;
                 const anti = t.antiCheat || {};
-                document.getElementById('builder-anti-cheat-enabled').checked = Boolean(anti.enabled) && (t.kind || "test") === "test";
+                document.getElementById('builder-anti-cheat-enabled').checked = Boolean(anti.enabled);
                 document.getElementById('builder-ac-idle').value = String(anti.idleMinutes || 3);
                 document.getElementById('builder-ac-warnings').value = String(anti.maxWarnings || 4);
                 document.getElementById('builder-ac-return').value = String(anti.returnSeconds || 5);
@@ -3019,7 +3022,7 @@
                 password,
                 removePassword,
                 antiCheat: {
-                    enabled: document.getElementById("builder-kind").value === "test" && document.getElementById("builder-anti-cheat-enabled").checked,
+                    enabled: document.getElementById("builder-anti-cheat-enabled").checked,
                     idleMinutes: Math.max(1, Math.min(30, Number(document.getElementById("builder-ac-idle").value) || 3)),
                     maxWarnings: Math.max(1, Math.min(10, Number(document.getElementById("builder-ac-warnings").value) || 4)),
                     returnSeconds: Math.max(3, Math.min(30, Number(document.getElementById("builder-ac-return").value) || 5)),
@@ -3663,7 +3666,7 @@
         $("builder-kind").value = model.kind;
         $("builder-password").value = model.password || "";
         const anti = model.antiCheat || {};
-        $("builder-anti-cheat-enabled").checked = Boolean(anti.enabled) && model.kind !== "olympiad";
+        $("builder-anti-cheat-enabled").checked = Boolean(anti.enabled);
         $("builder-ac-idle").value = String(anti.idleMinutes || 3);
         $("builder-ac-warnings").value = String(anti.maxWarnings || 4);
         $("builder-ac-return").value = String(anti.returnSeconds || 5);
@@ -3942,7 +3945,7 @@
 </script>
 <script>
 /* =====================================================================
- * ArTesolymp — анти-списування для тестів
+ * ArTesolymp — анти-списування для тестів і олімпіад
  * Браузерні події є засобом стримування, а не незламним захистом від обходу.
  * Системний буфер обміну не очищується: стороння вставка в редактор блокується.
  * ===================================================================== */
@@ -3998,7 +4001,7 @@
         clearTimer("idleTimer"); clearTimer("awayTimer"); hideOverlay();
         try {
             await apiRequest("terminateIntegrityAttempt", {attemptId:state.attemptId,reason:String(reason || "Порушення правил")});
-            showNotification("Тест автоматично завершено. За порушення зафіксовано 0 балів.");
+            showNotification("Роботу автоматично завершено. За порушення зафіксовано 0 балів.");
             if (typeof window.finishTest === "function") await window.finishTest();
         } catch (err) {
             state.ending = false;
