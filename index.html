@@ -825,7 +825,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold theme-text-secondary uppercase mb-1">Режим</label>
-                    <select id="builder-kind" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm">
+                    <select id="builder-kind" onchange="updateBuilderAntiCheatUI()" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm">
                         <option value="test">Тест</option>
                         <option value="olympiad">Олімпіада</option>
                     </select>
@@ -838,6 +838,32 @@
                 <div id="builder-password-remove-wrap" class="hidden sm:col-span-1 rounded-xl border theme-border p-3 flex items-start gap-2">
                     <input type="checkbox" id="builder-remove-password" class="mt-1">
                     <label for="builder-remove-password" class="text-xs theme-text-secondary">Зняти поточний пароль під час збереження</label>
+                </div>
+                <div id="builder-anti-cheat-panel" class="sm:col-span-3 rounded-2xl border theme-border p-4 space-y-3">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <label class="flex items-center gap-2 text-sm font-extrabold">
+                            <input type="checkbox" id="builder-anti-cheat-enabled" onchange="updateBuilderAntiCheatUI()" class="w-4 h-4">
+                            <i class="fa-solid fa-shield-halved theme-accent-color"></i> Анти-списування
+                        </label>
+                        <span class="relative inline-flex items-center justify-center w-5 h-5 rounded-full border theme-border text-xs font-black cursor-help" title="Система, яка захищає від списування та спрацьовує після кількох хвилин без дії. Учасник має обмежену кількість попереджень. Під час вставлення стороннього коду в редактор вставлення блокується та фіксується попередження. Браузер не дозволяє непомітно очищати системний буфер обміну. Функція поки доступна лише для тестів і надалі буде покращуватися.">?</span>
+                        <span id="builder-anti-cheat-kind-note" class="text-[11px] theme-text-secondary">Доступно лише для режиму «Тест».</span>
+                    </div>
+                    <div id="builder-anti-cheat-settings" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t theme-border">
+                        <label class="text-xs font-semibold">Час без дії (хвилини)
+                            <input type="number" id="builder-ac-idle" min="1" max="30" value="3" class="mt-1 w-full p-2.5 rounded-xl border theme-border theme-bg-card text-sm">
+                        </label>
+                        <label class="text-xs font-semibold">Максимально попереджень
+                            <input type="number" id="builder-ac-warnings" min="1" max="10" value="4" class="mt-1 w-full p-2.5 rounded-xl border theme-border theme-bg-card text-sm">
+                        </label>
+                        <label class="text-xs font-semibold">Таймер повернення (секунди)
+                            <input type="number" id="builder-ac-return" min="3" max="30" value="5" class="mt-1 w-full p-2.5 rounded-xl border theme-border theme-bg-card text-sm">
+                        </label>
+                        <label class="sm:col-span-3 flex items-start gap-2 text-xs font-semibold">
+                            <input type="checkbox" id="builder-ac-paste" checked class="mt-0.5">
+                            <span>Контроль вставлення коду з буфера обміну в редактор</span>
+                        </label>
+                        <p class="sm:col-span-3 text-[11px] theme-text-secondary">Код, вставлений не через копіювання всередині платформи, буде заблоковано та зараховано як попередження. Сам системний буфер не очищується — веббраузер не надає безпечного права непомітно видаляти його вміст.</p>
+                    </div>
                 </div>
             </div>
 
@@ -962,7 +988,7 @@
                     <option value="best">Краща спроба</option>
                     <option value="all">Усі спроби</option>
                 </select>
-                <input id="res-search" oninput="renderResults()" type="search" placeholder="Пошук учня…" class="md:col-span-2 p-2.5 rounded-xl border theme-border theme-bg-card text-sm">
+                <input id="res-search" oninput="renderResults()" type="search" autocomplete="off" placeholder="Пошук за ім’ям або поштою…" title="Фільтр таблиці оцінок за ім’ям учасника або email" class="md:col-span-2 p-2.5 rounded-xl border theme-border theme-bg-card text-sm">
             </div>
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <label class="flex items-center gap-2 text-xs font-semibold"><input id="res-percent" type="checkbox" onchange="renderResults()"> Показувати у відсотках</label>
@@ -1017,7 +1043,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbwrzD6DG03MAFeoarg6tFUha6OrxD1H310VcD3Y674cCnrL4ksTCWdnyJLH0aLryyoO/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbyg5ugZVkGakHtaM7CtEWa3QNMPWlfj0VXa3v6At8H8PJagwgtnK3mmZuz3YJxbdpb7/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -1227,6 +1253,19 @@
             const date = new Date(value);
             if (!Number.isFinite(date.getTime())) return "";
             return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        }
+        function normalizeDateAnswer(value) {
+            const s = String(value === undefined || value === null ? "" : value).trim();
+            let m = s.match(/^(\d{4})[-./](\d{1,2})[-./](\d{1,2})$/), y, mo, d;
+            if (m) { y=+m[1]; mo=+m[2]; d=+m[3]; }
+            else {
+                m = s.match(/^(\d{1,2})[-./](\d{1,2})[-./](\d{4})$/);
+                if (!m) return "";
+                d=+m[1]; mo=+m[2]; y=+m[3];
+            }
+            const dt = new Date(Date.UTC(y, mo-1, d));
+            if (!y || dt.getUTCFullYear()!==y || dt.getUTCMonth()!==mo-1 || dt.getUTCDate()!==d) return "";
+            return `${String(y).padStart(4,'0')}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
         }
 
         function showNotification(msg) {
@@ -1490,15 +1529,35 @@
                 attempts.innerHTML = "";
                 (data.attempts || []).forEach(a => {
                     const row = document.createElement("div");
-                    row.className = "border-b theme-border py-2";
+                    row.className = "border-b theme-border py-3";
                     const info = document.createElement("div");
-                    info.textContent = `${a.title} · ${a.score}/${a.maxScore} · ${new Date(a.finishedAt).toLocaleString("uk-UA")}`;
+                    info.className = "font-semibold text-sm";
+                    const percent = Number(a.maxScore) > 0 ? Math.round(Number(a.score) / Number(a.maxScore) * 100) : 0;
+                    info.textContent = `${a.title} · ${a.score}/${a.maxScore} б. (${percent}%) · ${new Date(a.finishedAt).toLocaleString("uk-UA")}`;
                     row.appendChild(info);
-                    const delAttempt = document.createElement("button");
-                    delAttempt.className = "text-xs text-red-500 font-bold mt-1";
-                    delAttempt.textContent = "Прибрати з історії";
-                    delAttempt.onclick = () => deleteOwnAttempt(a.id);
-                    row.appendChild(delAttempt);
+                    if (a.integrityTerminated) {
+                        const flag = document.createElement("div"); flag.className = "text-[11px] text-amber-600 mt-1";
+                        flag.textContent = `Автоматичне завершення анти-списування: ${a.integrityReason || "оцінка зафіксована як 0"}`;
+                        row.appendChild(flag);
+                    }
+                    const controls = document.createElement("div"); controls.className = "flex flex-wrap gap-3 mt-1";
+                    const detailsBtn = document.createElement("button"); detailsBtn.className = "text-xs theme-accent-color font-bold";
+                    detailsBtn.textContent = "Деталі оцінювання";
+                    const details = document.createElement("div"); details.className = "hidden mt-2 space-y-2";
+                    detailsBtn.onclick = () => details.classList.toggle("hidden");
+                    controls.appendChild(detailsBtn);
+                    const delAttempt = document.createElement("button"); delAttempt.className = "text-xs text-red-500 font-bold";
+                    delAttempt.textContent = "Прибрати з історії"; delAttempt.onclick = () => deleteOwnAttempt(a.id);
+                    controls.appendChild(delAttempt);
+                    row.append(controls, details);
+                    (a.breakdown || []).forEach(item => {
+                        const line = document.createElement("div"); line.className = "flex flex-wrap justify-between gap-2 rounded-lg border theme-border p-2 text-xs";
+                        const label = document.createElement("span"); label.textContent = `${item.title} · ${item.type === "code" && item.totalTests ? `тести ${item.passedTests || 0}/${item.totalTests}` : item.type}`;
+                        const mark = document.createElement("strong"); mark.textContent = `${item.score}/${item.maxScore} б.`;
+                        line.append(label, mark); details.appendChild(line);
+                        if (item.comment) { const c = document.createElement("p"); c.className = "text-[11px] theme-text-secondary px-2"; c.textContent = item.comment; details.appendChild(c); }
+                    });
+                    if (!(a.breakdown || []).length) details.textContent = "Деталізація для цього проходження недоступна.";
                     attempts.appendChild(row);
                 });
                 if (!data.attempts || !data.attempts.length) attempts.textContent = "Проходжень поки немає.";
@@ -1515,8 +1574,13 @@
                         summary.className = "flex flex-wrap items-center justify-between gap-2";
                         const label = document.createElement("div");
                         label.className = "text-sm";
-                        label.textContent = `${a.testTitle} · ${a.participantName} (${a.participantEmail}) · ${a.score}/${a.maxScore} · ${new Date(a.finishedAt).toLocaleString("uk-UA")}`;
+                        label.textContent = `${a.testTitle} · ${a.participantName} (${a.participantEmail}) · ${a.score}/${a.maxScore} · ${new Date(a.finishedAt).toLocaleString("uk-UA")}` + (a.integrityTerminated ? " · анти-списування: 0 балів" : "");
                         summary.appendChild(label);
+                        const removeBtn = document.createElement("button");
+                        removeBtn.className = "text-xs text-red-500 font-bold";
+                        removeBtn.textContent = "Прибрати учасника";
+                        removeBtn.onclick = () => removeParticipantFromTable(a.attemptId);
+                        summary.appendChild(removeBtn);
                         const detailsBtn = document.createElement("button");
                         detailsBtn.className = "text-xs theme-accent-color font-bold";
                         detailsBtn.textContent = "Відповіді / оцінювання";
@@ -1741,6 +1805,7 @@
 
         async function startTestSession(testId, isPreview = false, testPassword = "") {
             let restoredAnswers = {};
+            let restoredAntiCheatWarnings = 0;
             let test = null;
             if (isPreview) {
                 test = testId;
@@ -1768,6 +1833,7 @@
                         if (!started.test || !Array.isArray(started.test.questions)) throw new Error("Сервер не повернув питання. Оновіть розгортання Apps Script.");
                         window.currentAttemptId = started.attemptId;
                         restoredAnswers = started.answers && typeof started.answers === "object" ? started.answers : {};
+                        restoredAntiCheatWarnings = Number(started.antiCheatWarnings) || 0;
                         test = started.test;
                         if (started.resumed) showNotification("Відновлено незавершене проходження зі збереженими відповідями.");
                     } catch (err) {
@@ -1783,8 +1849,10 @@
             }
             if (!test || !Array.isArray(test.questions)) { showNotification("У тесті немає доступних питань."); return false; }
             activeTest = test;
+            window.activeTest = activeTest;
             userAnswers = restoredAnswers; window.bestCode = {}; window.flagged = new Set();
             isPreviewSession = isPreview;
+            window.isPreviewSession = isPreviewSession;
             activeTabName = (test.tabs && test.tabs.length > 0) ? test.tabs[0] : "";
 
             document.getElementById('active-test-title').querySelector('span').innerText = test.title;
@@ -1792,6 +1860,7 @@
             document.getElementById('preview-mode-badge').classList.toggle('hidden', !isPreview);
             document.getElementById('live-mode-badge').classList.toggle('hidden', isPreview);
             showSection('test');
+            if (window.__startAntiCheat) window.__startAntiCheat(restoredAntiCheatWarnings);
             startLiveTimer();
             renderInTestTabs();
             selectInTestTab(activeTabName);
@@ -2050,9 +2119,10 @@
             else if (q.type === 'date') {
                 const val = userAnswers[q.id] || '';
                 html += `
-                    <div class="max-w-xs space-y-2">
-                        <label class="block text-xs font-bold theme-text-secondary uppercase">Оберіть точну дату:</label>
-                        <input type="date" value="${escapeHtml(val)}" onchange="userAnswers[${jsString(q.id)}] = this.value; queueProgressSave(); renderPills(); renderInTestTabs();" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm font-bold focus:outline-none">
+                    <div class="max-w-sm space-y-2">
+                        <label class="block text-xs font-bold theme-text-secondary uppercase">Введіть дату події:</label>
+                        <input type="text" inputmode="numeric" autocomplete="off" placeholder="ДД.ММ.РРРР або РРРР-ММ-ДД" value="${escapeHtml(val)}" oninput="userAnswers[${jsString(q.id)}] = this.value; queueProgressSave(); renderPills(); renderInTestTabs();" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm font-bold focus:outline-none">
+                        <p class="text-[11px] theme-text-secondary">Наприклад: 20.02.2014 або 2014-02-20. Роздільник може бути крапкою, дефісом чи /.</p>
                     </div>
                 `;
             }
@@ -2328,6 +2398,7 @@
 
         async function finishTest() {
             if (!activeTest || window.finishInProgress) return;
+            if (window.__stopAntiCheat) window.__stopAntiCheat();
             window.finishInProgress = true;
             clearInterval(timerInterval);
             clearTimeout(progressSaveTimer);
@@ -2387,7 +2458,7 @@
                         const userArr = (Array.isArray(userAnswers[q.id]) ? userAnswers[q.id] : []).map(Number).sort((a,b)=>a-b).join(',');
                         const correctArr = (Array.isArray(q.correct) ? q.correct : [q.correct]).map(Number).sort((a,b)=>a-b).join(',');
                         if (correctArr !== "" && userArr === correctArr) score = points;
-                    } else if (q.type === 'date' && String(userAnswers[q.id] || "") === String(q.correctDate || "")) {
+                    } else if (q.type === 'date' && normalizeDateAnswer(userAnswers[q.id]) && normalizeDateAnswer(userAnswers[q.id]) === normalizeDateAnswer(q.correctDate)) {
                         score = points;
                     } else if (q.type === 'code') {
                         const b = (window.bestCode || {})[q.id];
@@ -2435,6 +2506,18 @@
             await finishTest();
         }
 
+        function updateBuilderAntiCheatUI() {
+            const isTest = document.getElementById('builder-kind')?.value === 'test';
+            const checkbox = document.getElementById('builder-anti-cheat-enabled');
+            const settings = document.getElementById('builder-anti-cheat-settings');
+            const note = document.getElementById('builder-anti-cheat-kind-note');
+            if (!checkbox || !settings) return;
+            checkbox.disabled = !isTest;
+            if (!isTest) checkbox.checked = false;
+            settings.classList.toggle('hidden', !isTest || !checkbox.checked);
+            if (note) note.textContent = isTest ? 'Функція працює під час проходження тесту.' : 'Анти-списування наразі доступне лише для режиму «Тест».';
+        }
+
         function showCreatorModal() {
             if (!requireLogin()) return;
             if (currentUser.role !== "Учитель") {
@@ -2456,6 +2539,12 @@
             document.getElementById('builder-password-help').textContent = "Для публічної олімпіади пароль теж можна ввімкнути. На сервері зберігається лише хеш.";
             document.getElementById('builder-password-remove-wrap').classList.add('hidden');
             document.getElementById('builder-remove-password').checked = false;
+            document.getElementById('builder-anti-cheat-enabled').checked = false;
+            document.getElementById('builder-ac-idle').value = "3";
+            document.getElementById('builder-ac-warnings').value = "4";
+            document.getElementById('builder-ac-return').value = "5";
+            document.getElementById('builder-ac-paste').checked = true;
+            updateBuilderAntiCheatUI();
             builderTabs = ["Основний розділ", "Додатковий розділ"];
             builderQuestions = [];
             renderBuilderTabs();
@@ -2481,6 +2570,13 @@
                     : "Установіть пароль за бажанням. На сервері зберігається лише хеш.";
                 document.getElementById('builder-password-remove-wrap').classList.remove('hidden');
                 document.getElementById('builder-remove-password').checked = false;
+                const anti = t.antiCheat || {};
+                document.getElementById('builder-anti-cheat-enabled').checked = Boolean(anti.enabled) && (t.kind || "test") === "test";
+                document.getElementById('builder-ac-idle').value = String(anti.idleMinutes || 3);
+                document.getElementById('builder-ac-warnings').value = String(anti.maxWarnings || 4);
+                document.getElementById('builder-ac-return').value = String(anti.returnSeconds || 5);
+                document.getElementById('builder-ac-paste').checked = anti.monitorPaste !== false;
+                updateBuilderAntiCheatUI();
                 builderTabs = Array.isArray(t.tabs) && t.tabs.length ? t.tabs : ["Основний розділ"];
                 builderQuestions = (t.questions || []).map(q => ({...q,
                     inputOptionsText: JSON.stringify(q.inputOptions || {}, null, 2),
@@ -2922,6 +3018,13 @@
                 kind: document.getElementById("builder-kind").value,
                 password,
                 removePassword,
+                antiCheat: {
+                    enabled: document.getElementById("builder-kind").value === "test" && document.getElementById("builder-anti-cheat-enabled").checked,
+                    idleMinutes: Math.max(1, Math.min(30, Number(document.getElementById("builder-ac-idle").value) || 3)),
+                    maxWarnings: Math.max(1, Math.min(10, Number(document.getElementById("builder-ac-warnings").value) || 4)),
+                    returnSeconds: Math.max(3, Math.min(30, Number(document.getElementById("builder-ac-return").value) || 5)),
+                    monitorPaste: document.getElementById("builder-ac-paste").checked
+                },
                 tabs: builderTabs,
                 questions
             };
@@ -3469,7 +3572,9 @@
 
         return {
             warnings,
-            test: { title, description, code, deadline, kind: isOlymp ? "olympiad" : "test", allowRepeat: reattempt, isPublic: !priv, password, tabs: sections, questions }
+            test: { title, description, code, deadline, kind: isOlymp ? "olympiad" : "test", allowRepeat: reattempt, isPublic: !priv, password,
+                antiCheat: isObj(root.antiCheat) ? root.antiCheat : {enabled:false,idleMinutes:3,maxWarnings:4,returnSeconds:5,monitorPaste:true},
+                tabs: sections, questions }
         };
     };
 
@@ -3501,7 +3606,9 @@
             const out = {
                 name: t.title || "", code: t.code || "", discription: t.description || "",
                 deadline: fmtDeadline(t.deadline), isOlymp: t.kind === "olympiad", reattempt: !!t.allowRepeat,
-                private: !t.isPublic, password: null, sections: tabs, questions: []
+                private: !t.isPublic, password: null,
+                antiCheat: t.antiCheat || {enabled:false,idleMinutes:3,maxWarnings:4,returnSeconds:5,monitorPaste:true},
+                sections: tabs, questions: []
             };
             (t.questions || []).forEach(q => {
                 const type = Math.max(0, TYPE_NAMES.indexOf(q.type));
@@ -3555,6 +3662,13 @@
         $("builder-allow-repeat").value = model.allowRepeat ? "true" : "false";
         $("builder-kind").value = model.kind;
         $("builder-password").value = model.password || "";
+        const anti = model.antiCheat || {};
+        $("builder-anti-cheat-enabled").checked = Boolean(anti.enabled) && model.kind !== "olympiad";
+        $("builder-ac-idle").value = String(anti.idleMinutes || 3);
+        $("builder-ac-warnings").value = String(anti.maxWarnings || 4);
+        $("builder-ac-return").value = String(anti.returnSeconds || 5);
+        $("builder-ac-paste").checked = anti.monitorPaste !== false;
+        updateBuilderAntiCheatUI();
         builderTabs = model.tabs.slice();
         builderQuestions = model.questions;
         renderBuilderTabs(); renderBuilderQuestions();
@@ -3708,7 +3822,7 @@
         RES.rows = atts.map(a => {
             const sc = {};
             (a.responses || []).forEach(r => { sc[r.questionId] = Number(r.score) || 0; });
-            return { name: a.participantName || a.participantEmail || "—", email: a.participantEmail || "", total: Number(a.score) || 0, max: Number(a.maxScore) || 0, sc, finishedAt: a.finishedAt };
+            return { attemptId: a.attemptId, name: a.participantName || a.participantEmail || "—", email: a.participantEmail || "", total: Number(a.score) || 0, max: Number(a.maxScore) || 0, sc, finishedAt: a.finishedAt };
         });
         const sorted = [...RES.rows].sort((x, y) => y.total - x.total);
         sorted.forEach((r, i) => { r.place = i > 0 && r.total === sorted[i - 1].total ? sorted[i - 1].place : i + 1; });
@@ -3716,8 +3830,9 @@
     };
 
     function sortedRows() {
-        const q = $("res-search").value.trim().toLowerCase();
-        let rows = RES.rows.filter(r => !q || r.name.toLowerCase().includes(q) || r.email.toLowerCase().includes(q));
+        const norm = v => String(v || "").normalize("NFKC").toLocaleLowerCase("uk-UA").trim();
+        const q = norm($("res-search").value);
+        let rows = RES.rows.filter(r => !q || norm(r.name).includes(q) || norm(r.email).includes(q));
         const s = $("res-sort").value, cmpName = (a, b) => a.name.localeCompare(b.name, "uk", { sensitivity: "base" });
         rows.sort((a, b) => {
             switch (s) {
@@ -3736,6 +3851,13 @@
             $("res-stats").innerHTML = ""; return;
         }
         const rows = sortedRows();
+        if (!rows.length) {
+            body.innerHTML = '<div class="p-8 text-center text-sm theme-text-secondary"><i class="fa-solid fa-magnifying-glass text-2xl mb-2 block"></i>За таким ім’ям або поштою учасника не знайдено.</div>';
+            const norm = v => String(v || "").normalize("NFKC").toLocaleLowerCase("uk-UA").trim();
+            const q = norm($("res-search").value);
+            $("res-stats").innerHTML = `<div class="px-3 py-2 rounded-xl border theme-border"><div class="text-[10px] theme-text-secondary uppercase font-bold">Знайдено</div><div class="text-base font-extrabold">0 з ${RES.rows.length}</div></div>`;
+            return;
+        }
         const cell = (v, max, strong) => {
             const ratio = max > 0 ? v / max : NaN;
             const txt = pct ? (max > 0 ? Math.round(ratio * 100) + "%" : "—") : fmt(v);
@@ -3746,27 +3868,40 @@
             <th class="px-3 py-2 border theme-border text-center">Місце</th>
             <th class="px-3 py-2 border theme-border text-left">Користувач</th>
             ${RES.cols.map((c, i) => `<th class="px-3 py-2 border theme-border text-center whitespace-nowrap" title="${esc(c.title)} (макс. ${fmt(c.max)})">питання ${i + 1}<div class="font-normal opacity-60">/${fmt(c.max)}</div></th>`).join("")}
-            <th class="px-3 py-2 border theme-border text-center">Результат</th></tr></thead><tbody>`;
+            <th class="px-3 py-2 border theme-border text-center">Результат</th><th class="px-3 py-2 border theme-border text-center">Дії</th></tr></thead><tbody>`;
         rows.forEach(r => {
             html += `<tr><td class="px-3 py-2 border theme-border text-center font-bold">${medal(r.place)} ${r.place}</td>
                 <td class="px-3 py-2 border theme-border"><div class="font-semibold">${esc(r.name)}</div><div class="text-[10px] theme-text-secondary">${esc(r.email)}</div></td>`;
             RES.cols.forEach(c => { html += cell(r.sc[c.id] || 0, c.max, false); });
-            html += cell(r.total, r.max, true) + "</tr>";
+            html += cell(r.total, r.max, true) + `<td class="px-2 py-2 border theme-border text-center"><button type="button" onclick="removeParticipantFromTable('${esc(r.attemptId || "")}')" class="text-[11px] font-bold text-red-500 hover:underline whitespace-nowrap">Прибрати</button></td></tr>`;
         });
         const avgRow = RES.cols.map(c => {
-            const a = RES.rows.reduce((s, r) => s + (r.sc[c.id] || 0), 0) / RES.rows.length;
+            const a = rows.reduce((s, r) => s + (r.sc[c.id] || 0), 0) / rows.length;
             return cell(a, c.max, false);
         }).join("");
-        const avgTotal = RES.rows.reduce((s, r) => s + r.total, 0) / RES.rows.length;
-        const maxTotal = Math.max(...RES.rows.map(r => r.max));
-        html += `<tr class="font-bold theme-accent-bg-light"><td class="px-3 py-2 border theme-border"></td><td class="px-3 py-2 border theme-border">Середнє</td>${avgRow}${cell(avgTotal, maxTotal, true)}</tr></tbody></table>`;
+        const avgTotal = rows.reduce((s, r) => s + r.total, 0) / rows.length;
+        const maxTotal = Math.max(...rows.map(r => r.max));
+        html += `<tr class="font-bold theme-accent-bg-light"><td class="px-3 py-2 border theme-border"></td><td class="px-3 py-2 border theme-border">Середнє</td>${avgRow}${cell(avgTotal, maxTotal, true)}<td class="px-3 py-2 border theme-border"></td></tr></tbody></table>`;
         body.innerHTML = html;
-        const totals = RES.rows.map(r => r.total).sort((a, b) => a - b);
+        const totals = rows.map(r => r.total).sort((a, b) => a - b);
         const med = totals.length % 2 ? totals[(totals.length - 1) / 2] : (totals[totals.length / 2 - 1] + totals[totals.length / 2]) / 2;
         const chip = (l, v) => `<div class="px-3 py-2 rounded-xl border theme-border"><div class="text-[10px] theme-text-secondary uppercase font-bold">${l}</div><div class="text-base font-extrabold">${v}</div></div>`;
-        $("res-stats").innerHTML = chip("Учасників", RES.rows.length) + chip("Середній бал", fmt(avgTotal) + (maxTotal ? ` / ${fmt(maxTotal)}` : ""))
+        $("res-stats").innerHTML = chip("Учасників", `${rows.length} / ${RES.rows.length}`) + chip("Середній бал", fmt(avgTotal) + (maxTotal ? ` / ${fmt(maxTotal)}` : ""))
             + chip("Найвищий", fmt(totals[totals.length - 1])) + chip("Найнижчий", fmt(totals[0])) + chip("Медіана", fmt(med))
             + chip("Успішність", maxTotal ? Math.round((avgTotal / maxTotal) * 100) + "%" : "—");
+    };
+
+    window.removeParticipantFromTable = async function (attemptId) {
+        if (!attemptId || !requireLogin()) return;
+        const target = (window.__teacherResults || []).find(a => String(a.attemptId) === String(attemptId));
+        const who = target ? `${target.participantName} (${target.participantEmail})` : "цього учасника";
+        if (!confirm(`Прибрати ${who} з таблиці цього тесту? Усі його спроби цього тесту буде приховано лише у вашій таблиці оцінок. Акаунт і особисту історію учасника не буде видалено.`)) return;
+        try {
+            await apiRequest("removeParticipant", {attemptId});
+            await loadProfile();
+            buildResults();
+            showNotification("Учасника прибрано з таблиці оцінок.");
+        } catch (err) { showNotification(err.message || "Не вдалося прибрати учасника."); }
     };
 
     const csvCell = v => {
@@ -3804,6 +3939,202 @@
     if (document.readyState !== "loading") { renderTemplates(); const ex = $("docs-json-example"); if (ex) ex.textContent = JSON.stringify(TEMPLATES[4].json, null, 2); }
 })();
 
+</script>
+<script>
+/* =====================================================================
+ * ArTesolymp — анти-списування для тестів
+ * Браузерні події є засобом стримування, а не незламним захистом від обходу.
+ * Системний буфер обміну не очищується: стороння вставка в редактор блокується.
+ * ===================================================================== */
+(function () {
+    "use strict";
+    const state = { enabled:false, attemptId:"", cfg:null, warnings:0, pendingAway:false,
+        awayAt:0, awayTimer:null, idleTimer:null, ackTimer:null, countdownTimer:null,
+        awaitingAck:false, ending:false, warningPending:false, internalCopy:null, currentReason:"" };
+
+    const style = document.createElement("style");
+    style.textContent = `
+      #at-ac-overlay{position:fixed;inset:0;z-index:10050;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(2,6,23,.78);backdrop-filter:blur(8px)}
+      #at-ac-overlay.at-ac-visible{display:flex}
+      #at-ac-card{width:min(100%,460px);border:1px solid var(--border-color,#bae6fd);border-radius:24px;background:var(--bg-card,#fff);color:var(--text-primary,#0f172a);padding:24px;box-shadow:0 25px 70px rgba(0,0,0,.38)}
+      #at-ac-countdown{font-size:42px;line-height:1;font-weight:900;font-variant-numeric:tabular-nums}
+      @media(max-width:480px){#at-ac-card{padding:18px}#at-ac-countdown{font-size:36px}}
+    `;
+    document.head.appendChild(style);
+    const overlay = document.createElement("div");
+    overlay.id = "at-ac-overlay";
+    overlay.setAttribute("role","alertdialog");
+    overlay.setAttribute("aria-modal","true");
+    overlay.innerHTML = `
+      <div id="at-ac-card">
+        <div class="flex items-center gap-3 mb-3"><span class="w-11 h-11 rounded-xl theme-accent-bg-light theme-accent-color flex items-center justify-center text-xl"><i class="fa-solid fa-shield-halved"></i></span><div><div class="font-black">Анти-списування</div><div id="at-ac-warning-count" class="text-xs theme-text-secondary">Попередження 0/4</div></div></div>
+        <p id="at-ac-reason" class="text-sm theme-text-secondary mb-4">Поверніться до тесту.</p>
+        <div class="flex items-center justify-between gap-3 rounded-xl border theme-border p-3 mb-4"><span class="text-xs font-bold">До автоматичного завершення</span><span id="at-ac-countdown">5</span></div>
+        <button id="at-ac-resume" type="button" class="w-full theme-btn-primary px-4 py-3 rounded-xl text-sm font-extrabold">Я повернувся до тесту</button>
+        <p class="text-[10px] theme-text-secondary mt-3">Якщо час вийде або ліміт попереджень буде перевищено, роботу буде завершено з 0 балів.</p>
+      </div>`;
+    document.body.appendChild(overlay);
+    const $ = id => document.getElementById(id);
+
+    function inRealTest() {
+        const section = $("section-test");
+        return !!(state.enabled && state.attemptId && section && !section.classList.contains("hidden") &&
+            window.currentAttemptId === state.attemptId && window.activeTest !== null);
+    }
+    function clearTimer(name) { if (state[name]) { clearTimeout(state[name]); clearInterval(state[name]); state[name] = null; } }
+    function hideOverlay() {
+        clearTimer("ackTimer"); clearTimer("countdownTimer");
+        state.awaitingAck = false;
+        overlay.classList.remove("at-ac-visible");
+    }
+    function stop() {
+        clearTimer("idleTimer"); clearTimer("awayTimer");
+        hideOverlay();
+        state.enabled = false; state.pendingAway = false; state.warningPending = false; state.internalCopy = null;
+    }
+    async function terminate(reason) {
+        if (state.ending || !state.attemptId) return;
+        state.ending = true;
+        clearTimer("idleTimer"); clearTimer("awayTimer"); hideOverlay();
+        try {
+            await apiRequest("terminateIntegrityAttempt", {attemptId:state.attemptId,reason:String(reason || "Порушення правил")});
+            showNotification("Тест автоматично завершено. За порушення зафіксовано 0 балів.");
+            if (typeof window.finishTest === "function") await window.finishTest();
+        } catch (err) {
+            state.ending = false;
+            showNotification("Не вдалося зафіксувати автоматичне завершення: " + (err.message || err));
+        }
+    }
+    async function recordWarning(reason, requireAck) {
+        if (!inRealTest() || state.ending || state.warningPending) return;
+        state.warningPending = true;
+        let result;
+        try {
+            result = await apiRequest("reportIntegrityWarning", {attemptId:state.attemptId,reason:String(reason || "Порушення правил")});
+        } catch (err) {
+            state.warningPending = false;
+            showNotification("Не вдалося зберегти попередження анти-списування: " + (err.message || err));
+            return;
+        }
+        state.warningPending = false;
+        state.warnings = Number(result.warnings) || state.warnings + 1;
+        if (result.terminated) { await terminate(result.reason || reason); return; }
+        if (requireAck) showAck(reason);
+        else showNotification(`Попередження анти-списування ${state.warnings}/${state.cfg.maxWarnings}: ${reason}`);
+        resetIdleTimer();
+    }
+    function showAck(reason) {
+        if (!inRealTest()) return;
+        hideOverlay();
+        state.awaitingAck = true;
+        state.currentReason = String(reason || "Порушення правил");
+        $("at-ac-warning-count").textContent = `Попередження ${state.warnings}/${state.cfg.maxWarnings}`;
+        $("at-ac-reason").textContent = state.currentReason;
+        overlay.classList.add("at-ac-visible");
+        $("at-ac-resume").focus();
+        let left = state.cfg.returnSeconds;
+        $("at-ac-countdown").textContent = String(left);
+        state.countdownTimer = setInterval(() => {
+            left = Math.max(0, left - 1);
+            $("at-ac-countdown").textContent = String(left);
+        }, 1000);
+        state.ackTimer = setTimeout(() => terminate("Час повернення на платформу вичерпано: " + state.currentReason), state.cfg.returnSeconds * 1000);
+    }
+    function acknowledge() {
+        if (!state.awaitingAck) return;
+        hideOverlay();
+        state.currentReason = "";
+        resetIdleTimer();
+    }
+    function resetIdleTimer() {
+        clearTimer("idleTimer");
+        if (!inRealTest() || state.awaitingAck || state.ending) return;
+        const delay = Math.max(1, Number(state.cfg.idleMinutes) || 3) * 60 * 1000;
+        state.idleTimer = setTimeout(() => recordWarning(`Відсутність активності протягом ${state.cfg.idleMinutes} хвилин`, true), delay);
+    }
+    function beginAway() {
+        if (!inRealTest() || state.pendingAway || state.ending) return;
+        state.pendingAway = true;
+        state.awayAt = Date.now();
+        state.internalCopy = null;
+        clearTimer("awayTimer");
+        state.awayTimer = setTimeout(() => {
+            if (state.pendingAway) terminate("Сторінка тесту була неактивна понад " + state.cfg.returnSeconds + " секунд.");
+        }, state.cfg.returnSeconds * 1000);
+    }
+    function returnFromAway() {
+        if (!state.pendingAway || !inRealTest()) return;
+        const elapsed = Date.now() - state.awayAt;
+        state.pendingAway = false;
+        clearTimer("awayTimer");
+        if (elapsed >= state.cfg.returnSeconds * 1000) {
+            terminate("Час повернення на платформу вичерпано.");
+            return;
+        }
+        recordWarning("Втрата фокуса вікна або перемикання з вкладки тесту", false);
+    }
+    function start(initialWarnings) {
+        stop();
+        state.attemptId = String(window.currentAttemptId || "");
+        const cfg = window.activeTest && window.activeTest.antiCheat;
+        if (!state.attemptId || !cfg || !cfg.enabled || window.isPreviewSession) return;
+        state.cfg = {
+            enabled:true, idleMinutes:Math.max(1,Math.min(30,Number(cfg.idleMinutes)||3)),
+            maxWarnings:Math.max(1,Math.min(10,Number(cfg.maxWarnings)||4)),
+            returnSeconds:Math.max(3,Math.min(30,Number(cfg.returnSeconds)||5)), monitorPaste:cfg.monitorPaste !== false
+        };
+        state.warnings = Number(initialWarnings) || 0;
+        state.enabled = true; state.ending = false;
+        resetIdleTimer();
+    }
+
+    $("at-ac-resume").addEventListener("click", acknowledge);
+    ["pointerdown","pointermove","keydown","touchstart","wheel","input","click"].forEach(eventName => {
+        document.addEventListener(eventName, () => {
+            if (!inRealTest()) return;
+            if (state.awaitingAck) acknowledge();
+            else if (!state.pendingAway) resetIdleTimer();
+        }, {capture:true,passive:true});
+    });
+    window.addEventListener("blur", beginAway);
+    window.addEventListener("focus", returnFromAway);
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) beginAway(); else returnFromAway();
+    });
+
+    document.addEventListener("copy", event => {
+        if (!inRealTest() || !state.cfg.monitorPaste) return;
+        const target = event.target;
+        const editor = target && (target.closest?.(".CodeMirror") || target.matches?.('textarea[id^="code-input-"]'));
+        if (!editor) return;
+        let text = "";
+        const wrapper = target && target.closest ? target.closest(".CodeMirror") : null;
+        if (wrapper) {
+            const source = Array.from(document.querySelectorAll('textarea[id^="code-input-"]')).find(ta => ta._cm && ta._cm.getWrapperElement() === wrapper);
+            if (source && source._cm) text = String(source._cm.getSelection() || "");
+        }
+        if (!text && target && typeof target.selectionStart === "number" && typeof target.value === "string")
+            text = target.value.slice(target.selectionStart,target.selectionEnd);
+        if (!text && window.getSelection) text = String(window.getSelection() || "");
+        if (text) state.internalCopy = {text,at:Date.now()};
+    }, true);
+    document.addEventListener("paste", event => {
+        if (!inRealTest() || !state.cfg.monitorPaste) return;
+        const target = event.target;
+        const editor = target && (target.closest?.(".CodeMirror") || target.matches?.('textarea[id^="code-input-"]'));
+        if (!editor) return;
+        const pasted = event.clipboardData ? event.clipboardData.getData("text/plain") : "";
+        const allowed = state.internalCopy && Date.now()-state.internalCopy.at < 60000 && pasted === state.internalCopy.text;
+        state.internalCopy = null;
+        if (allowed) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        recordWarning("Заблоковано вставлення коду, скопійованого поза платформою", true);
+    }, true);
+
+    window.__startAntiCheat = start;
+    window.__stopAntiCheat = stop;
+})();
 </script>
 </body>
 </html>
