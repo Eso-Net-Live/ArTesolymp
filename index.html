@@ -398,7 +398,7 @@
                             <li><b>Пароль тесту</b> — якщо вчитель його встановив, система попросить його перед стартом.</li>
                             <li><b>Розділи (вкладки)</b> — питання згруповані за розділами; перемикайтеся вкладками та номерами питань («пігулками») над питанням.</li>
                             <li><b>Автозбереження</b> — відповіді зберігаються автоматично; можна повернутися до питання й змінити відповідь до завершення.</li>
-                            <li><b>Дедлайн</b> — після закінчення терміну тест закривається. Повторна спроба можлива лише якщо вчитель її дозволив.</li>
+                            <li><b>Дедлайн</b> — після завершення часу тест/олімпіада автоматично закривається та відправляє збережені відповіді на оцінювання. За правильні автоматично перевірювані відповіді нараховуються бали, пропущені дають 0; текстові відповіді оцінює вчитель. Повторна спроба можлива лише якщо вчитель її дозволив.</li>
                             <li><b>Завершення</b> — кнопка «Завершити» покаже попередження про питання без відповіді; після підтвердження відповіді відправляються на перевірку.</li>
                             <li><b>Відео в питаннях</b> — відтворюється прямо на сторінці (YouTube, Vimeo, Google Drive або файл).</li>
                             <li><b>Історія</b> — усі ваші проходження зберігаються в Профілі; зайве можна прибрати з історії.</li>
@@ -441,6 +441,7 @@
                                 <tr><td class="border theme-border px-3 py-2 font-code">3</td><td class="border theme-border px-3 py-2">Декілька правильних</td><td class="border theme-border px-3 py-2">Автоматично; <code>correct</code> — масив номерів, напр. <code>[0,2]</code>.</td></tr>
                                 <tr><td class="border theme-border px-3 py-2 font-code">4</td><td class="border theme-border px-3 py-2">Текстова відповідь</td><td class="border theme-border px-3 py-2">Оцінює вчитель; поле <code>AIinstruction</code> — підказка для оцінювання з ШІ.</td></tr>
                                 <tr><td class="border theme-border px-3 py-2 font-code">5</td><td class="border theme-border px-3 py-2">Дата</td><td class="border theme-border px-3 py-2">Автоматично; <code>correct</code> — дата <code>ДД-ММ-РРРР</code>.</td></tr>
+                                <tr><td class="border theme-border px-3 py-2 font-code">6</td><td class="border theme-border px-3 py-2">Розставити відповіді (відповідність)</td><td class="border theme-border px-3 py-2">Автоматично; для кожного пункту ліворуч обирається індекс варіанта праворуч, усі відповідності мають збігтися.</td></tr>
                             </tbody></table></div>
                     </section>
 
@@ -492,16 +493,28 @@
                         <div class="overflow-x-auto"><table class="w-full text-xs border-collapse">
                             <thead><tr class="theme-accent-bg-light"><th class="border theme-border px-2 py-1.5 text-left">Поле</th><th class="border theme-border px-2 py-1.5 text-left">Для типів</th><th class="border theme-border px-2 py-1.5 text-left">Значення (за замовчуванням)</th></tr></thead>
                             <tbody>
-                                <tr><td class="border theme-border px-2 py-1.5 font-code">type</td><td class="border theme-border px-2 py-1.5">усі</td><td class="border theme-border px-2 py-1.5">0–5 (4)</td></tr>
+                                <tr><td class="border theme-border px-2 py-1.5 font-code">type</td><td class="border theme-border px-2 py-1.5">усі</td><td class="border theme-border px-2 py-1.5">0–6 (4)</td></tr>
                                 <tr><td class="border theme-border px-2 py-1.5 font-code">score</td><td class="border theme-border px-2 py-1.5">усі</td><td class="border theme-border px-2 py-1.5">0–100000 (10; для типу 0 завжди 0)</td></tr>
                                 <tr><td class="border theme-border px-2 py-1.5 font-code">sections</td><td class="border theme-border px-2 py-1.5">усі</td><td class="border theme-border px-2 py-1.5">індекс у масиві <code>sections</code>, з 0 (0)</td></tr>
                                 <tr><td class="border theme-border px-2 py-1.5 font-code">name / discription</td><td class="border theme-border px-2 py-1.5">усі</td><td class="border theme-border px-2 py-1.5">назва («Питання N») / умова (порожньо)</td></tr>
                                 <tr><td class="border theme-border px-2 py-1.5 font-code">urlOrFile</td><td class="border theme-border px-2 py-1.5">усі</td><td class="border theme-border px-2 py-1.5">фото / відео / YouTube / Vimeo / Drive (порожньо)</td></tr>
                                 <tr><td class="border theme-border px-2 py-1.5 font-code">answers, correct</td><td class="border theme-border px-2 py-1.5">2, 3</td><td class="border theme-border px-2 py-1.5">варіанти (мін. 2); правильний індекс або масив індексів (0 / [0])</td></tr>
+                                <tr><td class="border theme-border px-2 py-1.5 font-code">items, answers, correct</td><td class="border theme-border px-2 py-1.5">6</td><td class="border theme-border px-2 py-1.5">пункти ліворуч, варіанти праворуч; <code>correct</code> — масив індексів правої колонки для кожного пункту (з 0)</td></tr>
                                 <tr><td class="border theme-border px-2 py-1.5 font-code">correct</td><td class="border theme-border px-2 py-1.5">5</td><td class="border theme-border px-2 py-1.5"><code>ДД-ММ-РРРР</code> (не задано)</td></tr>
                                 <tr><td class="border theme-border px-2 py-1.5 font-code">AIinstruction</td><td class="border theme-border px-2 py-1.5">4</td><td class="border theme-border px-2 py-1.5">інструкція для оцінювання (порожньо)</td></tr>
                                 <tr><td class="border theme-border px-2 py-1.5 font-code">code, typeInput, partialScore, formatInput, fixJsonWords, specHideTest, TestsCount, MaximumTest, Memory, Timeout</td><td class="border theme-border px-2 py-1.5">1</td><td class="border theme-border px-2 py-1.5">див. розділ 7 (int; true; —; {}; —; 100; 20; 156; 3000)</td></tr>
                             </tbody></table></div>
+                        <div class="rounded-xl border theme-border p-3 text-xs space-y-2">
+                            <b>Приклад питання типу 6 (відповідність):</b>
+                            <pre class="font-code overflow-x-auto whitespace-pre-wrap">{
+  "type": 6,
+  "name": "Зіставте приклади",
+  "items": ["2+2", "12/2", "52/5.2", "11/1"],
+  "answers": ["6", "10", "11", "4"],
+  "correct": [3, 0, 1, 2]
+}</pre>
+                            <p class="theme-text-secondary">Індекси починаються з 0: <code>0 = а</code>, <code>1 = б</code>, <code>2 = в</code>, <code>3 = г</code>. Один варіант праворуч можна використовувати кілька разів.</p>
+                        </div>
                         <div class="flex items-center justify-between gap-2">
                             <h4 class="font-bold">Повний приклад</h4>
                             <button onclick="copyDocsExample()" class="px-3 py-1.5 rounded-lg border theme-border text-xs font-bold hover:border-sky-400"><i class="fa-regular fa-copy mr-1"></i> Копіювати</button>
@@ -1020,10 +1033,16 @@
                         <span class="block font-bold text-sm">artesolymp.exe</span>
                         <span class="text-[11px] theme-text-secondary">Windows • портативна версія, без встановлення</span>
                     </div>
-                    <span class="text-xs font-bold theme-accent-color whitespace-nowrap">28.2 МБ</span>
+                </div>
+                <div>
+                    <label for="desktop-version-select" class="block text-xs font-bold theme-text-secondary mb-1.5">Версія програми</label>
+                    <select id="desktop-version-select" onchange="updateDesktopDownloadInfo()" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm font-bold">
+                        <option value="">Завантаження версій…</option>
+                    </select>
+                    <p id="desktop-selected-version-info" class="text-[11px] theme-text-secondary mt-2" aria-live="polite"></p>
                 </div>
                 <button onclick="downloadClientHtml()" class="w-full theme-btn-primary py-3.5 rounded-xl font-bold text-sm shadow-xl flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-download"></i> Завантажувати
+                    <i class="fa-solid fa-download"></i> Завантажити вибрану версію
                 </button>
             </div>
             <p class="text-xs theme-text-secondary">Після натискання кнопки завантаження почнеться автоматично. Якщо Windows покаже попередження SmartScreen — оберіть «Докладніше» → «Все одно виконати».</p>
@@ -1043,7 +1062,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbzCICH_RQ9pCWQTdKuFIbalJsinGsgu0mh2D4nLngnTtGKnvVUoBCXp9qcdEX5VtGyg/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbzBvj9t-fL4IFTZqj6G7jov_WZlqn5jGgTv1zoY2JD9Gec27nb3mkxO8cD_QnsjqK2N/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -1196,10 +1215,46 @@
             showNotification(favorites.has(String(testId)) ? "Додано до обраного." : "Прибрано з обраного.");
         }
 
-        const DESKTOP_APP_URL = "https://www.dropbox.com/scl/fi/nmdx1b210s80r0pak735h/artesolymp.exe?rlkey=k6mivp957airay4mg35kki8l5&st=34l1m4ve&dl=1";
+        // Додавайте нові версії у форматі "номер версії": "пряме посилання на файл".
+        const DESKTOP_APP_VERSIONS = {
+            "1.0.0.0": "https://www.dropbox.com/scl/fi/nmdx1b210s80r0pak735h/artesolymp.exe?rlkey=k6mivp957airay4mg35kki8l5&st=34l1m4ve&dl=1"
+        };
+        function populateDesktopVersions() {
+            const select = document.getElementById("desktop-version-select");
+            if (!select) return;
+            const versions = Object.keys(DESKTOP_APP_VERSIONS);
+            const previous = select.value;
+            select.innerHTML = "";
+            versions.sort((a, b) => b.localeCompare(a, undefined, {numeric:true}));
+            versions.forEach(version => {
+                const option = document.createElement("option");
+                option.value = version;
+                option.textContent = version;
+                select.appendChild(option);
+            });
+            if (versions.includes(previous)) select.value = previous;
+            else if (versions.length) select.value = versions[0];
+            updateDesktopDownloadInfo();
+        }
+        function updateDesktopDownloadInfo() {
+            const select = document.getElementById("desktop-version-select");
+            const info = document.getElementById("desktop-selected-version-info");
+            if (!select || !info) return;
+            const version = select.value;
+            info.textContent = version && DESKTOP_APP_VERSIONS[version]
+                ? `Обрана версія: ${version} • Windows (.exe)`
+                : "Немає доступних версій для завантаження.";
+        }
         function downloadClientHtml() {
-            showNotification("Завантаження artesolymp.exe розпочато…");
-            window.location.href = DESKTOP_APP_URL;
+            const select = document.getElementById("desktop-version-select");
+            const version = select ? select.value : "";
+            const url = DESKTOP_APP_VERSIONS[version];
+            if (!url) {
+                showNotification("Спочатку оберіть доступну версію програми.");
+                return;
+            }
+            showNotification(`Завантаження ArTesolymp ${version} розпочато…`);
+            window.location.href = url;
         }
 
         /* THEME MANAGEMENT CLICK CONTROLS */
@@ -1835,7 +1890,9 @@
                         restoredAnswers = started.answers && typeof started.answers === "object" ? started.answers : {};
                         restoredAntiCheatWarnings = Number(started.antiCheatWarnings) || 0;
                         test = started.test;
-                        if (started.resumed) showNotification("Відновлено незавершене проходження зі збереженими відповідями.");
+                        if (started.resumed) showNotification(started.expired
+                            ? "Дедлайн уже минув. Збережені відповіді зараз будуть автоматично оцінені."
+                            : "Відновлено незавершене проходження зі збереженими відповідями.");
                     } catch (err) {
                         const message = err.message || "Не вдалося розпочати проходження.";
                         if (testPassword && !document.getElementById('modal-test-password').classList.contains('hidden')) {
@@ -1903,8 +1960,8 @@
                 if (diffSec <= 0) {
                     clearInterval(timerInterval);
                     document.getElementById('live-timer').innerText = "00:00";
-                    showNotification("Дедлайн вичерпано! Тест завершено.");
-                    finishTest();
+                    showNotification("Дедлайн вичерпано! Олімпіаду/тест автоматично завершено, відповіді відправляються на оцінювання.");
+                    finishTest(true);
                     return;
                 }
 
@@ -2001,6 +2058,7 @@
         function checkIsAnswered(q) {
             if (q.type === 'info') return true;
             const ans = userAnswers[q.id];
+            if (q.type === 'matching') return Array.isArray(ans) && ans.some(v => v !== null && v !== undefined && v !== "");
             if (Array.isArray(ans)) return ans.length > 0;
             return ans !== null && ans !== "" && ans !== undefined;
         }
@@ -2016,7 +2074,8 @@
                 'single': 'Тест (Одна правильна)',
                 'multiple': 'Тест (Декілька правильних)',
                 'text': 'Текстова відповідь (ШІ)',
-                'date': 'Введення дати'
+                'date': 'Введення дати',
+                'matching': 'Розставити відповіді (відповідність)'
             };
 
             let html = `
@@ -2105,6 +2164,24 @@
                         <label onclick="toggleMultipleChoice(${jsString(q.id)}, ${idx})" class="p-4 rounded-xl border theme-border theme-bg-card hover:border-sky-400 cursor-pointer flex items-center gap-3 transition-all ${isChecked ? 'ring-2 ring-sky-500 theme-accent-bg-light' : ''}">
                             <input type="checkbox" ${isChecked ? 'checked' : ''} class="w-4 h-4 rounded text-sky-600">
                             <span class="text-sm font-medium">${escapeHtml(opt)}</span>
+                        </label>
+                    `;
+                });
+                html += `</div>`;
+            }
+            else if (q.type === 'matching') {
+                const userMap = Array.isArray(userAnswers[q.id]) ? userAnswers[q.id] : [];
+                html += `<div class="space-y-3 pt-2">`;
+                (q.matchItems || []).forEach((item, itemIdx) => {
+                    const selected = userMap[itemIdx] === null || userMap[itemIdx] === undefined ? "" : String(userMap[itemIdx]);
+                    html += `
+                        <label class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(10rem,1fr)] gap-2 sm:gap-4 items-center p-3 rounded-xl border theme-border theme-bg-card">
+                            <span class="text-sm font-semibold">${itemIdx + 1}. ${escapeHtml(item)}</span>
+                            <select onchange="setMatchingChoice(${jsString(q.id)}, ${itemIdx}, this.value)"
+                                class="w-full p-3 rounded-lg border theme-border theme-bg-main text-sm font-semibold">
+                                <option value="">— Оберіть відповідь —</option>
+                                ${(q.options || []).map((opt, optIdx) => `<option value="${optIdx}" ${selected === String(optIdx) ? 'selected' : ''}>${String.fromCharCode(97 + optIdx)}. ${escapeHtml(opt)}</option>`).join('')}
+                            </select>
                         </label>
                     `;
                 });
@@ -2357,6 +2434,18 @@
             renderQuestion();
         }
 
+        function setMatchingChoice(qId, itemIdx, optionValue) {
+            const q = activeTest && activeTest.questions.find(item => String(item.id) === String(qId));
+            if (!q) return;
+            const values = Array.isArray(userAnswers[qId]) ? userAnswers[qId].slice() : [];
+            while (values.length < (q.matchItems || []).length) values.push(null);
+            values[itemIdx] = optionValue === "" ? null : Number(optionValue);
+            userAnswers[qId] = values;
+            queueProgressSave();
+            renderPills();
+            renderInTestTabs();
+        }
+
         function navigateQuestion(dir) {
             const nextIdx = currentQuestionIndex + dir;
             if (nextIdx >= 0 && nextIdx < activeTest.questions.length) {
@@ -2396,7 +2485,7 @@
             showNotification("Результати збережено на ПК!");
         }
 
-        async function finishTest() {
+        async function finishTest(automaticDeadlineFinish = false) {
             if (!activeTest || window.finishInProgress) return;
             if (window.__stopAntiCheat) window.__stopAntiCheat();
             window.finishInProgress = true;
@@ -2443,6 +2532,13 @@
                     document.getElementById('btn-retry-submit').classList.remove('hidden');
                     document.getElementById('final-percentage').innerText = "Результат ще не збережено на сервері.";
                     window.finishInProgress = false;
+                    if (automaticDeadlineFinish) {
+                        window.deadlineAutoRetryCount = Number(window.deadlineAutoRetryCount || 0) + 1;
+                        if (window.deadlineAutoRetryCount <= 3) {
+                            showNotification("Повторна спроба автоматичного збереження результату…");
+                            setTimeout(() => finishTest(true), 5000);
+                        }
+                    }
                     return;
                 }
             }
@@ -2458,6 +2554,11 @@
                         const userArr = (Array.isArray(userAnswers[q.id]) ? userAnswers[q.id] : []).map(Number).sort((a,b)=>a-b).join(',');
                         const correctArr = (Array.isArray(q.correct) ? q.correct : [q.correct]).map(Number).sort((a,b)=>a-b).join(',');
                         if (correctArr !== "" && userArr === correctArr) score = points;
+                    } else if (q.type === 'matching') {
+                        const submittedMap = Array.isArray(userAnswers[q.id]) ? userAnswers[q.id] : [];
+                        const correctMap = Array.isArray(q.correct) ? q.correct : [];
+                        if (submittedMap.length === (q.matchItems || []).length && correctMap.length === submittedMap.length &&
+                            correctMap.every((v, i) => submittedMap[i] !== null && submittedMap[i] !== undefined && Number(submittedMap[i]) === Number(v))) score = points;
                     } else if (q.type === 'date' && normalizeDateAnswer(userAnswers[q.id]) && normalizeDateAnswer(userAnswers[q.id]) === normalizeDateAnswer(q.correctDate)) {
                         score = points;
                     } else if (q.type === 'code') {
@@ -2496,6 +2597,7 @@
             }
             window.currentAttemptId = null;
             window.finishInProgress = false;
+            window.deadlineAutoRetryCount = 0;
         }
         async function retrySubmitAttempt() {
             if (!window.currentAttemptId) {
@@ -2644,6 +2746,7 @@
                 type: "single",
                 points: 10,
                 options: ["Варіант 1", "Варіант 2"],
+                matchItems: ["Пункт 1", "Пункт 2"],
                 correct: 0,
                 allowedLangs: ["python"],
                 correctDate: "",
@@ -2681,6 +2784,13 @@
                     q.correct = Array.isArray(q.correct) ? (q.correct.length ? q.correct[0] : 0) : (Number(q.correct) || 0);
                     if (q.correct < 0 || q.correct >= q.options.length) q.correct = 0;
                 }
+            } else if (newType === 'matching') {
+                if (!Array.isArray(q.matchItems) || !q.matchItems.length) q.matchItems = ["Пункт 1", "Пункт 2"];
+                if (!Array.isArray(q.options) || q.options.length < 2) q.options = ["Варіант а", "Варіант б"];
+                q.correct = q.matchItems.map((_, i) => {
+                    const old = Array.isArray(q.correct) ? Number(q.correct[i]) : 0;
+                    return Number.isInteger(old) && old >= 0 && old < q.options.length ? old : 0;
+                });
             } else if (newType === 'info') {
                 q.points = 0;
             } else if (newType === 'code') {
@@ -2769,6 +2879,15 @@
 
             builderQuestions.forEach((q, idx) => {
                 if (q.type === 'multiple' && !Array.isArray(q.correct)) q.correct = [0];
+                if (q.type === 'matching') {
+                    if (!Array.isArray(q.matchItems) || !q.matchItems.length) q.matchItems = ["Пункт 1", "Пункт 2"];
+                    if (!Array.isArray(q.options) || q.options.length < 2) q.options = ["Варіант а", "Варіант б"];
+                    if (!Array.isArray(q.correct)) q.correct = [];
+                    q.correct = q.matchItems.map((_, i) => {
+                        const v = Number(q.correct[i]);
+                        return Number.isInteger(v) && v >= 0 && v < q.options.length ? v : 0;
+                    });
+                }
 
                 const card = document.createElement('div');
                 card.className = 'p-4 rounded-2xl border theme-border theme-bg-card space-y-3 relative';
@@ -2797,6 +2916,58 @@
                                     `;
                                 }).join('')}
                             </div>
+                        </div>
+                    `;
+                }
+
+                if (q.type === 'matching') {
+                    specificFieldsHtml = `
+                        <div class="space-y-3 pt-3 border-t theme-border">
+                            <div class="flex items-center justify-between gap-2">
+                                <label class="text-xs font-bold theme-text-secondary">Ліва колонка — що потрібно зіставити</label>
+                                <button onclick="builderAddMatchItem(${idx})" class="text-xs theme-accent-color font-bold hover:underline">+ Пункт</button>
+                            </div>
+                            <div class="space-y-2">
+                                ${(q.matchItems || []).map((item, itemIdx) => `
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold theme-text-secondary w-6">${itemIdx + 1}.</span>
+                                        <input type="text" value="${escapeHtml(item)}"
+                                            oninput="builderQuestions[${idx}].matchItems[${itemIdx}] = this.value"
+                                            placeholder="Пункт для зіставлення"
+                                            class="flex-1 min-w-0 p-2 rounded-lg border theme-border theme-bg-main text-xs">
+                                        <button onclick="builderRemoveMatchItem(${idx}, ${itemIdx})" class="text-red-400 px-2" title="Видалити пункт"><i class="fa-solid fa-trash text-xs"></i></button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="flex items-center justify-between gap-2 pt-2 border-t theme-border">
+                                <label class="text-xs font-bold theme-text-secondary">Права колонка — варіанти відповідей</label>
+                                <button onclick="builderAddOption(${idx})" class="text-xs theme-accent-color font-bold hover:underline">+ Варіант</button>
+                            </div>
+                            <div class="space-y-2">
+                                ${(q.options || []).map((opt, optIdx) => `
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold theme-text-secondary w-6">${String.fromCharCode(97 + optIdx)}.</span>
+                                        <input type="text" value="${escapeHtml(opt)}"
+                                            oninput="builderQuestions[${idx}].options[${optIdx}] = this.value"
+                                            placeholder="Варіант відповіді"
+                                            class="flex-1 min-w-0 p-2 rounded-lg border theme-border theme-bg-main text-xs">
+                                        <button onclick="builderRemoveOption(${idx}, ${optIdx})" class="text-red-400 px-2" title="Видалити варіант"><i class="fa-solid fa-trash text-xs"></i></button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="pt-2 border-t theme-border space-y-2">
+                                <p class="text-xs font-bold theme-text-secondary">Правильні відповідності</p>
+                                ${(q.matchItems || []).map((item, itemIdx) => `
+                                    <label class="grid grid-cols-[minmax(0,1fr)_minmax(7rem,1fr)] items-center gap-2 text-xs">
+                                        <span class="truncate">${itemIdx + 1}. ${escapeHtml(item)}</span>
+                                        <select onchange="setBuilderMatchingCorrect(${idx}, ${itemIdx}, this.value)"
+                                            class="w-full p-2 rounded-lg border theme-border theme-bg-main text-xs">
+                                            ${(q.options || []).map((opt, optIdx) => `<option value="${optIdx}" ${Number(q.correct[itemIdx]) === optIdx ? 'selected' : ''}>${String.fromCharCode(97 + optIdx)}. ${escapeHtml(opt)}</option>`).join('')}
+                                        </select>
+                                    </label>
+                                `).join('')}
+                            </div>
+                            <p class="text-[11px] theme-text-secondary">Один варіант справа можна використовувати для кількох пунктів зліва.</p>
                         </div>
                     `;
                 }
@@ -2890,6 +3061,7 @@
                                 <option value="multiple" ${q.type === 'multiple' ? 'selected' : ''}>3. Декілька правильних</option>
                                 <option value="text" ${q.type === 'text' ? 'selected' : ''}>4. Текстова відповідь (оцінює вчитель)</option>
                                 <option value="date" ${q.type === 'date' ? 'selected' : ''}>5. Введення дати</option>
+                                <option value="matching" ${q.type === 'matching' ? 'selected' : ''}>6. Розставити відповіді (відповідність)</option>
                             </select>
                         </div>
                     </div>
@@ -2908,6 +3080,33 @@
             renderBuilderQuestions();
         }
 
+        function builderAddMatchItem(qIdx) {
+            const q = builderQuestions[qIdx];
+            if (!Array.isArray(q.matchItems)) q.matchItems = [];
+            q.matchItems.push(`Пункт ${q.matchItems.length + 1}`);
+            if (!Array.isArray(q.correct)) q.correct = [];
+            q.correct.push(0);
+            renderBuilderQuestions();
+        }
+
+        function builderRemoveMatchItem(qIdx, itemIdx) {
+            const q = builderQuestions[qIdx];
+            if (!q || !Array.isArray(q.matchItems) || q.matchItems.length <= 1) {
+                showNotification("Залиште хоча б один пункт лівої колонки.");
+                return;
+            }
+            q.matchItems.splice(itemIdx, 1);
+            if (Array.isArray(q.correct)) q.correct.splice(itemIdx, 1);
+            renderBuilderQuestions();
+        }
+
+        function setBuilderMatchingCorrect(qIdx, itemIdx, optionValue) {
+            const q = builderQuestions[qIdx];
+            if (!q || !Array.isArray(q.matchItems)) return;
+            if (!Array.isArray(q.correct)) q.correct = q.matchItems.map(() => 0);
+            q.correct[itemIdx] = Number(optionValue);
+        }
+
         function builderRemoveOption(qIdx, optIdx) {
             const q = builderQuestions[qIdx];
             if (!q || !Array.isArray(q.options)) return;
@@ -2923,6 +3122,11 @@
                 q.correct = (Array.isArray(q.correct) ? q.correct : [])
                     .filter(i => i !== optIdx).map(i => i > optIdx ? i - 1 : i);
                 if (q.correct.length === 0) q.correct = [0];
+            } else if (q.type === 'matching') {
+                q.correct = (Array.isArray(q.correct) ? q.correct : []).map(i => {
+                    if (Number(i) === optIdx) return 0;
+                    return Number(i) > optIdx ? Number(i) - 1 : Number(i);
+                });
             }
             renderBuilderQuestions();
         }
@@ -3061,7 +3265,10 @@
             showNotification(`Код ${code} скопійовано!`);
         }
 
-        function showDesktopModal() { document.getElementById('modal-desktop').classList.remove('hidden'); }
+        function showDesktopModal() {
+            populateDesktopVersions();
+            document.getElementById('modal-desktop').classList.remove('hidden');
+        }
         function hideDesktopModal() { document.getElementById('modal-desktop').classList.add('hidden'); }
 
         document.addEventListener('keydown', function(e) {
@@ -3219,7 +3426,7 @@
     const $ = id => document.getElementById(id);
     const esc = v => escapeHtml(v);
     const pad = n => String(n).padStart(2, "0");
-    const TYPE_NAMES = ["info", "code", "single", "multiple", "text", "date"];
+    const TYPE_NAMES = ["info", "code", "single", "multiple", "text", "date", "matching"];
     const MAX_VIDEO_MB = 20;
 
     /* ------------------------------------------------------------------
@@ -3474,7 +3681,7 @@
             if (!isObj(r)) { warn(`Питання №${n}: не є об'єктом — замінено порожнім текстовим питанням.`); r = {}; }
             let tRaw = pick(r, "type");
             let type = typeof tRaw === "number" || /^\d+$/.test(String(tRaw)) ? TYPE_NAMES[Number(tRaw)] : String(tRaw ?? "").toLowerCase();
-            if (!TYPE_NAMES.includes(type)) { warn(`Питання №${n}, type «${tRaw ?? ""}»: має бути 0–5 — використано 4 (текстова відповідь).`); type = "text"; }
+            if (!TYPE_NAMES.includes(type)) { warn(`Питання №${n}, type «${tRaw ?? ""}»: має бути 0–6 — використано 4 (текстова відповідь).`); type = "text"; }
 
             let secIdx = pick(r, "sections", "section");
             secIdx = Number(secIdx);
@@ -3498,7 +3705,7 @@
                 description: String(pick(r, "discription", "description") ?? "").slice(0, 5000),
                 imageUrl: String(pick(r, "urlOrFile", "url", "media") ?? "").trim(),
                 type, points,
-                options: ["Варіант 1", "Варіант 2"], correct: 0, allowedLangs: ["python"], correctDate: "",
+                options: ["Варіант 1", "Варіант 2"], matchItems: [], correct: 0, allowedLangs: ["python"], correctDate: "",
                 referenceCode: "", inputFormat: "i<0 100> i<0 100> i<0 100>\ni<0 1000000>", inputKind: "numbers", inputOptions: {},
                 inputOptionsText: "{}", testInputs: [], testInputsText: "", codeScoreMode: "partial", hiddenTestCount: 100,
                 maxChecks: 20, memoryLimitMb: 156, timeLimitMs: 3000, aiPrompt: "", manualTestInput: ""
@@ -3522,6 +3729,21 @@
                     if (!arr.length) { warn(`Питання №${n}, correct: немає коректних індексів — використано [0].`); arr = [0]; }
                     q.correct = arr;
                 }
+            } else if (type === "matching") {
+                const leftRaw = pick(r, "items", "left", "matchItems");
+                const rightRaw = pick(r, "answers", "options", "right");
+                q.matchItems = Array.isArray(leftRaw) ? leftRaw.slice(0, 100).map(x => String(x ?? "").slice(0, 350)) : [];
+                q.options = Array.isArray(rightRaw) ? rightRaw.slice(0, 100).map(x => String(x ?? "").slice(0, 350)) : [];
+                if (!q.matchItems.length) { q.matchItems = ["Пункт 1", "Пункт 2"]; warn(`Питання №${n}, items: додайте пункти лівої колонки — використано приклад.`); }
+                if (q.options.length < 2) { q.options = ["Варіант а", "Варіант б"]; warn(`Питання №${n}, answers: потрібно щонайменше 2 варіанти — використано приклад.`); }
+                const rawMap = pick(r, "correct");
+                const map = Array.isArray(rawMap) ? rawMap : [];
+                q.correct = q.matchItems.map((_, idx) => {
+                    const value = Number(map[idx]);
+                    if (Number.isInteger(value) && value >= 0 && value < q.options.length) return value;
+                    warn(`Питання №${n}, correct[${idx}]: потрібен індекс варіанта правої колонки — обрано перший варіант.`);
+                    return 0;
+                });
             } else if (type === "text") {
                 q.aiPrompt = String(pick(r, "AIinstruction", "aiInstruction", "aiPrompt") ?? "").slice(0, 3000);
             } else if (type === "date") {
@@ -3617,6 +3839,7 @@
                 const type = Math.max(0, TYPE_NAMES.indexOf(q.type));
                 const o = { type, score: Number(q.points) || 0, sections: Math.max(0, tabs.indexOf(q.tabName)), name: q.title || "", discription: q.description || "" };
                 if (q.type === "single" || q.type === "multiple") { o.answers = q.options || []; o.correct = q.correct; }
+                if (q.type === "matching") { o.items = q.matchItems || []; o.answers = q.options || []; o.correct = q.correct || []; }
                 if (q.type === "date") o.correct = dateToDMY(q.correctDate);
                 o.urlOrFile = q.imageUrl || "";
                 if (q.type === "text") o.AIinstruction = q.aiPrompt || "";
