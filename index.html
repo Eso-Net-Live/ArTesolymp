@@ -1218,7 +1218,7 @@
         // Додавайте нові версії у форматі "номер версії": "пряме посилання на файл".
         const DESKTOP_APP_VERSIONS = {
             "1.0.0.0": "https://www.dropbox.com/scl/fi/nmdx1b210s80r0pak735h/artesolymp.exe?rlkey=k6mivp957airay4mg35kki8l5&st=34l1m4ve&dl=1",
-            "1.1.2.0": "https://www.dropbox.com/scl/fi/z0wr6rk8yk9imov6fnula/artesolymp.exe?rlkey=2g0w54e5hwmvea3z0yaqaax5t&st=3p18homo&dl=1"
+            "1.1.2.0  (Рекомендовано)": "https://www.dropbox.com/scl/fi/z0wr6rk8yk9imov6fnula/artesolymp.exe?rlkey=2g0w54e5hwmvea3z0yaqaax5t&st=3p18homo&dl=1"
         };
         function populateDesktopVersions() {
             const select = document.getElementById("desktop-version-select");
@@ -1243,7 +1243,7 @@
             if (!select || !info) return;
             const version = select.value;
             info.textContent = version && DESKTOP_APP_VERSIONS[version]
-                ? `Обрана версія: ${version} • Windows (.exe)`
+                ? `Обрана версія: ${version != "1.1.2.0  (Рекомендовано)" ? version : "1.1.2.0"} • Windows (.exe)`
                 : "Немає доступних версій для завантаження.";
         }
         function downloadClientHtml() {
