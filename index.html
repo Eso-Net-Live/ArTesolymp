@@ -218,6 +218,9 @@
                     </div>
                 </div>
 
+                <button onclick="openGloberAI()" id="glober-nav-btn" aria-label="Glober AI" title="Glober AI" class="flex items-center gap-2 px-2.5 sm:px-3.5 py-2 rounded-xl text-sm font-semibold border theme-border theme-bg-card hover:border-sky-400 transition-all shadow-sm">
+                    <i class="fa-solid fa-wand-magic-sparkles theme-accent-color"></i> <span class="hidden sm:inline">Glober AI</span>
+                </button>
                 <button onclick="showDocs()" id="docs-nav-btn" aria-label="Документація" title="Документація" class="flex items-center gap-2 px-2.5 sm:px-3.5 py-2 rounded-xl text-sm font-semibold border theme-border theme-bg-card hover:border-sky-400 transition-all shadow-sm">
                     <i class="fa-solid fa-book theme-accent-color"></i> <span class="hidden sm:inline">Документація</span>
                 </button>
@@ -265,6 +268,9 @@
                         </button>
                         <button onclick="showCreatorModal()" class="px-6 py-3.5 rounded-2xl text-sm font-bold border theme-border theme-bg-card hover:border-sky-400 flex items-center gap-2 transition-all">
                             <i class="fa-solid fa-plus-circle theme-accent-color"></i> Конструктор тестів
+                        </button>
+                        <button onclick="openGloberAI()" class="px-6 py-3.5 rounded-2xl text-sm font-bold border theme-border theme-bg-card hover:border-sky-400 flex items-center gap-2 transition-all">
+                            <i class="fa-solid fa-wand-magic-sparkles theme-accent-color"></i> Glober AI
                         </button>
                         <button onclick="showDocs()" class="px-6 py-3.5 rounded-2xl text-sm font-bold border theme-border theme-bg-card hover:border-sky-400 flex items-center gap-2 transition-all">
                             <i class="fa-solid fa-book theme-accent-color"></i> Документація
@@ -379,9 +385,143 @@
                     <p class="text-xs theme-text-secondary mt-1">Керуйте запитами на перегляд ваших результатів.</p>
                     <div id="tracking-student-requests" class="mt-3 space-y-3"></div>
                 </section>
+
+                <section class="rounded-2xl border theme-border p-4 mt-5 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div><h3 class="font-bold">Гаманець ArTesolymp 💎</h3><p class="text-xs theme-text-secondary">Ключі та самоцвіти зберігаються на сервері й не залежать від браузера.</p></div>
+                        <button onclick="refreshEconomy()" class="px-3 py-2 rounded-xl border theme-border text-xs font-bold">Оновити баланс</button>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div class="rounded-xl theme-accent-bg-light border theme-border p-3"><div class="text-[10px] uppercase font-bold theme-text-secondary">Самоцвіти</div><div id="wallet-gems" class="text-2xl font-black">—</div></div>
+                        <div class="rounded-xl border theme-border p-3"><div class="text-[10px] uppercase font-bold theme-text-secondary">Безкоштовні</div><div id="wallet-free" class="text-2xl font-black">—</div><div id="wallet-refill" class="text-[10px] theme-text-secondary">—</div></div>
+                        <div class="rounded-xl border theme-border p-3"><div class="text-[10px] uppercase font-bold theme-text-secondary">Тимчасові</div><div id="wallet-temp" class="text-2xl font-black">—</div></div>
+                        <div class="rounded-xl border theme-border p-3"><div class="text-[10px] uppercase font-bold theme-text-secondary">Куплені</div><div id="wallet-paid" class="text-2xl font-black">—</div></div>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="buyKeyPackage('keys30')" class="px-3 py-2 rounded-xl border theme-border text-xs font-bold">30 ключів · 300 💎</button>
+                        <button onclick="buyKeyPackage('keys105')" class="px-3 py-2 rounded-xl border theme-border text-xs font-bold">105 ключів · 1000 💎</button>
+                        <button onclick="buyKeyPackage('keys300')" class="px-3 py-2 rounded-xl border theme-border text-xs font-bold">300 ключів · 2600 💎</button>
+                        <button onclick="buyKeyPackage('keys500')" class="px-3 py-2 rounded-xl border theme-border text-xs font-bold">500 ключів · 4000 💎</button>
+                    </div>
+                    <div class="flex flex-wrap gap-2 items-center">
+                        <button onclick="activateTemporaryTeacher()" class="theme-btn-primary px-4 py-2 rounded-xl text-xs font-bold">Режим вчителя · 200 💎 / 12 год</button>
+                        <button onclick="buyStreakFreeze()" class="px-4 py-2 rounded-xl border theme-border text-xs font-bold">Заморозка стріку · 25 💎</button>
+                        <span id="wallet-streak" class="text-xs theme-text-secondary"></span>
+                    </div>
+                    <p id="wallet-mode-note" class="text-[11px] theme-text-secondary"></p>
+                </section>
+
+                <section id="mentor-panel" class="rounded-2xl border theme-border p-4 mt-5 space-y-3 hidden">
+                    <h3 class="font-bold">Менторська передача ключів</h3>
+                    <p class="text-xs theme-text-secondary">Безкоштовні ключі діють 4 години; куплені передаються назавжди.</p>
+                    <div class="grid sm:grid-cols-[minmax(0,1fr)_150px_110px_auto] gap-2">
+                        <input id="mentor-email" type="email" placeholder="Пошта учня" class="min-w-0 p-2.5 rounded-xl border theme-border theme-bg-card text-sm">
+                        <select id="mentor-kind" class="p-2.5 rounded-xl border theme-border theme-bg-card text-sm"><option value="free">Безкоштовні (4 год)</option><option value="paid">Куплені назавжди</option></select>
+                        <input id="mentor-count" type="number" min="1" max="40" value="1" class="p-2.5 rounded-xl border theme-border theme-bg-card text-sm">
+                        <button onclick="sendMentorKeys()" class="theme-btn-primary px-4 py-2 rounded-xl text-xs font-bold">Передати</button>
+                    </div>
+                </section>
+
+                <section class="rounded-2xl border theme-border p-4 mt-5 space-y-3">
+                    <h3 class="font-bold">Листівка підтримки вчителю</h3>
+                    <p class="text-xs theme-text-secondary">Вічна листівка з повідомленням і передачею 5–5000 самоцвітів.</p>
+                    <div class="grid sm:grid-cols-[minmax(0,1fr)_120px] gap-2">
+                        <input id="support-teacher-email" type="email" placeholder="Пошта підтвердженого вчителя" class="p-2.5 rounded-xl border theme-border theme-bg-card text-sm">
+                        <input id="support-amount" type="number" min="5" max="5000" value="5" class="p-2.5 rounded-xl border theme-border theme-bg-card text-sm">
+                    </div>
+                    <textarea id="support-message" maxlength="500" rows="2" placeholder="Текст листівки" class="w-full p-2.5 rounded-xl border theme-border theme-bg-card text-sm"></textarea>
+                    <button onclick="sendSupportCard()" class="theme-btn-primary px-4 py-2 rounded-xl text-xs font-bold">Надіслати листівку</button>
+                    <div id="support-cards-list" class="space-y-2 text-xs"></div>
+                </section>
+
+                <section class="rounded-2xl border theme-border p-4 mt-5 space-y-3">
+                    <h3 class="font-bold">Стиль профілю</h3>
+                    <p class="text-xs theme-text-secondary">Косметичні предмети купуються за внутрішні самоцвіти. Уже придбані стилі можна вибирати повторно без оплати.</p>
+                    <div id="profile-appearance-preview" class="rounded-xl border theme-border p-3 text-sm">Попередній перегляд профілю</div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="buyProfileStyle('frame_gold')" class="px-3 py-2 rounded-xl border theme-border text-xs font-bold">Золота рамка · 50 💎</button>
+                        <button onclick="buyProfileStyle('frame_neon')" class="px-3 py-2 rounded-xl border theme-border text-xs font-bold">Неонова рамка · 100 💎</button>
+                        <button onclick="buyProfileStyle('frame_olympian')" class="px-3 py-2 rounded-xl border theme-border text-xs font-bold">Олімпієць · 150 💎</button>
+                        <button onclick="buyProfileStyle('frame_sysadmin')" class="px-3 py-2 rounded-xl border theme-border text-xs font-bold">Сисадмін · 150 💎</button>
+                        <button onclick="buyProfileStyle('name_cyan')" class="px-3 py-2 rounded-xl border theme-border text-xs font-bold">Блакитний нік · 75 💎</button>
+                        <button onclick="buyProfileStyle('name_violet')" class="px-3 py-2 rounded-xl border theme-border text-xs font-bold">Фіолетовий нік · 75 💎</button>
+                        <button onclick="buyProfileStyle('name_gold')" class="px-3 py-2 rounded-xl border theme-border text-xs font-bold">Золотий нік · 100 💎</button>
+                    </div>
+                </section>
+
+                <section class="rounded-2xl border theme-border p-4 mt-5 space-y-3">
+                    <h3 class="font-bold">Соціальні посилання</h3>
+                    <p class="text-xs theme-text-secondary">Дозволені лише TikTok, YouTube, Chess.com, Facebook і Telegram.</p>
+                    <div class="grid sm:grid-cols-2 gap-2">
+                        <input id="social-tiktok" placeholder="https://tiktok.com/@..." class="p-2.5 rounded-xl border theme-border theme-bg-card text-sm">
+                        <input id="social-youtube" placeholder="https://youtube.com/@..." class="p-2.5 rounded-xl border theme-border theme-bg-card text-sm">
+                        <input id="social-chess" placeholder="https://chess.com/member/..." class="p-2.5 rounded-xl border theme-border theme-bg-card text-sm">
+                        <input id="social-facebook" placeholder="https://facebook.com/..." class="p-2.5 rounded-xl border theme-border theme-bg-card text-sm">
+                        <input id="social-telegram" placeholder="https://t.me/..." class="p-2.5 rounded-xl border theme-border theme-bg-card text-sm">
+                    </div>
+                    <button onclick="saveSocialProfileLinks()" class="theme-btn-primary px-4 py-2 rounded-xl text-xs font-bold">Зберегти посилання</button>
+                </section>
+
+                <section class="rounded-2xl border theme-border p-4 mt-5 space-y-3">
+                    <div><h3 class="font-bold">Досягнення та титули ✨</h3><p class="text-xs theme-text-secondary">Відзнаки за навчальну активність і командну гру.</p></div>
+                    <div id="profile-achievements" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs"><span class="theme-text-secondary">Досягнення з'являться після активності на платформі.</span></div>
+                </section>
+
+                <section class="rounded-2xl border theme-border p-4 mt-5 space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2"><div><h3 class="font-bold">Сезонна ліга 🏆</h3><p class="text-xs theme-text-secondary">Поточний місячний рейтинг учнів і підтверджених учителів.</p></div><button onclick="loadLeaderboard()" class="px-3 py-2 rounded-xl border theme-border text-xs font-bold">Оновити рейтинг</button></div>
+                    <div class="grid md:grid-cols-3 gap-3"><div><div class="text-xs font-bold mb-2">Учні</div><div id="league-students" class="space-y-1 text-xs"></div></div><div><div class="text-xs font-bold mb-2">Вчителі</div><div id="league-teachers" class="space-y-1 text-xs"></div></div><div><div class="text-xs font-bold mb-2">Класи</div><div id="league-classes" class="space-y-1 text-xs"></div></div></div>
+                </section>
+
+                <section class="rounded-2xl border theme-border p-4 mt-5 space-y-3">
+                    <div><h3 class="font-bold">Кабінет класу 🏫</h3><p class="text-xs theme-text-secondary">Створіть клас або приєднайтеся за кодом. Бали класу формуються із завершених тестувань учасників.</p></div>
+                    <div class="grid sm:grid-cols-[minmax(0,1fr)_auto] gap-2"><input id="classroom-name" maxlength="60" placeholder="Назва вашого класу" class="p-2.5 rounded-xl border theme-border theme-bg-card text-sm"><button onclick="createClassroom()" class="theme-btn-primary px-4 py-2 rounded-xl text-xs font-bold">Створити клас</button></div>
+                    <div class="grid sm:grid-cols-[minmax(0,1fr)_auto] gap-2"><input id="classroom-join-code" maxlength="20" placeholder="Код запрошення CLS-…" class="p-2.5 rounded-xl border theme-border theme-bg-card text-sm"><button onclick="joinClassroom()" class="px-4 py-2 rounded-xl border theme-border text-xs font-bold">Приєднатися</button></div>
+                    <div id="classroom-meta" class="text-sm theme-text-secondary">Завантаження інформації про клас…</div><div id="classroom-members" class="space-y-1 text-xs"></div>
+                </section>
+
+                <section class="rounded-2xl border theme-border p-4 mt-5 space-y-3">
+                    <div><h3 class="font-bold">Виклик на дуель ⚔️</h3><p class="text-xs theme-text-secondary">Створіть однаковий міні-тест для друга. Дуель не використовує ставки та не переказує самоцвіти.</p></div>
+                    <div class="grid sm:grid-cols-2 gap-2"><input id="duel-friend-email" type="email" placeholder="Email друга на платформі" class="p-2.5 rounded-xl border theme-border theme-bg-card text-sm"><input id="duel-subject" maxlength="120" placeholder="Тема: наприклад, алгебра 7 клас" class="p-2.5 rounded-xl border theme-border theme-bg-card text-sm"></div>
+                    <button onclick="createDuel()" class="theme-btn-primary px-4 py-2 rounded-xl text-xs font-bold">Згенерувати й надіслати виклик</button>
+                    <div id="duels-list" class="space-y-2 text-sm theme-text-secondary">Немає активних дуелей.</div>
+                    <div id="duel-question-panel" class="hidden rounded-xl border theme-border p-3 space-y-3"></div>
+                </section>
+
+                <section id="admin-panel" class="rounded-2xl border border-amber-500/50 p-4 mt-5 space-y-3 hidden">
+                    <h3 class="font-bold">Адміністративна панель</h3>
+                    <p class="text-xs theme-text-secondary">Лише адміністратор може підтверджувати вчителів, змінювати truths і нараховувати самоцвіти.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="loadAdminPanel()" class="px-3 py-2 rounded-xl border theme-border text-xs font-bold">Оновити дані</button>
+                        <button onclick="runNewYearEvent()" class="px-3 py-2 rounded-xl border theme-border text-xs font-bold">Запустити новорічний подарунок</button>
+                    </div>
+                    <div class="grid sm:grid-cols-[minmax(0,1fr)_120px_minmax(0,1fr)_auto] gap-2">
+                        <input id="admin-grant-email" type="email" placeholder="Email користувача" class="p-2 rounded-xl border theme-border theme-bg-card text-xs">
+                        <input id="admin-grant-amount" type="number" min="1" max="100000" value="50" class="p-2 rounded-xl border theme-border theme-bg-card text-xs">
+                        <input id="admin-grant-reason" placeholder="Причина" class="p-2 rounded-xl border theme-border theme-bg-card text-xs">
+                        <button onclick="adminGrantGems()" class="theme-btn-primary px-3 py-2 rounded-xl text-xs font-bold">Нарахувати</button>
+                    </div>
+                    <div><h4 class="font-bold text-xs mb-2">Заявки на роль учителя</h4><div id="admin-users-list" class="space-y-2 text-xs"></div></div>
+                    <div><h4 class="font-bold text-xs mb-2">Перевірка олімпіад (truths)</h4><div id="admin-tests-list" class="space-y-2 text-xs"></div></div>
+                </section>
             </div>
         </div>
 
+
+        <!-- ================= GLOBER AI ================= -->
+        <div id="section-glober" class="hidden space-y-5">
+            <div class="rounded-3xl theme-bg-card border theme-border p-6 md:p-8 shadow-xl">
+                <div class="flex flex-wrap items-center gap-3"><div class="w-14 h-14 rounded-2xl theme-btn-primary flex items-center justify-center text-2xl"><i class="fa-solid fa-wand-magic-sparkles"></i></div><div><h2 class="text-2xl font-black">Glober AI</h2><p class="text-sm theme-text-secondary">Мультиагентний навчальний помічник ArTesolymp</p></div></div>
+                <p class="text-xs theme-text-secondary mt-4">Безкоштовні ключі відновлюються автоматично. Режим роздуму виконує три послідовні AI-етапи та коштує x3 ключі (під час святкового бонусу — x2).</p>
+            </div>
+            <div class="rounded-3xl theme-bg-card border theme-border shadow-xl overflow-hidden">
+                <div class="flex flex-wrap items-center justify-between gap-3 p-4 border-b theme-border">
+                    <div><div class="font-extrabold">Чат з Glober</div><div id="glober-agent-status" class="text-[11px] theme-text-secondary">Агент визначається автоматично</div></div>
+                    <div class="flex flex-wrap items-center gap-2"><select id="glober-agent" class="p-2 rounded-xl border theme-border theme-bg-card text-xs"><option value="auto">Автовибір агента</option></select><label class="flex items-center gap-2 text-xs font-bold"><input id="glober-thinking" type="checkbox"> <span id="glober-thinking-label">Режим роздуму x3</span></label></div>
+                </div>
+                <div id="glober-chat-log" class="p-4 space-y-3 min-h-[320px] max-h-[58vh] overflow-y-auto" aria-live="polite"><div class="text-sm theme-text-secondary text-center py-16">Вітаю! Я Glober AI. Постав запитання з навчання, програмування або роботи платформи.</div></div>
+                <div class="p-4 border-t theme-border space-y-2"><textarea id="glober-input" rows="3" maxlength="5000" placeholder="Напиши повідомлення українською…" class="w-full p-3 rounded-xl border theme-border theme-bg-main text-sm resize-y"></textarea><div class="flex flex-wrap justify-between items-center gap-2"><span id="glober-key-cost" class="text-[11px] theme-text-secondary">Вартість: 1 ключ</span><div class="flex gap-2"><button onclick="clearGloberChat()" class="px-3 py-2 rounded-xl border theme-border text-xs font-bold">Очистити екран</button><button id="glober-send-btn" onclick="sendGloberMessage()" class="theme-btn-primary px-5 py-2.5 rounded-xl text-xs font-bold"><i class="fa-solid fa-paper-plane mr-1"></i> Надіслати</button></div></div></div>
+            </div>
+        </div>
 
         <!-- ================= ДОКУМЕНТАЦІЯ ================= -->
         <div id="section-docs" class="hidden">
@@ -864,6 +1004,11 @@
                     </select>
                 </div>
                 <div>
+                    <label class="block text-xs font-bold theme-text-secondary uppercase mb-1">Мінімум для нагороди</label>
+                    <input id="builder-reward-min" type="number" min="0" max="100" value="50" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm">
+                    <p class="text-[10px] theme-text-secondary mt-1">Відсоток балів; самоцвіти все одно потребують підтвердження адміністратора.</p>
+                </div>
+                <div>
                     <label class="block text-xs font-bold theme-text-secondary uppercase mb-1">Режим</label>
                     <select id="builder-kind" onchange="updateBuilderAntiCheatUI()" class="w-full p-3 rounded-xl border theme-border theme-bg-card text-sm">
                         <option value="test">Тест</option>
@@ -1089,14 +1234,29 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbzexkpJ2l2y_qneLifmdtHUnuF1bivxUAm2gx-DElwBHItSoaoyAP5xqJlNSeD2RPln/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbynASt3pbhGwoCg00y0X5xiS5NTU5D7JBxYPIeizrWTRGmdTi71PfR4w-kMcZTKj9W2/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
         let currentUser = { name: "Гість", email: "", role: "Учень" };
+        let globerHistoryLoaded = false;
+        let activeDuelId = "";
+        let activeDuelQuestions = [];
 
         /* Database */
         let testsDatabase = [
+            {
+                id: DEMO_TEST_ID, kind: "olympiad", allowRepeat: true,
+                title: "Демо-олімпіада ArTesolymp",
+                description: "Навчальний демонстраційний режим: можна пройти без реєстрації. Результат тестовий і не дає самоцвітів.",
+                code: "", deadline: "2099-12-31T23:59:00", isPublic: false,
+                tabs: ["Знайомство", "Логіка"], questionCount: 3, requiresPassword: false,
+                questions: [
+                    {id:"demo-info",tabName:"Знайомство",title:"Демо-режим",description:"Це демонстраційне проходження. Вибери відповіді, щоб перевірити інтерфейс.",type:"info",points:0},
+                    {id:"demo-q1",tabName:"Логіка",title:"Скільки буде 7 × 8?",description:"Оберіть одну відповідь.",type:"single",points:10,options:["54","56","64","48"],correct:1},
+                    {id:"demo-q2",tabName:"Логіка",title:"Які з цих значень є парними?",description:"Оберіть усі правильні варіанти.",type:"multiple",points:10,options:["11","14","20","27"],correct:[1,2]}
+                ]
+            },
             // {
             //     id: "demo-olympiad-tabs",
             //     kind: "olympiad",
@@ -1315,11 +1475,12 @@
 
         /* NAVIGATION & MODALS */
         function showSection(sec) {
-            ['landing','profile','test','results','docs'].forEach(name => {
+            ['landing','profile','test','results','docs','glober'].forEach(name => {
                 const el = document.getElementById(`section-${name}`);
                 if (el) el.classList.toggle('hidden', name !== sec);
             });
             if (sec === 'landing') { renderTestsList(); loadStudentProgress(); }
+            if (sec === 'glober' && authToken) loadGloberHistory();
         }
 
         function escapeHtml(value) {
@@ -1662,12 +1823,66 @@
             pts.forEach((p,i)=>{if(data.length<=10||i%Math.ceil(data.length/10)===0||i===data.length-1){ctx.save();ctx.translate(p.x,h-32);ctx.rotate(-.35);ctx.fillStyle=getComputedStyle(document.body).getPropertyValue("--text-secondary")||"#64748b";ctx.fillText(String(p.a.title||"Результат").slice(0,22),0,0);ctx.restore();}});
         }
 
+        function renderEconomy(e) {
+            if(!e)return;
+            const ids={"wallet-gems":e.gems,"wallet-free":`${e.freeKeys}/${e.freeKeyCap}`,"wallet-temp":e.temporaryKeys,"wallet-paid":e.paidKeys};
+            Object.keys(ids).forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=String(ids[id]);});
+            const refill=document.getElementById("wallet-refill");if(refill)refill.textContent=`+1 кожні ${e.refillMinutes} хв`;
+            const streak=document.getElementById("wallet-streak");if(streak)streak.textContent=`🔥 Стрік: ${e.streak} днів · заморозки: ${e.streakFreezes}`;
+            const note=document.getElementById("wallet-mode-note");if(note)note.textContent=e.teacherModeActive?`Тимчасовий режим вчителя активний до ${new Date(e.teacherModeUntil).toLocaleString("uk-UA")} (лише створення олімпіад).`:currentUser.role==="Учитель"?"Підтверджений учитель: створення доступне без оплати.":"Режим вчителя відкриває створення олімпіад на 12 годин.";
+            const holiday=new Date(e.thinkingMultiplierUntil||"").getTime()>Date.now();const thoughtLabel=document.getElementById("glober-thinking-label");if(thoughtLabel)thoughtLabel.textContent=`Режим роздуму x${holiday?2:3}`;
+            const cost=document.getElementById("glober-key-cost");if(cost){const count=document.getElementById("glober-thinking")?.checked?(holiday?2:3):1;cost.textContent=`Вартість: ${count} ключ${count===1?"":"і(в)"} · доступно ${e.totalKeys}`;}
+        }
+        async function refreshEconomy(){if(!requireLogin())return;try{const d=await apiRequest("economy");renderEconomy(d.economy);currentUser=d.user||currentUser;}catch(e){showNotification(e.message);}}
+        async function buyKeyPackage(packageId){if(!requireLogin())return;try{const d=await apiRequest("buyKeys",{packageId});renderEconomy(d.economy);showNotification(`Придбано ${d.purchased} ключів Glober AI.`);}catch(e){showNotification(e.message);}}
+        async function activateTemporaryTeacher(){if(!requireLogin())return;try{const d=await apiRequest("activateTeacherMode");renderEconomy(d.economy);currentUser.temporaryTeacher=true;currentUser.teacherModeUntil=d.teacherModeUntil||"";showNotification(d.permanent?"У вас уже є постійні права вчителя.":"Режим вчителя активовано на 12 годин.");}catch(e){showNotification(e.message);}}
+        async function buyStreakFreeze(){if(!requireLogin())return;try{const d=await apiRequest("freezeStreak");renderEconomy(d.economy);showNotification("Заморозку стріку додано до профілю.");}catch(e){showNotification(e.message);}}
+        async function sendMentorKeys(){if(!requireLogin())return;const email=document.getElementById("mentor-email").value.trim(),kind=document.getElementById("mentor-kind").value,amount=Number(document.getElementById("mentor-count").value);try{const d=await apiRequest("transferKeys",{email,kind,amount});renderEconomy(d.economy);showNotification(`Передано ${d.transferred} ключів користувачу ${d.target}.`);}catch(e){showNotification(e.message);}}
+        async function sendSupportCard(){if(!requireLogin())return;const teacherEmail=document.getElementById("support-teacher-email").value.trim(),amount=Number(document.getElementById("support-amount").value),message=document.getElementById("support-message").value;try{const d=await apiRequest("createSupportCard",{teacherEmail,amount,message});renderEconomy(d.economy);showNotification(`Листівку надіслано. Передано ${d.amount} 💎.`);document.getElementById("support-message").value="";}catch(e){showNotification(e.message);}}
+        function renderSupportCards(cards){const box=document.getElementById("support-cards-list");if(!box)return;box.innerHTML="";cards.forEach(c=>{const el=document.createElement("div");el.className="rounded-xl border theme-border p-3";const h=document.createElement("div");h.className="font-bold";h.textContent=`${c.fromName} · ${c.amount} 💎`;const p=document.createElement("p");p.className="theme-text-secondary mt-1";p.textContent=c.message||"Листівка підтримки";el.append(h,p);box.append(el);});if(!cards.length)box.textContent="Листівок поки немає.";}
+        function renderAchievements(items){const box=document.getElementById("profile-achievements");if(!box)return;box.innerHTML="";(items||[]).forEach(a=>{const card=document.createElement("div");card.className="rounded-xl border theme-border p-3";const title=document.createElement("div");title.className="font-bold";title.textContent="🏅 "+a.title;const desc=document.createElement("div");desc.className="theme-text-secondary mt-1";desc.textContent=a.description||"Досягнення ArTesolymp";card.append(title,desc);box.append(card);});if(!(items||[]).length)box.textContent="Досягнення з'являться після активності на платформі.";}
+        function renderProfileAppearance(){const box=document.getElementById("profile-appearance-preview");if(!box)return;box.innerHTML="";const name=document.createElement("strong");name.textContent=currentUser.name||"Користувач";if(currentUser.nameColor)name.style.color=currentUser.nameColor;const frame=document.createElement("span");frame.className="ml-2 rounded-full px-2 py-1 text-[10px] border";const frames={gold:"Золота рамка",neon:"Неонова рамка",olympian:"Олімпієць",sysadmin:"Сисадмін"};frame.textContent=frames[currentUser.frameId]||"Без рамки";box.append(name,frame);if(currentUser.titleId){const title=document.createElement("div");title.className="text-xs theme-text-secondary mt-1";title.textContent="Титул: "+currentUser.titleId;box.append(title);}}
+        async function buyProfileStyle(styleId){if(!requireLogin())return;try{const d=await apiRequest("purchaseStyle",{styleId});currentUser=d.user||currentUser;renderEconomy(d.economy);renderProfileAppearance();showNotification(d.alreadyOwned?"Раніше придбаний стиль застосовано без оплати.":"Елемент стилю придбано.");}catch(e){showNotification(e.message);}}
+        async function saveSocialProfileLinks(){if(!requireLogin())return;const links={};["tiktok","youtube","chess","facebook","telegram"].forEach(k=>links[k]=document.getElementById("social-"+k).value.trim());try{await apiRequest("saveSocialLinks",{links});showNotification("Соціальні посилання збережено.");}catch(e){showNotification(e.message);}}
+        async function unlockExpiredOlympiad(testId){if(!requireLogin())return;if(!confirm("Індивідуальне відкриття простроченої олімпіади коштує 20 💎 та діє 24 години. Продовжити?"))return;try{const d=await apiRequest("buyExpiredAccess",{testId});renderEconomy(d.economy);showNotification("Олімпіаду відкрито на 24 години.");await startTestSession(d.test||testId,false);}catch(e){showNotification(e.message);}}
+        async function loadLeaderboard(){if(!authToken)return;try{const d=await apiRequest("leaderboard");const draw=(id,rows)=>{const box=document.getElementById(id);if(!box)return;box.innerHTML="";(rows||[]).forEach((r,i)=>{const line=document.createElement("div");line.className="flex justify-between gap-2 rounded-lg border theme-border p-2";const name=document.createElement("span");name.textContent=`${i+1}. ${r.name}`;const score=document.createElement("strong");score.textContent=String(r.score);line.append(name,score);box.append(line);});if(!rows||!rows.length)box.textContent="Поки немає результатів.";};draw("league-students",d.students);draw("league-teachers",d.teachers);draw("league-classes",d.classes);}catch(e){console.warn("Leaderboard:",e.message);}}
+
+        async function loadClassroom(){if(!authToken)return;const meta=document.getElementById("classroom-meta"),membersBox=document.getElementById("classroom-members");if(!meta||!membersBox)return;try{const d=await apiRequest("classroomInfo");membersBox.innerHTML="";if(!d.classroom){meta.textContent="Ви ще не приєдналися до класу. Створіть клас або введіть код запрошення.";return;}const c=d.classroom;meta.textContent=c.name+(c.isOwner?` · Код запрошення: ${c.inviteCode}`:" · Ви учасник класу");(d.members||[]).forEach((m,i)=>{const row=document.createElement("div");row.className="flex justify-between gap-2 border-b theme-border py-1";const name=document.createElement("span");name.textContent=`${i+1}. ${m.name}${m.isOwner?" · власник":""}`;const score=document.createElement("strong");score.textContent=`${m.score} бал.`;row.append(name,score);membersBox.append(row);});}catch(e){meta.textContent=e.message;}}
+        async function createClassroom(){if(!requireLogin())return;const name=document.getElementById("classroom-name").value.trim();try{await apiRequest("classroomCreate",{name});document.getElementById("classroom-name").value="";await loadClassroom();await loadLeaderboard();showNotification("Клас створено.");}catch(e){showNotification(e.message);}}
+        async function joinClassroom(){if(!requireLogin())return;const code=document.getElementById("classroom-join-code").value.trim();try{await apiRequest("classroomJoin",{code});document.getElementById("classroom-join-code").value="";await loadClassroom();await loadLeaderboard();showNotification("Ви приєдналися до класу.");}catch(e){showNotification(e.message);}}
+        async function loadDuels(){if(!authToken)return;const box=document.getElementById("duels-list");if(!box)return;try{const d=await apiRequest("duelList");box.innerHTML="";(d.duels||[]).forEach(x=>{const card=document.createElement("div");card.className="rounded-xl border theme-border p-3 space-y-2";const title=document.createElement("div");title.className="font-bold";title.textContent=`${x.subject||"Дуель"} · ${x.myRole==="creator"?"ви викликали "+x.opponentName:"виклик від "+x.creatorName}`;card.append(title);const info=document.createElement("div");info.className="text-xs theme-text-secondary";info.textContent=x.status==="pending"?(x.myRole==="opponent"?"Очікує вашої відповіді":"Очікує прийняття виклику") : x.status==="active"?"Дуель триває" : x.status==="completed"?`Завершено · ${x.creatorName}: ${x.creatorScore}/5 · ${x.opponentName}: ${x.opponentScore}/5${x.winnerId==="tie"?" · Нічия":x.winnerId===(x.myRole==="creator"?x.creatorId:x.opponentId)?" · Ви перемогли":" · Переміг суперник"}`:`Статус: ${x.status}`;card.append(info);if(x.status==="pending"&&x.myRole==="opponent"){const actions=document.createElement("div");actions.className="flex gap-2";[ ["accept","Прийняти"],["reject","Відхилити"] ].forEach(([decision,label])=>{const b=document.createElement("button");b.className="px-3 py-1.5 rounded-lg border theme-border text-xs font-bold";b.textContent=label;b.onclick=()=>respondDuel(x.id,decision);actions.append(b);});card.append(actions);}if(x.status==="active"&&!x.submitted){const b=document.createElement("button");b.className="theme-btn-primary px-3 py-1.5 rounded-lg text-xs font-bold";b.textContent="Відкрити міні-тест";b.onclick=()=>openDuel(x.id);card.append(b);}else if(x.status==="active"&&x.submitted){const b=document.createElement("button");b.className="px-3 py-1.5 rounded-lg border theme-border text-xs font-bold";b.textContent="Оновити статус";b.onclick=loadDuels;card.append(b);}box.append(card);});if(!(d.duels||[]).length)box.textContent="Поки немає дуелей.";}catch(e){box.textContent=e.message;}}
+        async function createDuel(){if(!requireLogin())return;const email=document.getElementById("duel-friend-email").value.trim(),subject=document.getElementById("duel-subject").value.trim();if(!email){showNotification("Вкажіть email друга.");return;}try{const d=await apiRequest("duelCreate",{email,subject});document.getElementById("duel-friend-email").value="";await loadDuels();showNotification(`Виклик надіслано користувачу ${d.opponentName}.`);}catch(e){showNotification(e.message);}}
+        async function respondDuel(id,decision){try{await apiRequest("duelRespond",{duelId:id,decision});await loadDuels();showNotification(decision==="accept"?"Дуель прийнято.":"Виклик відхилено.");}catch(e){showNotification(e.message);}}
+        async function openDuel(id){try{const d=await apiRequest("duelGet",{duelId:id});activeDuelId=d.id;activeDuelQuestions=d.questions||[];const panel=document.getElementById("duel-question-panel");panel.innerHTML="";panel.classList.remove("hidden");const heading=document.createElement("h4");heading.className="font-bold";heading.textContent=`Дуель: ${d.subject}`;panel.append(heading);if(d.submitted){const note=document.createElement("p");note.className="text-sm theme-text-secondary";note.textContent="Ваші відповіді вже відправлено. Очікуйте завершення суперником.";panel.append(note);return;}activeDuelQuestions.forEach((q,i)=>{const field=document.createElement("fieldset");field.className="rounded-lg border theme-border p-3 space-y-2";const legend=document.createElement("legend");legend.className="text-sm font-bold";legend.textContent=`${i+1}. ${q.title}`;field.append(legend);if(q.description){const desc=document.createElement("p");desc.className="text-xs theme-text-secondary";desc.textContent=q.description;field.append(desc);}q.options.forEach((option,j)=>{const label=document.createElement("label");label.className="flex items-center gap-2 text-sm py-1";const radio=document.createElement("input");radio.type="radio";radio.name=`duel-answer-${i}`;radio.value=String(j);radio.className="accent-sky-500";const text=document.createElement("span");text.textContent=option;label.append(radio,text);field.append(label);});panel.append(field);});const submit=document.createElement("button");submit.className="theme-btn-primary px-4 py-2 rounded-xl text-xs font-bold";submit.textContent="Надіслати відповіді";submit.onclick=submitDuel;panel.append(submit);panel.scrollIntoView({behavior:"smooth",block:"nearest"});}catch(e){showNotification(e.message);}}
+        async function submitDuel(){const answers=[];for(let i=0;i<activeDuelQuestions.length;i++){const selected=document.querySelector(`input[name="duel-answer-${i}"]:checked`);if(!selected){showNotification(`Дайте відповідь на питання №${i+1}.`);return;}answers.push(Number(selected.value));}try{const d=await apiRequest("duelSubmit",{duelId:activeDuelId,answers});document.getElementById("duel-question-panel").classList.add("hidden");showNotification(`Ваш результат: ${d.score}/${d.total}.`);await loadDuels();}catch(e){showNotification(e.message);}}
+
+        async function adminGrantGems(){if(!requireLogin())return;try{const d=await apiRequest("adminGrantGems",{email:document.getElementById("admin-grant-email").value.trim(),amount:Number(document.getElementById("admin-grant-amount").value),reason:document.getElementById("admin-grant-reason").value});showNotification(`Нараховано ${d.granted} 💎.`);await loadAdminPanel();}catch(e){showNotification(e.message);}}
+        async function runNewYearEvent(){if(!requireLogin())return;if(!confirm("Роздати всім користувачам 50 💎 і ввімкнути x2 режим роздуму на 7 днів? Подію можна запустити лише один раз за рік."))return;try{const d=await apiRequest("adminNewYearEvent");showNotification(`Подарунок отримають ${d.sent} користувачів.`);await loadAdminPanel();}catch(e){showNotification(e.message);}}
+        async function loadAdminPanel(){if(!currentUser.isAdmin)return;try{const [td,ud]=await Promise.all([apiRequest("adminListTests"),apiRequest("adminListUsers")]);const users=document.getElementById("admin-users-list");users.innerHTML="";(ud.users||[]).filter(x=>x.requestedRole==="Учитель"||x.role==="Учитель").forEach(u=>{const row=document.createElement("div");row.className="flex flex-wrap justify-between gap-2 border-b theme-border py-2";const info=document.createElement("span");info.textContent=`${u.name} · ${u.email} · ${u.role}${u.requestedRole?" · очікує підтвердження":""}`;const button=document.createElement("button");button.className="theme-accent-color font-bold";button.textContent=u.role==="Учитель"?"Зняти статус":"Підтвердити";button.onclick=async()=>{try{await apiRequest("adminVerifyTeacher",{userId:u.id,verified:u.role!=="Учитель"});await loadAdminPanel();}catch(e){showNotification(e.message);}};row.append(info,button);users.append(row);});if(!users.children.length)users.textContent="Заявок на роль вчителя немає.";const tests=document.getElementById("admin-tests-list");tests.innerHTML="";(td.tests||[]).forEach(t=>{const row=document.createElement("div");row.className="flex flex-wrap items-center gap-2 border-b theme-border py-2";const label=document.createElement("span");label.className="flex-1 min-w-[220px]";label.textContent=`${t.title} · ${t.kind} · ${t.ownerEmail} · ID ${t.id}`;const threshold=document.createElement("input");threshold.type="number";threshold.min="0";threshold.max="100";threshold.value=String(t.rewardMinPercent);threshold.className="w-16 p-1 rounded border theme-border theme-bg-card";const button=document.createElement("button");button.className="px-3 py-1.5 rounded-lg border theme-border text-xs font-bold";button.textContent=t.truths?"truths = TRUE":"Підтвердити truths";button.onclick=async()=>{try{await apiRequest("adminSetTruth",{testId:t.id,truths:!t.truths,rewardMinPercent:Number(threshold.value)});await loadAdminPanel();}catch(e){showNotification(e.message);}};row.append(label,threshold,button);tests.append(row);});if(!tests.children.length)tests.textContent="Тестів ще немає.";}catch(e){showNotification(e.message);}}
+        function openGloberAI(){if(!requireLogin()){showNotification("Увійдіть, щоб користуватися Glober AI та зберігати історію чату.");return;}showSection("glober");}
+        function addGloberMessage(speaker,content,agentName){const box=document.getElementById("glober-chat-log");if(!box)return;const empty=box.querySelector(".text-center");if(empty)empty.remove();const wrap=document.createElement("div");wrap.className=`max-w-[92%] rounded-2xl p-3 border theme-border ${speaker==="user"?"ml-auto theme-accent-bg-light":"mr-auto theme-bg-main"}`;const meta=document.createElement("div");meta.className="text-[10px] font-bold theme-text-secondary mb-1";meta.textContent=speaker==="user"?"Ви":`Glober AI${agentName?" · "+agentName:""}`;const body=document.createElement("div");body.className="text-sm whitespace-pre-wrap break-words";body.textContent=content;wrap.append(meta,body);box.append(wrap);box.scrollTop=box.scrollHeight;}
+        async function loadGloberHistory(){if(!authToken)return;try{const d=await apiRequest("globerHistory");const box=document.getElementById("glober-chat-log");box.innerHTML="";if(!(d.messages||[]).length){box.innerHTML='<div class="text-sm theme-text-secondary text-center py-16">Вітаю! Я Glober AI. Постав запитання з навчання, програмування або роботи платформи.</div>'; }else d.messages.forEach(m=>addGloberMessage(m.speaker,m.content,""));globerHistoryLoaded=true;}catch(e){showNotification(e.message);}}
+        async function sendGloberMessage(){if(!requireLogin())return;const input=document.getElementById("glober-input"),message=input.value.trim();if(!message)return;const btn=document.getElementById("glober-send-btn");const agentId=document.getElementById("glober-agent").value;const thinking=document.getElementById("glober-thinking").checked;addGloberMessage("user",message);input.value="";btn.disabled=true;btn.textContent="Glober думає…";try{const d=await apiRequest("globerChat",{message,agentId,thinking});addGloberMessage("assistant",d.answer,d.agent&&d.agent.name);document.getElementById("glober-agent-status").textContent=`Агент: ${d.agent.name} · витрачено ${d.keysUsed} ключ(і)`;renderEconomy(d.economy);}catch(e){addGloberMessage("assistant","Не вдалося виконати запит: "+e.message,"Системне повідомлення");}finally{btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-paper-plane mr-1"></i> Надіслати';}}
+        function clearGloberChat(){document.getElementById("glober-chat-log").innerHTML='<div class="text-sm theme-text-secondary text-center py-16">Екран очищено. Історія збережена на сервері; оновіть сторінку чату, щоб завантажити її знову.</div>';}
+
         async function loadProfile() {
             if (!requireLogin()) return;
             try {
                 const data = await apiRequest("profile");
                 currentUser = data.user || currentUser;
                 applyCurrentUserUI();
+                if (data.economy) renderEconomy(data.economy);
+                document.getElementById("mentor-panel").classList.toggle("hidden", data.user.role !== "Учитель");
+                document.getElementById("admin-panel").classList.toggle("hidden", !data.user.isAdmin);
+                const links=data.socialLinks||{};
+                ["tiktok","youtube","chess","facebook","telegram"].forEach(k=>{const el=document.getElementById("social-"+k);if(el)el.value=links[k]||"";});
+                renderSupportCards(data.supportCards||[]);
+                renderAchievements(data.achievements||[]);
+                renderProfileAppearance();
+                if(data.user.isAdmin)loadAdminPanel();
+                loadLeaderboard();
+                loadClassroom();
+                loadDuels();
                 window.__teacherResults = data.teacherResults || [];
                 window.__createdTests = data.created || [];
                 renderTrackingPanels(data);
@@ -1737,7 +1952,7 @@
                     const info = document.createElement("div");
                     info.className = "font-semibold text-sm";
                     const percent = Number(a.maxScore) > 0 ? Math.round(Number(a.score) / Number(a.maxScore) * 100) : 0;
-                    info.textContent = `${a.title} · ${a.score}/${a.maxScore} б. (${percent}%) · ${new Date(a.finishedAt).toLocaleString("uk-UA")}`;
+                    info.textContent = `${a.title} · ${a.score}/${a.maxScore} б. (${percent}%) · ${new Date(a.finishedAt).toLocaleString("uk-UA")}` + (a.rewardGems ? ` · +${a.rewardGems} 💎` : "");
                     row.appendChild(info);
                     if (a.integrityTerminated) {
                         const flag = document.createElement("div"); flag.className = "text-[11px] text-amber-600 mt-1";
@@ -1979,6 +2194,7 @@
                 const deadlineFormatted = Number.isFinite(deadlineDate.getTime()) ? deadlineDate.toLocaleString('uk-UA') : 'Без дедлайну';
                 const isFavorite = favorites.has(String(test.id));
                 const questionCount = Number(test.questionCount) || (Array.isArray(test.questions) ? test.questions.length : 0);
+                const expiredOlympiad = test.kind === "olympiad" && Number.isFinite(deadlineDate.getTime()) && deadlineDate.getTime() < Date.now() && test.id !== DEMO_TEST_ID;
                 card.innerHTML = `
                     <div class="space-y-3 min-w-0">
                         <div class="flex items-start justify-between gap-3">
@@ -1999,9 +2215,7 @@
                     </div>
                     <div class="flex items-center justify-between gap-3 pt-3 border-t theme-border">
                         <span class="text-xs font-semibold theme-text-secondary shrink-0"><i class="fa-solid fa-list-check mr-1"></i>${questionCount} питань</span>
-                        <button onclick="startTestSession(${jsString(test.id)}, false)" class="theme-btn-primary px-4 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow min-w-0">
-                            <i class="fa-solid ${test.requiresPassword ? 'fa-lock' : 'fa-play'}"></i>${test.requiresPassword ? 'Ввести пароль' : 'Почати'}
-                        </button>
+                        ${expiredOlympiad ? `<button onclick="unlockExpiredOlympiad(${jsString(test.id)})" class="theme-btn-primary px-4 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow min-w-0"><i class="fa-solid fa-gem"></i> Відкрити за 20 💎</button>` : `<button onclick="startTestSession(${jsString(test.id)}, false)" class="theme-btn-primary px-4 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow min-w-0"><i class="fa-solid ${test.requiresPassword ? 'fa-lock' : 'fa-play'}"></i>${test.requiresPassword ? 'Ввести пароль' : 'Почати'}</button>`}
                     </div>`;
                 container.appendChild(card);
             });
@@ -2774,8 +2988,9 @@
 
         function showCreatorModal() {
             if (!requireLogin()) return;
-            if (currentUser.role !== "Учитель") {
-                showNotification("Створювати тести та олімпіади може лише акаунт учителя.");
+            const tempTeacher = currentUser.role !== "Учитель" && currentUser.temporaryTeacher;
+            if (currentUser.role !== "Учитель" && !tempTeacher) {
+                showNotification("Створення доступне підтвердженим учителям або після активації режиму вчителя.");
                 return;
             }
             builderEditingTestId = null;
@@ -2788,7 +3003,9 @@
             document.getElementById('builder-deadline').value = "";
             document.getElementById('builder-visibility').value = "private";
             document.getElementById('builder-allow-repeat').value = "false";
-            document.getElementById('builder-kind').value = "test";
+            document.getElementById('builder-kind').value = tempTeacher ? "olympiad" : "test";
+            document.querySelector('#builder-kind option[value="test"]').disabled = tempTeacher;
+            document.getElementById('builder-reward-min').value = "50";
             document.getElementById('builder-password').value = "";
             document.getElementById('builder-password-help').textContent = "Для публічної олімпіади пароль теж можна ввімкнути. На сервері зберігається лише хеш.";
             document.getElementById('builder-password-remove-wrap').classList.add('hidden');
@@ -2818,6 +3035,8 @@
                 document.getElementById('builder-visibility').value = t.isPublic ? "public" : "private";
                 document.getElementById('builder-allow-repeat').value = t.allowRepeat ? "true" : "false";
                 document.getElementById('builder-kind').value = t.kind || "test";
+                document.getElementById('builder-kind').querySelectorAll('option').forEach(o=>o.disabled=currentUser.role!=="Учитель"&&currentUser.temporaryTeacher&&o.value!=="olympiad");
+                document.getElementById('builder-reward-min').value = String(t.rewardMinPercent || 50);
                 document.getElementById('builder-password').value = "";
                 document.getElementById('builder-password-help').textContent = t.hasPassword
                     ? "Для зміни пароля введіть новий. Порожнє поле залишить поточний пароль без змін."
@@ -3372,6 +3591,7 @@
                 isPublic: document.getElementById("builder-visibility").value === "public",
                 allowRepeat: document.getElementById("builder-allow-repeat").value === "true",
                 kind: document.getElementById("builder-kind").value,
+                rewardMinPercent: Math.max(0,Math.min(100,document.getElementById("builder-reward-min").value===""?50:Number(document.getElementById("builder-reward-min").value)||0)),
                 password,
                 removePassword,
                 antiCheat: {
@@ -3424,12 +3644,16 @@
             if (e.key === 'Escape' && !document.getElementById('modal-test-password').classList.contains('hidden')) hideTestPasswordModal();
         });
 
+        document.addEventListener("keydown",function(e){if(e.target&&e.target.id==="glober-input"&&e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendGloberMessage();}});
         window.onload = function() {
             const savedTheme = localStorage.getItem('artesolymp_theme') || 'light-blue';
             setTheme(savedTheme);
             applyCurrentUserUI();
             toggleAuthFields();
             renderTestsList();
+            const agentSelect=document.getElementById("glober-agent");
+            if(agentSelect){const names=[["receiver","Отримувач"],["router","Головний планувальник"],["database","База даних"],["search","Іскатель"],["librarian","Бібліотекар"],["stem","Фізмат"],["history","Історик"],["english","Англічанин"],["ukrainian","Українець"],["science","Природознавець"],["ukrlit","Патріотичний читатель"],["worldlit","Всесвітній читатель"],["programmer","Програміст"],["civics","Грамотна"],["playlist","Плейлистер-навчання"],["moderation","Нагляд"],["examiner","Екзаменатор"],["sysadmin","Сисадмін ArTesolymp"],["artsport","Мистецтвознавець та Фізрук"],["time","Планувальник часу"],["support","Психолог"],["anonymizer","Олімпіадний Анонімайзер"],["referee","Арбітр / Розбирач помилок"],["stylist","Стиліст-Хамелеон"],["memory","Конденсатор / Зберігач пам'яті"]];names.forEach(([v,l])=>{const o=document.createElement("option");o.value=v;o.textContent=l;agentSelect.append(o);});}
+            document.getElementById("glober-thinking")?.addEventListener("change",()=>{if(authToken)refreshEconomy();});
             if (API_URL) refreshFromServer();
         };
     </script>
