@@ -4674,7 +4674,7 @@
     const NC = { red: "#ef4444", gold: "#eab308", cyan: "#06b6d4", pink: "#ec4899", lime: "#84cc16" };
     const NAMES = { frame: "Рамки", bg: "Фони профілю", nameColor: "Кольори імені" };
     const LBL = { frame_gold: "Золота", frame_neon: "Неон", frame_olympian: "Олімпієць", frame_sysadmin: "Сисадмін", bg_sunset: "Захід", bg_ocean: "Океан", bg_forest: "Ліс", bg_space: "Космос", nc_red: "Червоний", nc_gold: "Золотий", nc_cyan: "Блакитний", nc_pink: "Рожевий", nc_lime: "Лаймовий" };
-    let me = null, tab = "profile", duelTimer = null;
+    let me = null, tab = "dm", duelTimer = null;
     const call = async (a, p) => apiRequest(a, p || {});
     const toast = m => showNotification(m);
 
@@ -4687,10 +4687,10 @@
         <div id="hb-body" class="flex-1 overflow-y-auto p-3 text-sm space-y-3"></div>
       </div>
     </div>`);
-    const TABS = [["profile", "👤 Профіль"], ["garage", "🎨 Гараж"], ["dm", "💬 ЛС"], ["cards", "🎁 Картки"], ["class", "🏫 Класи"], ["league", "🏅 Ліга"], ["duel", "⚔️ Дуелі"], ["build", "🧠 Конструктор"]];
+    const TABS = [["dm", "💬 ЛС"], ["cards", "🎁 Картки"], ["class", "🏫 Класи"], ["league", "🏅 Ліга"], ["duel", "⚔️ Дуелі"], ["build", "🧠 Конструктор"]];
     const btn = "px-3 py-2 rounded-xl border theme-border font-bold text-xs hover:border-sky-400";
     const inp = "w-full p-2 rounded-xl border theme-border theme-bg-card text-sm";
-    const body = () => $("hb-body");
+    const body = () => mount || $("hb-body");
     const walTxt = () => { if (me && me.wallet) $("hb-wal").textContent = `· 💎 ${me.wallet.gems} · 🔑 ${me.wallet.freeKeys + me.wallet.paidKeys}`; };
 
     function avatar(p, size) {
@@ -4707,16 +4707,28 @@
     }
     async function render() {
         setTabs(); if (!me) await load(); if (!me) return;
-        const f = { profile, garage, dm, cards, cls, league, duel, build }[tab]; body().innerHTML = "<div class='theme-text-secondary'>Завантаження…</div>"; try { await f(); } catch (e) { body().innerHTML = `<div class="text-red-500">${esc(e.message)}</div>`; }
+        const f = { dm, cards, cls, league, duel, build }[tab]; body().innerHTML = "<div class='theme-text-secondary'>Завантаження…</div>"; try { await f(); } catch (e) { body().innerHTML = `<div class="text-red-500">${esc(e.message)}</div>`; }
         walTxt();
     }
     function openHub() { if (!requireLogin()) return; $("hb-modal").classList.remove("hidden"); load().then(render); }
     $("hb-fab").onclick = openHub; $("hb-close").onclick = () => $("hb-modal").classList.add("hidden");
     $("hb-tabs").addEventListener("click", e => { const t = e.target.dataset && e.target.dataset.tab; if (t) { tab = t; render(); } });
 
-    /* --- профіль --- */
+    /* --- профіль (рендериться у розділі showSection('profile')) --- */
+    let mount = null;
+    async function mountProfile() {
+        if (!authToken) return;
+        let m = $("sp-mount");
+        if (!m) { m = document.createElement("div"); m.id = "sp-mount"; m.className = "p-6 rounded-3xl theme-bg-card border theme-border shadow-xl space-y-3 text-sm"; $("section-profile").appendChild(m); }
+        m.innerHTML = '<div class="text-lg font-black">Соціальний профіль і гараж</div><div id="sp-a"></div><div id="sp-b" class="mt-4"></div>';
+        try { await load(); mount = $("sp-a"); await profile(); mount = $("sp-b"); await garage(); }
+        catch (e) { m.textContent = e.message; } finally { mount = null; }
+    }
+    const _show = window.showSection;
+    window.showSection = function (s) { const r = _show.apply(this, arguments); if (s === "profile") mountProfile(); return r; };
+    
     async function profile() {
-        const p = me.profile, s = p.socials || {};
+        const p = me.profile, s = p.socials || {}, root = body();
         const src = { tiktok: "TikTok (tiktok.com/@…)", youtube: "YouTube (youtube.com/@… або youtu.be/…)", chess: "Chess.com (chess.com/member/…)", facebook: "Facebook (facebook.com/…)", telegram: "Telegram (t.me/…)" };
         body().innerHTML = card(p, me.tempUntil ? " · 🕒 тимчасовий учитель" : "") + `
         <div class="space-y-2"><div class="font-bold">Аватар</div>
@@ -4730,9 +4742,9 @@
         </div>`;
         $("pf-dm").value = p.dmPrivacy;
         $("pf-save").onclick = async () => {
-            const socials = {}; body().querySelectorAll("[data-soc]").forEach(i => socials[i.dataset.soc] = i.value.trim());
+            const socials = {}; root.querySelectorAll("[data-soc]").forEach(i => socials[i.dataset.soc] = i.value.trim());
             const pl = { avatarUrl: $("pf-av").value.trim(), title: $("pf-title").value, socials, dmPrivacy: $("pf-dm").value }; if ($("pf-bd")) pl.birthDate = $("pf-bd").value;
-            try { await call("globerSocSave", pl); toast("Профіль збережено."); await load(); render(); } catch (e) { toast(e.message); }
+            try { await call("globerSocSave", pl); toast("Профіль збережено."); await mountProfile(); } catch (e) { toast(e.message); }
         };
         $("pf-up").onclick = () => $("pf-file").click();
         $("pf-file").onchange = async ev => {
@@ -4740,10 +4752,10 @@
             const img = new Image(); img.onload = async () => {
                 const c = document.createElement("canvas"); c.width = c.height = 256; const x = c.getContext("2d"), m = Math.min(img.width, img.height);
                 x.drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, 256, 256);
-                try { await call("globerSocAvatar", { image: c.toDataURL("image/jpeg", 0.8) }); toast("Аватар оновлено."); await load(); render(); } catch (e) { toast(e.message); }
+                try { await call("globerSocAvatar", { image: c.toDataURL("image/jpeg", 0.8) }); toast("Аватар оновлено."); await mountProfile(); } catch (e) { toast(e.message); }
             }; img.src = URL.createObjectURL(f);
         };
-        if ($("pf-temp")) $("pf-temp").onclick = async () => { try { await call("globerTempTeacher"); toast("Режим вчителя активовано на 12 год."); await load(); render(); } catch (e) { toast(e.message); } };
+        if ($("pf-temp")) $("pf-temp").onclick = async () => { try { await call("globerTempTeacher"); toast("Режим вчителя активовано на 12 год."); await mountProfile(); } catch (e) { toast(e.message); } };
     }
 
     /* --- гараж --- */
@@ -4757,7 +4769,7 @@
             const d = e.target.dataset; try {
                 if (d.off) await call("globerSocEquip", { slot: d.off, value: "" });
                 else if (d.item) { if (p.owned.indexOf(d.item) >= 0) await call("globerSocEquip", { slot: d.slot, value: d.val }); else await call("globerSocBuy", { item: d.item }); }
-                else return; await load(); render();
+                else return; await mountProfile();
             } catch (er) { toast(er.message); }
         };
     }
