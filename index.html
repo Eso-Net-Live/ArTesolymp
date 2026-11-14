@@ -1089,7 +1089,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbwUn_FY9ro3DBS16axTMMTnaPHqJKt4KP8n9QTeegmySoboz8CjtdwyAoGSIlW4IRMi/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbxGZOhxCuVRDUEvkLpZSTOeoOJjVlulCxml65G8hf-RNb9MjE8iNed2HWYix3tK_n1E/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -4511,190 +4511,385 @@
     window.__stopAntiCheat = stop;
 })();
 </script>
-<!-- ===== Glober AI widget v2 + "return to task" bar ===== -->
-<style>
-#gl-fab{position:fixed;left:14px;bottom:14px;z-index:70;width:48px;height:48px;border-radius:16px;font-size:22px;background:var(--bg-card,#fff);border:1px solid var(--border-color,#bae6fd);box-shadow:0 6px 18px rgba(0,0,0,.25);cursor:pointer}
-#gl-panel{position:fixed;left:14px;bottom:70px;z-index:70;width:min(430px,calc(100vw - 28px));height:min(620px,76vh);display:none;flex-direction:column;background:var(--bg-card,#fff);color:inherit;border:1px solid var(--border-color,#bae6fd);border-radius:18px;box-shadow:0 12px 32px rgba(0,0,0,.3);overflow:hidden;font-size:13px}
-#gl-panel header{padding:8px 12px;display:flex;gap:8px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-color,#bae6fd);font-weight:700}
-#gl-tabs{display:flex;gap:4px;padding:6px;overflow-x:auto;border-bottom:1px solid var(--border-color,#bae6fd)}
-#gl-tabs button{white-space:nowrap;padding:4px 9px;border-radius:9px;border:1px solid var(--border-color,#bae6fd);font-weight:700;cursor:pointer}
-#gl-tabs button.on{background:#2563eb;color:#fff}
-#gl-body{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
-.gl-m{padding:6px 10px;border-radius:12px;max-width:92%;white-space:pre-wrap;word-break:break-word}
-.gl-u{align-self:flex-end;background:#2563eb;color:#fff}.gl-a{align-self:flex-start;background:rgba(125,125,125,.15)}.gl-s{align-self:flex-start;opacity:.75;font-style:italic}
-#gl-foot{padding:8px;border-top:1px solid var(--border-color,#bae6fd);display:flex;flex-direction:column;gap:6px}
-#gl-panel input,#gl-panel select,#gl-panel textarea{background:transparent;border:1px solid var(--border-color,#bae6fd);border-radius:10px;padding:5px 8px;color:inherit;max-width:100%}
-#gl-panel .gl-b{border:1px solid var(--border-color,#bae6fd);border-radius:10px;padding:4px 9px;font-weight:700;cursor:pointer}
-#gl-panel .gl-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-#gl-panel .gl-card{border:1px solid var(--border-color,#bae6fd);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:5px}
-#gl-panel h4{font-weight:800;margin:2px 0}
-.gl-frame-gold{box-shadow:0 0 0 3px #f59e0b}.gl-frame-neon{box-shadow:0 0 0 3px #22d3ee,0 0 10px #22d3ee}.gl-frame-olympian{box-shadow:0 0 0 3px #a855f7}.gl-frame-sysadmin{box-shadow:0 0 0 3px #22c55e}
-.gl-bg-sunset{background:linear-gradient(135deg,#fb923c33,#ec489933)}.gl-bg-aurora{background:linear-gradient(135deg,#22d3ee33,#a855f733)}.gl-bg-midnight{background:linear-gradient(135deg,#1e3a8a44,#0f172a44)}
-#resume-bar{position:fixed;top:0;left:0;right:0;z-index:95;display:none;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 12px;background:#f59e0b;color:#111;font-weight:700;font-size:13px;box-shadow:0 4px 14px rgba(0,0,0,.3)}
-#resume-bar button{padding:5px 12px;border-radius:10px;font-weight:800;cursor:pointer;border:2px solid #111}
-#rb-return{background:#111;color:#fff}#rb-finish{background:#fff;color:#b91c1c;border-color:#b91c1c}
-</style>
-<div id="resume-bar"><span id="rb-text">⏳ Ви не завершили завдання.</span><button id="rb-return">↩ Повернутися до завдання</button><button id="rb-finish">Завершити</button></div>
-<button id="gl-fab" title="Glober AI">🤖</button>
-<div id="gl-panel" role="dialog" aria-label="Glober AI">
-  <header><span>Glober AI</span><span id="gl-bal" style="font-weight:600;font-size:12px"></span></header>
-  <div id="gl-tabs"></div><div id="gl-body"></div>
-  <div id="gl-foot">
-    <div class="gl-row"><select id="gl-mode"><option value="standard">Glober 1.0 · 1 🔑</option><option value="deep">Deep 1.1 · 3 🔑</option></select>
-    <select id="gl-pack"><option value="p30">30 🔑 — 300 💎</option><option value="p105">105 🔑 — 1000 💎</option><option value="p300">300 🔑 — 2600 💎</option><option value="p500">500 🔑 — 4000 💎</option></select>
-    <button class="gl-b" id="gl-buy">Купити</button><button class="gl-b" id="gl-freeze" title="Заморозка серії">❄️ 25💎</button></div>
-    <div class="gl-row"><input id="gl-in" style="flex:1" placeholder="Запитай Glober AI…" maxlength="3000"><button class="gl-b" id="gl-send">➤</button></div>
-  </div>
-</div>
 <script>
-(function(){
-  const $=id=>document.getElementById(id), E=s=>escapeHtml(String(s??''));
-  let hist=[],summary='',busy=false,tab='chat',prof=null,duelTimer=null;
-  try{hist=JSON.parse(localStorage.getItem('gl_hist')||'[]');summary=localStorage.getItem('gl_sum')||'';}catch(_){}
-  const save=()=>{try{localStorage.setItem('gl_hist',JSON.stringify(hist.slice(-30)));localStorage.setItem('gl_sum',summary)}catch(_){}};
-  const gl=(op,d={})=>apiRequest('gl',{op,...d});
-  const note=t=>{const l=$('gl-log');if(l){const d=document.createElement('div');d.className='gl-m gl-s';d.textContent=t;l.appendChild(d);l.scrollTop=1e9}else if(typeof showNotification==='function')showNotification(t)};
-  function paint(w){if(!w)return;try{localStorage.setItem('gl_wallet',JSON.stringify(w))}catch(_){}$('gl-bal').textContent=`💎 ${w.gems} · 🔑 ${w.keysTotal} · 🔥 ${w.streakDays}`+(w.penaltyLevel?' · ⛔':'')+(w.nyBuff?' · 🎄':'');$('gl-mode').options[1].textContent=`Deep 1.1 · ${w.deepCost} 🔑`}
-  const refresh=async()=>{if(!authToken)return;try{paint((await apiRequest('globerState')).wallet)}catch(_){try{paint(JSON.parse(localStorage.getItem('gl_wallet')||'null'))}catch(__){}}};
-  const TABS=[['chat','💬 Чат'],['prof','👤 Профіль'],['mail','✉️ Листи'],['lg','🏆 Ліга'],['duel','⚔️ Дуелі'],['build','🧪 Конструктор'],['arb','🎯 Розбір'],['train','📚 Тренування']];
-  function tabs(){$('gl-tabs').innerHTML=TABS.map(([k,l])=>`<button data-t="${k}" class="${k===tab?'on':''}">${l}</button>`).join('');
-    $('gl-foot').style.display=tab==='chat'?'flex':'none'}
-  $('gl-tabs').onclick=e=>{const k=e.target.dataset.t;if(k){tab=k;render()}};
-  function render(){tabs();clearInterval(duelTimer);({chat:rChat,prof:rProf,mail:rMail,lg:rLeague,duel:rDuel,build:rBuild,arb:rArb,train:rTrain})[tab]()}
-  const body=h=>{$('gl-body').innerHTML=h};
-  const guard=async(fn)=>{try{await fn()}catch(e){note('⚠️ '+e.message)}};
+/* ===== ArTesolymp: Glober AI + гемі/ключі (клієнтський модуль) ===== */
+(function () {
+    "use strict";
+    const $ = id => document.getElementById(id);
+    const QKEY = "at_glober_queue";
+    let mode = "std", busy = false, wallet = null, history = [], tick = null;
 
-  /* ---- chat (+offline queue) ---- */
-  function rChat(){body('<div id="gl-log" style="display:flex;flex-direction:column;gap:6px"></div>');
-    hist.forEach(h=>add(h.role==='user'?'gl-u':'gl-a',h.content));}
-  function add(c,t){const d=document.createElement('div');d.className='gl-m '+c;d.textContent=t;const l=$('gl-log');if(l){l.appendChild(d);$('gl-body').scrollTop=1e9}return d}
-  async function ask(t){
-    busy=true;const wait=add('gl-s',$('gl-mode').value==='deep'?'Підключаю агентів…':'Думаю…');
-    try{const r=await apiRequest('globerChat',{message:t,mode:$('gl-mode').value,history:hist.slice(-30),summary});
-      for(const p of (r.pipeline||[]).slice(1)){wait.textContent=p.status;await new Promise(x=>setTimeout(x,300))}
-      wait.remove();add('gl-a',r.reply);hist.push({role:'user',content:t},{role:'assistant',content:r.reply});
-      if(r.summary){summary=r.summary;hist=hist.slice(-6)}save();paint(r.wallet);if(r.achievement)add('gl-s','🏆 Секретне досягнення: «'+r.achievement+'»');
-    }catch(e){wait.remove();add('gl-s','⚠️ '+e.message)}busy=false}
-  async function send(){if(busy)return;const t=$('gl-in').value.trim();if(!t)return;if(!authToken){note('Увійдіть в акаунт.');return}
-    $('gl-in').value='';if(tab!=='chat'){tab='chat';render()}add('gl-u',t);
-    if(!navigator.onLine){const q=JSON.parse(localStorage.getItem('gl_q')||'[]');q.push(t);localStorage.setItem('gl_q',JSON.stringify(q));add('gl-s','📴 Офлайн: запит у черзі, надішлю після відновлення зв’язку.');return}
-    await ask(t)}
-  window.addEventListener('online',async()=>{const q=JSON.parse(localStorage.getItem('gl_q')||'[]');localStorage.removeItem('gl_q');for(const t of q){await ask(t)}});
-  $('gl-send').onclick=send;$('gl-in').onkeydown=e=>{if(e.key==='Enter')send()};
-  $('gl-buy').onclick=()=>guard(async()=>{paint((await apiRequest('buyKeys',{packId:$('gl-pack').value})).wallet);note('Ключі куплено ✅')});
-  $('gl-freeze').onclick=()=>guard(async()=>{paint((await apiRequest('buyFreeze')).wallet);note('Заморозку серії придбано ❄️')});
+    document.body.insertAdjacentHTML("beforeend", `
+    <button id="gl-fab" class="fixed left-4 bottom-4 z-[70] px-4 py-3 rounded-2xl theme-btn-primary font-bold text-sm shadow-2xl">🤖 Glober</button>
+    <div id="gl-panel" class="hidden fixed left-3 bottom-20 z-[80] w-[min(26rem,calc(100vw-1.5rem))] h-[34rem] max-h-[78vh] flex flex-col rounded-3xl theme-bg-card border theme-border shadow-2xl">
+      <div class="p-3 border-b theme-border flex items-center justify-between gap-2">
+        <div><div class="font-extrabold text-sm">Glober AI</div><div id="gl-wallet" class="text-[11px] theme-text-secondary">—</div></div>
+        <button id="gl-close" class="text-gray-400 hover:text-gray-600 px-2" aria-label="Закрити"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="gl-banner" class="hidden text-[11px] px-3 py-2 bg-amber-500/15 text-amber-600"></div>
+      <div class="p-2 flex gap-2 text-xs font-bold">
+        <button id="gl-m-std" class="flex-1 py-2 rounded-xl border theme-border">Glober 1.0 · 1🔑</button>
+        <button id="gl-m-deep" class="flex-1 py-2 rounded-xl border theme-border">Deep 1.1 · <span id="gl-cost">3</span>🔑</button>
+      </div>
+      <div id="gl-msgs" class="flex-1 overflow-y-auto p-3 space-y-2 text-sm"></div>
+      <div id="gl-status" class="px-3 pb-1 text-[11px] theme-accent-color font-bold min-h-[1rem]"></div>
+      <div class="p-2 border-t theme-border flex gap-2">
+        <input id="gl-input" maxlength="2000" placeholder="Запитай Glober…" class="flex-1 p-2.5 rounded-xl border theme-border theme-bg-card text-sm">
+        <button id="gl-send" class="theme-btn-primary px-4 rounded-xl font-bold text-sm">➤</button>
+      </div>
+      <div class="p-2 pt-0 flex flex-wrap gap-1.5 text-[11px] font-bold">
+        <button data-t="store" class="px-2 py-1 rounded-lg border theme-border">🛒 Ключі</button>
+        <button data-t="claim" class="px-2 py-1 rounded-lg border theme-border">💎 Гемі за олімпіади</button>
+        <button data-t="freeze" class="px-2 py-1 rounded-lg border theme-border">🧊 Заморозка серії</button>
+        <button data-t="ny" class="px-2 py-1 rounded-lg border theme-border">🎁 Новий рік</button>
+        <button data-t="send" class="px-2 py-1 rounded-lg border theme-border">🤝 Передати ключі</button>
+        <button data-t="truth" id="gl-truth" class="hidden px-2 py-1 rounded-lg border theme-border">✅ Підтвердити олімпіаду</button>
+      </div>
+    </div>`);
 
-  /* ---- profile & shop ---- */
-  async function rProf(){body('Завантаження…');await guard(async()=>{prof=(await gl('profile')).profile;drawProf()})}
-  function drawProf(){const p=prof,own=k=>p.owned.filter(x=>x.startsWith(k+':')).map(x=>x.split(':').slice(1).join(':'));
-    const sel=(k,label)=>`<label>${label}: <select data-k="${k}"><option value="">—</option>${own(k).map(v=>`<option ${p[k]===v?'selected':''}>${E(v)}</option>`).join('')}</select></label>`;
-    const shop=Object.keys(p.shop).map(k=>`<div><b>${k}</b>: `+Object.keys(p.shop[k]).map(id=>own(k).includes(id)?`✔${E(id)} `:`<button class="gl-b" data-buy="${k}|${E(id)}">${E(id)} ${p.shop[k][id]}💎</button> `).join('')+'</div>').join('');
-    const soc=p.socials||{};
-    body(`<div class="gl-card gl-frame-${E(p.frame)} gl-bg-${E(p.background)}"><b style="color:${E(p.nameColor)}">${E(p.activeTitle?'['+p.activeTitle+'] ':'')}${E(p.name)}</b><div>${(p.badges||[]).map(b=>'🏅'+E(b)).join(' ')}</div></div>
-    <div class="gl-card"><h4>Стиль</h4><div class="gl-row">${sel('frame','Рамка')}${sel('background','Фон')}${sel('nameColor','Колір імені')}</div>
-      <label>Титул: <select data-k="activeTitle"><option value="">—</option>${p.titles.map(t=>`<option ${p.activeTitle===t?'selected':''}>${E(t)}</option>`).join('')}</select></label>${shop}</div>
-    <div class="gl-card"><h4>Профіль</h4>${['tiktok','youtube','chess','facebook','telegram'].map(k=>`<input data-s="${k}" placeholder="${k} (https://…)" value="${E(soc[k]||'')}">`).join('')}
-      <div class="gl-row"><label>День народження <input type="date" id="gp-bd" value="${E(p.birthDate)}"></label>
-      <label>Повідомлення від: <select id="gp-dm"><option value="all">усіх</option><option value="teachers">лише вчителів</option><option value="none">нікого</option></select></label></div>
-      <select id="gp-class"><option value="">Без класу</option></select><button class="gl-b" id="gp-save">Зберегти</button></div>
-    <div class="gl-card"><h4>Тимчасовий режим вчителя</h4><div>${p.tempTeacherUntil&&new Date(p.tempTeacherUntil)>new Date()?'Активний до '+new Date(p.tempTeacherUntil).toLocaleString():'12 годин за 200 💎 — відкриває конструктор олімпіад'}</div><button class="gl-b" id="gp-temp">Активувати (200 💎)</button>
-      <div class="gl-row"><input id="gp-exp" placeholder="ID простроченого тесту"><button class="gl-b" id="gp-expb">Відкрити за 20 💎</button></div></div>`);
-    $('gp-dm').value=p.dmPrivacy||'all';
-    guard(async()=>{const c=(await gl('classes')).classes;$('gp-class').innerHTML='<option value="">Без класу</option>'+c.map(x=>`<option value="${E(x.id)}" ${x.id===p.classId?'selected':''}>${E(x.name)}</option>`).join('')})}
-  $('gl-body').addEventListener('click',e=>{const t=e.target;
-    if(t.dataset.buy)guard(async()=>{const[k,id]=t.dataset.buy.split('|');const r=await gl('buyCosmetic',{kind:k,id});paint(r.wallet);prof=r.profile;drawProf()});
-    if(t.id==='gp-save')guard(async()=>{const d={socials:{},birthDate:$('gp-bd').value,dmPrivacy:$('gp-dm').value,classId:$('gp-class').value};
-      document.querySelectorAll('#gl-body [data-s]').forEach(i=>d.socials[i.dataset.s]=i.value);
-      document.querySelectorAll('#gl-body select[data-k]').forEach(i=>d[i.dataset.k]=i.value);
-      if(!navigator.onLine){localStorage.setItem('gl_pending',JSON.stringify(d));note('📴 Збережено локально — синхронізується автоматично.');return}
-      prof=(await gl('saveProfile',{data:d})).profile;drawProf();note('Збережено ✅')});
-    if(t.id==='gp-temp')guard(async()=>{const r=await gl('tempTeacher');paint(r.wallet);rProf()});
-    if(t.id==='gp-expb')guard(async()=>{const r=await gl('expiredAccess',{testId:$('gp-exp').value});paint(r.wallet);note('Доступ відкрито (без 💎 за проходження).')});
-  });
+    const msgs = $("gl-msgs");
+    function add(role, text) {
+        const d = document.createElement("div");
+        d.className = role === "user" ? "ml-8 p-2.5 rounded-2xl theme-btn-primary whitespace-pre-wrap break-words"
+            : "mr-8 p-2.5 rounded-2xl theme-accent-bg-light border theme-border whitespace-pre-wrap break-words";
+        d.textContent = text; msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
+    }
+    const status = t => { $("gl-status").textContent = t || ""; };
+    function minsTo(iso) { return Math.max(1, Math.ceil((new Date(iso) - Date.now()) / 60000)); }
+    function paint() {
+        if (!wallet) return;
+        $("gl-wallet").textContent = `💎 ${wallet.gems} · 🔑 ${wallet.freeKeys}/${wallet.maxFree} + ${wallet.paidKeys} куплених · 🔥 ${wallet.streakDays} дн.` +
+            (wallet.nextKeyAt ? ` · +1🔑 за ${minsTo(wallet.nextKeyAt)} хв` : "");
+        $("gl-cost").textContent = wallet.deepCost;
+        $("gl-truth").classList.toggle("hidden", !wallet.isAdmin);
+        const bn = $("gl-banner"), parts = [];
+        if (wallet.penaltyUntil) parts.push(`Штраф: ліміт ${wallet.maxFree} 🔑 ще ${minsTo(wallet.penaltyUntil)} хв.`);
+        if (wallet.nyUntil) parts.push(`🎄 Новорічний баф: Deep ×2 ще ${Math.ceil(minsTo(wallet.nyUntil) / 60)} год.`);
+        bn.textContent = parts.join(" "); bn.classList.toggle("hidden", !parts.length);
+        ["std", "deep"].forEach(m => $("gl-m-" + m).classList.toggle("theme-btn-primary", m === mode));
+    }
+    async function refresh() {
+        if (!authToken) return;
+        try { wallet = (await apiRequest("globerMe")).wallet; paint(); } catch (e) { showNotification(e.message); }
+    }
+    function open() {
+        if (!requireLogin()) return;
+        $("gl-panel").classList.remove("hidden"); refresh();
+        clearInterval(tick); tick = setInterval(paint, 30000);
+        if (!msgs.children.length) add("bot", "Привіт! Я Glober AI 🤖 Standard — швидка відповідь, Deep — команда агентів (Фізмат, Історик, Программист…).");
+    }
+    $("gl-fab").onclick = open;
+    $("gl-close").onclick = () => { $("gl-panel").classList.add("hidden"); clearInterval(tick); };
+    $("gl-m-std").onclick = () => { mode = "std"; paint(); };
+    $("gl-m-deep").onclick = () => { mode = "deep"; paint(); };
 
-  /* ---- mail: DMs, cards, key transfers ---- */
-  async function rMail(){body('Завантаження…');await guard(async()=>{const m=(await gl('dmList')).messages;
-    body(`<div class="gl-card"><h4>Повідомлення</h4>${m.map(x=>`<div class="gl-m ${x.mine?'gl-u':'gl-a'}">${E(x.mine?'→ '+x.to:x.from)}: ${E(x.text)}</div>`).join('')||'Порожньо'}
-      <input id="m-e" placeholder="email отримувача"><textarea id="m-t" maxlength="500" placeholder="Текст"></textarea><button class="gl-b" id="m-s">Надіслати</button></div>
-      <div class="gl-card"><h4>🎁 Листівка вчителю (5–5000 💎)</h4><input id="c-e" placeholder="email вчителя"><input id="c-g" type="number" min="5" max="5000" value="5"><textarea id="c-t" maxlength="300" placeholder="Привітання"></textarea><button class="gl-b" id="c-s">Подарувати</button></div>
-      <div class="gl-card"><h4>🔑 Передати ключі</h4><input id="k-e" placeholder="email"><input id="k-n" type="number" min="1" value="3"><label><input type="checkbox" id="k-p"> назавжди (куплені ключі)</label><button class="gl-b" id="k-s">Передати</button></div>`)})}
-  $('gl-body').addEventListener('click',e=>{const id=e.target.id;
-    if(id==='m-s')guard(async()=>{await gl('dmSend',{email:$('m-e').value,text:$('m-t').value});rMail()});
-    if(id==='c-s')guard(async()=>{const r=await gl('card',{email:$('c-e').value,gems:$('c-g').value,text:$('c-t').value});paint(r.wallet);note('Листівку надіслано 🎁')});
-    if(id==='k-s')guard(async()=>{const r=await apiRequest('transferKeys',{email:$('k-e').value,keys:$('k-n').value,permanent:$('k-p').checked});paint(r.wallet);note('Ключі передано ✅')});
-  });
+    async function ask(text, m) {
+        add("user", text); busy = true; $("gl-send").disabled = true;
+        try {
+            let r;
+            if (m === "deep") {
+                status("Отримувач передає запит Головному планувальнику...");
+                r = await apiRequest("globerStart", { message: text, history });
+                if (r.wallet) { wallet = r.wallet; paint(); }
+                while (!r.done) {
+                    status(r.status);
+                    r = await apiRequest("globerStep", { jobId: r.jobId });
+                }
+            } else {
+                status("Glober думає...");
+                r = await apiRequest("globerChat", { message: text, history });
+            }
+            if (r.wallet) wallet = r.wallet;
+            add("bot", r.reply);
+            if (!r.blocked && !r.penalty) { history.push({ role: "user", content: text }, { role: "assistant", content: r.reply }); history = history.slice(-12); }
+        } catch (e) { add("bot", "⚠️ " + (e.message || "Помилка.")); await refresh(); }
+        finally { busy = false; $("gl-send").disabled = false; status(""); paint(); }
+    }
+    function send() {
+        const input = $("gl-input"), text = input.value.trim();
+        if (!text || busy) return; input.value = "";
+        if (!navigator.onLine) {   // офлайн: запит стає в чергу й піде після відновлення мережі
+            const q = JSON.parse(localStorage.getItem(QKEY) || "[]"); q.push({ text, mode });
+            localStorage.setItem(QKEY, JSON.stringify(q)); add("user", text); add("bot", "📴 Офлайн. Запит у черзі й відправиться автоматично."); return;
+        }
+        ask(text, mode);
+    }
+    async function flush() {
+        const q = JSON.parse(localStorage.getItem(QKEY) || "[]"); localStorage.removeItem(QKEY);
+        for (const it of q) await ask(it.text, it.mode);
+    }
+    window.addEventListener("online", () => { if (authToken) flush(); });
+    $("gl-send").onclick = send;
+    $("gl-input").addEventListener("keydown", e => { if (e.key === "Enter") send(); });
 
-  /* ---- league & classes ---- */
-  async function rLeague(){body('Завантаження…');await guard(async()=>{const L=(await gl('league')).league;
-    let news='';try{news=(await gl('news')).note}catch(_){}
-    const li=(a,f)=>a.map((x,i)=>`<div>${i+1}. ${E(x.name)} — ${f(x)}</div>`).join('')||'—';
-    body(`<div class="gl-card">📣 <i>${E(news)}</i></div><div class="gl-card"><h4>Ліга ${E(L.month)} · учні</h4>${li(L.students,x=>x.gems+' 💎')}</div><div class="gl-card"><h4>Вчителі (проходжень)</h4>${li(L.teachers,x=>x.attempts)}</div>
-      <div class="gl-card"><h4>Класи</h4>${li(L.classes,x=>x.gems+' 💎')}<div class="gl-row"><input id="cl-n" placeholder="Новий клас (8-А), для вчителів"><button class="gl-b" id="cl-s">Створити</button></div></div>`)})}
-  $('gl-body').addEventListener('click',e=>{if(e.target.id==='cl-s')guard(async()=>{await gl('createClass',{name:$('cl-n').value});rLeague()})});
-
-  /* ---- duels ---- */
-  async function rDuel(){body('Завантаження…');await guard(async()=>{const d=(await gl('duelList')).duels;
-    body(`<div class="gl-card"><h4>Новий виклик (2 🔑, без ставок)</h4><input id="d-e" placeholder="email друга"><input id="d-s" placeholder="Предмет/тема"><button class="gl-b" id="d-c">Кинути виклик</button></div>`+
-      d.map(x=>`<div class="gl-card"><b>${E(x.topic)}</b> vs ${E(x.opponent)} · ${E(x.status)}${x.result?` · ${x.result.winner?(x.result.winner===x.result[Object.keys(x.result)[0]]?'':''):''}`:''}
-        ${x.status==='pending'&&!x.iAmChallenger?`<button class="gl-b" data-da="${E(x.duelId)}">Прийняти</button>`:''}${x.status==='active'&&!x.mine?`<button class="gl-b" data-dp="${E(x.duelId)}">Грати</button>`:''}
-        ${x.result?Object.entries(x.result).filter(([k])=>k!=='winner').map(([k,v])=>`<div>${v.status==='disqualified'?'🚫 дискваліфіковано':'✔ '+v.score+'/5'}</div>`).join(''):''}</div>`).join(''))})}
-  $('gl-body').addEventListener('click',e=>{const t=e.target;
-    if(t.id==='d-c')guard(async()=>{const s=$('d-s').value;await gl('duelCreate',{email:$('d-e').value,subject:s,topic:s});rDuel()});
-    if(t.dataset.da)guard(async()=>{await gl('duel',{sub:'accept',duelId:t.dataset.da});play(t.dataset.da)});
-    if(t.dataset.dp)play(t.dataset.dp)});
-  async function play(id){await guard(async()=>{const d=(await gl('duel',{sub:'get',duelId:id})).duel;if(!d.questions.length){note('Немає питань для гри.');return}
-    let lost=false;const t0=Date.now(),picks={};const vis=()=>{if(document.hidden)lost=true};document.addEventListener('visibilitychange',vis);
-    body(`<div class="gl-card"><b>⚔️ ${E(d.topic)}</b><div>Не залишайте вкладку — це дискваліфікація.</div></div>`+d.questions.map((q,n)=>`<div class="gl-card"><b>${n+1}. ${E(q.title)}</b>${q.options.map(o=>`<label><input type="radio" name="q${q.i}" value="${o.k}"> ${E(o.t)}</label>`).join('')}</div>`).join('')+'<button class="gl-b" id="d-done">Завершити дуель</button>');
-    $('d-done').onclick=()=>guard(async()=>{d.questions.forEach(q=>{const c=document.querySelector(`input[name=q${q.i}]:checked`);if(c)picks[q.i]=c.value});
-      document.removeEventListener('visibilitychange',vis);await gl('duel',{sub:'submit',duelId:id,picks,ms:Date.now()-t0,focusLost:lost});rDuel()})})}
-
-  /* ---- AI olympiad builder (#17 + #22) ---- */
-  let draft=null;
-  function rBuild(){body(`<div class="gl-card"><h4>AI-конструктор олімпіад</h4><input id="b-s" placeholder="Предмет"><input id="b-t" placeholder="Тема"><input id="b-g" placeholder="Клас/рівень"><input id="b-n" type="number" min="1" max="15" value="5"><button class="gl-b" id="b-go">Згенерувати (унікальні питання)</button></div><div id="b-out"></div>`);if(draft)showDraft()}
-  function showDraft(){$('b-out').innerHTML=`<div class="gl-card"><b>${E(draft.title)}</b>${draft.questions.map((q,i)=>`<div>${i+1}. ${E(q.title)}<br>${q.options.map((o,k)=>(k===q.correct?'✅ ':'▫️ ')+E(o)).join('<br>')}</div>`).join('<hr>')}<button class="gl-b" id="b-pub">Опублікувати олімпіаду (7 днів)</button> <button class="gl-b" id="b-off">📥 Зберегти для офлайн-тренування</button></div>`}
-  $('gl-body').addEventListener('click',e=>{
-    if(e.target.id==='b-go')guard(async()=>{$('b-out').textContent='Генерую…';const r=await gl('aiBuild',{subject:$('b-s').value,topic:$('b-t').value,grade:$('b-g').value,count:$('b-n').value});draft=r.test;showDraft();refresh()});
-    if(e.target.id==='b-off'&&draft){const a=JSON.parse(localStorage.getItem('gl_train')||'[]');a.push({title:draft.title,questions:draft.questions});localStorage.setItem('gl_train',JSON.stringify(a.slice(-10)));note('Збережено для офлайн-тренування ✅')}
-    if(e.target.id==='b-pub')guard(async()=>{const r=await apiRequest('createTest',{test:{...draft,deadline:new Date(Date.now()+7*864e5).toISOString()}});note('Створено! Код доступу: '+r.code);draft=null;rBuild()})});
-
-  /* ---- Arbiter: post-olympiad error analysis ---- */
-  async function rArb(){body('Завантаження…');const saved=JSON.parse(localStorage.getItem('gl_plans')||'[]');
-    const savedHtml=saved.map(x=>`<div class="gl-card"><b>💾 ${E(x.title)}</b><div style="white-space:pre-wrap">${E(x.plan)}</div></div>`).join('');
-    await guard(async()=>{const a=(await gl('attempts')).attempts;
-      body(`<div class="gl-card"><h4>Розбір помилок (2 🔑)</h4>${a.map(x=>`<div class="gl-row"><span>${E(x.title)} — ${E(x.score)}/${E(x.maxScore)}</span><button class="gl-b" data-arb="${E(x.attemptId)}" data-ti="${E(x.title)}">Розібрати</button></div>`).join('')||'Ще немає зданих робіт.'}</div><div id="arb-out"></div>`+savedHtml)})
-    .catch?.(()=>{});
-    if(!navigator.onLine)body('📴 Офлайн: збережені плани<br>'+savedHtml)}
-  $('gl-body').addEventListener('click',e=>{const t=e.target;if(!t.dataset.arb)return;
-    guard(async()=>{$('arb-out').textContent='Арбітр аналізує…';const r=await gl('arbiter',{attemptId:t.dataset.arb});
-      $('arb-out').innerHTML=`<div class="gl-card" style="white-space:pre-wrap">${E(r.plan)}<button class="gl-b" id="arb-save">💾 Зберегти офлайн</button></div>`;
-      $('arb-save').onclick=()=>{const a=JSON.parse(localStorage.getItem('gl_plans')||'[]');a.push({title:t.dataset.ti,plan:r.plan});localStorage.setItem('gl_plans',JSON.stringify(a.slice(-10)));note('Збережено ✅')};refresh()})});
-
-  /* ---- offline local training (no server, no keys) ---- */
-  function rTrain(){const a=JSON.parse(localStorage.getItem('gl_train')||'[]');
-    body(`<div class="gl-card"><h4>Тренування (працює офлайн)</h4>${a.map((x,i)=>`<div class="gl-row"><span>${E(x.title)} · ${x.questions.length} пит.</span><button class="gl-b" data-tr="${i}">Почати</button></div>`).join('')||'Збережіть чернетку з «🧪 Конструктор».'}</div><div id="tr-out"></div>`)}
-  $('gl-body').addEventListener('click',e=>{const t=e.target;if(t.dataset.tr===undefined)return;
-    const x=JSON.parse(localStorage.getItem('gl_train')||'[]')[+t.dataset.tr];if(!x)return;
-    $('tr-out').innerHTML=x.questions.map((q,n)=>`<div class="gl-card"><b>${n+1}. ${E(q.title)}</b>${q.options.map((o,k)=>`<label><input type="radio" name="tq${n}" value="${k}"> ${E(o)}</label>`).join('')}</div>`).join('')+'<button class="gl-b" id="tr-done">Перевірити</button><div id="tr-res"></div>';
-    $('tr-done').onclick=()=>{let ok=0,fb='';x.questions.forEach((q,n)=>{const c=document.querySelector(`input[name=tq${n}]:checked`);const good=c&&+c.value===q.correct;if(good)ok++;else fb+=`<div>❌ ${n+1}: правильно — ${E(q.options[q.correct])}. ${E(q.description||'')}</div>`});
-      $('tr-res').innerHTML=`<div class="gl-card"><b>Результат: ${ok}/${x.questions.length}</b>${fb}</div>`}});
-
-  /* ---- periodic background sync (one batched request) ---- */
-  async function sync(){if(!authToken||!navigator.onLine||busy)return;let d=null;try{d=JSON.parse(localStorage.getItem('gl_pending')||'null')}catch(_){}
-    try{const r=await gl('sync',d?{data:d}:{});if(d)localStorage.removeItem('gl_pending');paint(r.wallet)}catch(_){}}
-  setInterval(()=>{if(!document.hidden)sync()},60000);window.addEventListener('online',sync);setTimeout(sync,2500);
-
-  $('gl-fab').onclick=()=>{const p=$('gl-panel'),o=p.style.display!=='flex';p.style.display=o?'flex':'none';if(o){render();refresh()}};
-
-  /* ---- return to task / finish (works from the landing page) ---- */
-  const vis=id=>{const e=document.getElementById(id);return e&&!e.classList.contains('hidden')};
-  function pending(){return !!(window.currentAttemptId&&window.activeTest&&!window.isPreviewSession&&!window.finishInProgress&&!vis('section-test')&&!vis('section-results'))}
-  setInterval(()=>{const on=pending(),b=$('resume-bar');b.style.display=on?'flex':'none';if(on)$('rb-text').textContent='⏳ Ви не завершили «'+(window.activeTest.title||'завдання')+'».'},700);
-  $('rb-return').onclick=async()=>{try{await document.documentElement.requestFullscreen()}catch(_){}showSection('test')};
-  $('rb-finish').onclick=async()=>{if(!confirm('Завершити роботу зараз? Незаповнені відповіді буде зараховано як порожні.'))return;
-    if(document.fullscreenElement)try{await document.exitFullscreen()}catch(_){}finishTest()};
+    const act = async (name, payload, ok) => {
+        try { const r = await apiRequest(name, payload || {}); if (r.wallet) { wallet = r.wallet; paint(); } showNotification(ok ? ok(r) : "Готово."); return r; }
+        catch (e) { showNotification(e.message); }
+    };
+    function store() {
+        const old = $("gl-store"); if (old) old.remove();
+        const box = document.createElement("div"); box.id = "gl-store";
+        box.className = "fixed inset-0 z-[90] bg-black/60 flex items-center justify-center p-4";
+        const card = document.createElement("div"); card.className = "theme-bg-card border theme-border rounded-3xl p-5 max-w-sm w-full space-y-2";
+        card.innerHTML = `<div class="font-extrabold">Магазин ключів Glober (у вас ${wallet ? wallet.gems : 0} 💎)</div>`;
+        const bonus = { 30: "", 105: " · +5%", 300: " · +15%", 500: " · +25%" };
+        Object.keys((wallet && wallet.packs) || { 30: 300, 105: 1000, 300: 2600, 500: 4000 }).forEach(k => {
+            const price = (wallet && wallet.packs ? wallet.packs : { 30: 300, 105: 1000, 300: 2600, 500: 4000 })[k];
+            const b = document.createElement("button"); b.className = "w-full p-3 rounded-xl border theme-border font-bold text-sm text-left hover:border-sky-400";
+            b.textContent = `${k} 🔑 — ${price} 💎${bonus[k] || ""}`;
+            b.onclick = async () => { await act("globerBuyKeys", { keys: Number(k) }, () => `Куплено ${k} ключів.`); box.remove(); };
+            card.appendChild(b);
+        });
+        const c = document.createElement("button"); c.className = "w-full p-2 text-xs theme-text-secondary"; c.textContent = "Закрити"; c.onclick = () => box.remove();
+        card.appendChild(c); box.appendChild(card); document.body.appendChild(box);
+    }
+    document.querySelector("#gl-panel").addEventListener("click", async e => {
+        const t = e.target.dataset && e.target.dataset.t; if (!t) return;
+        if (t === "store") store();
+        if (t === "claim") await act("globerClaimGems", {}, r => r.gained ? `+${r.gained} 💎 за ${r.olympiads} олімпіад(и).` : "Нових підтверджених олімпіад із гемами немає.");
+        if (t === "freeze") await act("globerBuyFreeze", {}, () => "Заморозку серії куплено (−25 💎).");
+        if (t === "ny") await act("globerNewYear", {}, () => "+200 💎 і новорічний баф: Deep ×2 на 7 днів 🎄");
+        if (t === "send") {
+            const email = prompt("Пошта одержувача:"); if (!email) return;
+            const amount = Number(prompt("Скільки ключів (1–100)?")); if (!amount) return;
+            const temp = wallet && wallet.role === "teacher" && confirm("OK — тимчасово (вільні ключі, повернуться через 4 год).\nСкасувати — подарувати куплені ключі назавжди.");
+            await act("globerTransfer", { email, amount, kind: temp ? "temp" : "paid" }, () => "Ключі передано.");
+        }
+        if (t === "truth") { const id = prompt("ID тесту (testId) для підтвердження олімпіади:"); if (id) await act("globerSetTruth", { testId: id, value: true }, () => "Олімпіаду підтверджено — гемі можна нараховувати."); }
+    });
+    setInterval(() => {   // під час проходження тесту Glober прихований (анти-списування)
+        const s = $("section-test"), inTest = s && !s.classList.contains("hidden");
+        $("gl-fab").style.display = inTest ? "none" : ""; if (inTest) $("gl-panel").classList.add("hidden");
+    }, 1000);
 })();
 </script>
+<script>
+/* ===== ArTesolymp: Хаб (профіль, гараж, ЛС, картки, класи, ліга, дуелі, конструктор) ===== */
+(function () {
+    "use strict";
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const FR = { gold: "0 0 0 3px #facc15", neon: "0 0 0 3px #22d3ee,0 0 14px #22d3ee", olympian: "0 0 0 3px #a855f7,0 0 0 6px #facc15", sysadmin: "0 0 0 3px #22c55e,0 0 10px #22c55e" };
+    const BG = { sunset: "linear-gradient(135deg,#f97316,#db2777)", ocean: "linear-gradient(135deg,#0ea5e9,#1e3a8a)", forest: "linear-gradient(135deg,#16a34a,#14532d)", space: "linear-gradient(135deg,#312e81,#0f172a)" };
+    const NC = { red: "#ef4444", gold: "#eab308", cyan: "#06b6d4", pink: "#ec4899", lime: "#84cc16" };
+    const NAMES = { frame: "Рамки", bg: "Фони профілю", nameColor: "Кольори імені" };
+    const LBL = { frame_gold: "Золота", frame_neon: "Неон", frame_olympian: "Олімпієць", frame_sysadmin: "Сисадмін", bg_sunset: "Захід", bg_ocean: "Океан", bg_forest: "Ліс", bg_space: "Космос", nc_red: "Червоний", nc_gold: "Золотий", nc_cyan: "Блакитний", nc_pink: "Рожевий", nc_lime: "Лаймовий" };
+    let me = null, tab = "profile", duelTimer = null;
+    const call = async (a, p) => apiRequest(a, p || {});
+    const toast = m => showNotification(m);
 
+    document.body.insertAdjacentHTML("beforeend", `
+    <button id="hb-fab" class="fixed left-32 bottom-4 z-[70] px-4 py-3 rounded-2xl theme-btn-primary font-bold text-sm shadow-2xl">🏆 Хаб</button>
+    <div id="hb-modal" class="hidden fixed inset-0 z-[85] bg-black/60 flex items-center justify-center p-3">
+      <div class="theme-bg-card border theme-border rounded-3xl w-full max-w-2xl h-[85vh] flex flex-col">
+        <div class="p-3 border-b theme-border flex items-center justify-between"><div class="font-extrabold">Хаб ArTesolymp <span id="hb-wal" class="text-xs font-normal theme-text-secondary"></span></div><button id="hb-close" class="px-2 text-gray-400">✕</button></div>
+        <div id="hb-tabs" class="flex flex-wrap gap-1 p-2 text-xs font-bold border-b theme-border"></div>
+        <div id="hb-body" class="flex-1 overflow-y-auto p-3 text-sm space-y-3"></div>
+      </div>
+    </div>`);
+    const TABS = [["profile", "👤 Профіль"], ["garage", "🎨 Гараж"], ["dm", "💬 ЛС"], ["cards", "🎁 Картки"], ["class", "🏫 Класи"], ["league", "🏅 Ліга"], ["duel", "⚔️ Дуелі"], ["build", "🧠 Конструктор"]];
+    const btn = "px-3 py-2 rounded-xl border theme-border font-bold text-xs hover:border-sky-400";
+    const inp = "w-full p-2 rounded-xl border theme-border theme-bg-card text-sm";
+    const body = () => $("hb-body");
+    const walTxt = () => { if (me && me.wallet) $("hb-wal").textContent = `· 💎 ${me.wallet.gems} · 🔑 ${me.wallet.freeKeys + me.wallet.paidKeys}`; };
+
+    function avatar(p, size) {
+        const s = size || 56, ring = FR[p.frame] || "none";
+        const inner = p.avatarUrl ? `<img src="${esc(p.avatarUrl)}" alt="" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover">` : `<div style="width:${s}px;height:${s}px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#64748b;color:#fff;font-weight:800">${esc((p.name || "?")[0])}</div>`;
+        return `<div style="box-shadow:${ring};border-radius:50%;display:inline-block">${inner}</div>`;
+    }
+    function nameHtml(p) { return `<span style="color:${NC[p.nameColor] || "inherit"};font-weight:800">${esc(p.title ? "[" + p.title + "] " : "")}${esc(p.name)}</span>`; }
+    function card(p, extra) { return `<div class="rounded-2xl p-3 flex items-center gap-3" style="background:${BG[p.bg] || "transparent"};${BG[p.bg] ? "color:#fff" : ""}">${avatar(p)}<div class="min-w-0">${nameHtml(p)}<div class="text-xs opacity-80">${esc(p.role || "")}${extra || ""}</div></div></div>`; }
+
+    async function load() { try { me = await call("globerSocMe"); walTxt(); } catch (e) { toast(e.message); } }
+    function setTabs() {
+        $("hb-tabs").innerHTML = TABS.map(t => `<button data-tab="${t[0]}" class="px-3 py-1.5 rounded-xl border theme-border ${t[0] === tab ? "theme-btn-primary" : ""}">${t[1]}</button>`).join("");
+    }
+    async function render() {
+        setTabs(); if (!me) await load(); if (!me) return;
+        const f = { profile, garage, dm, cards, cls, league, duel, build }[tab]; body().innerHTML = "<div class='theme-text-secondary'>Завантаження…</div>"; try { await f(); } catch (e) { body().innerHTML = `<div class="text-red-500">${esc(e.message)}</div>`; }
+        walTxt();
+    }
+    function openHub() { if (!requireLogin()) return; $("hb-modal").classList.remove("hidden"); load().then(render); }
+    $("hb-fab").onclick = openHub; $("hb-close").onclick = () => $("hb-modal").classList.add("hidden");
+    $("hb-tabs").addEventListener("click", e => { const t = e.target.dataset && e.target.dataset.tab; if (t) { tab = t; render(); } });
+
+    /* --- профіль --- */
+    async function profile() {
+        const p = me.profile, s = p.socials || {};
+        const src = { tiktok: "TikTok (tiktok.com/@…)", youtube: "YouTube (youtube.com/@… або youtu.be/…)", chess: "Chess.com (chess.com/member/…)", facebook: "Facebook (facebook.com/…)", telegram: "Telegram (t.me/…)" };
+        body().innerHTML = card(p, me.tempUntil ? " · 🕒 тимчасовий учитель" : "") + `
+        <div class="space-y-2"><div class="font-bold">Аватар</div>
+          <div class="flex gap-2"><input id="pf-av" class="${inp}" placeholder="Посилання ImgBB / Cloudinary" value="${esc(p.avatarUrl)}"><button id="pf-up" class="${btn}">Завантажити файл</button><input id="pf-file" type="file" accept="image/*" class="hidden"></div>
+          <div class="font-bold">Звання</div><select id="pf-title" class="${inp}"><option value="">— без звання —</option>${me.titles.map(t => `<option ${p.title === t ? "selected" : ""}>${esc(t)}</option>`).join("")}</select>
+          <div class="font-bold">Соцмережі (лише з білого списку)</div>${Object.keys(src).map(k => `<input data-soc="${k}" class="${inp}" placeholder="${src[k]}" value="${esc(s[k] || "")}">`).join("")}
+          <div class="font-bold">Хто може писати мені в ЛС</div><select id="pf-dm" class="${inp}"><option value="all">Усі</option><option value="teachers">Лише вчителі</option><option value="none">Ніхто</option></select>
+          ${p.role === "Учитель" ? `<div class="font-bold">Дата народження (для привітання о 00:00)</div><input id="pf-bd" type="date" class="${inp}" value="${esc(p.birthDate)}">` : ""}
+          <button id="pf-save" class="${btn} theme-btn-primary">Зберегти</button>
+          ${p.role !== "Учитель" ? `<div class="pt-2 border-t theme-border"><div class="font-bold">Режим «тимчасовий учитель»</div><div class="text-xs theme-text-secondary">12 годин створення олімпіад — 200 💎. ${me.tempUntil ? "Активний до " + new Date(me.tempUntil).toLocaleString() : ""}</div><button id="pf-temp" class="${btn} mt-1">Активувати (200 💎)</button></div>` : ""}
+        </div>`;
+        $("pf-dm").value = p.dmPrivacy;
+        $("pf-save").onclick = async () => {
+            const socials = {}; body().querySelectorAll("[data-soc]").forEach(i => socials[i.dataset.soc] = i.value.trim());
+            const pl = { avatarUrl: $("pf-av").value.trim(), title: $("pf-title").value, socials, dmPrivacy: $("pf-dm").value }; if ($("pf-bd")) pl.birthDate = $("pf-bd").value;
+            try { await call("globerSocSave", pl); toast("Профіль збережено."); await load(); render(); } catch (e) { toast(e.message); }
+        };
+        $("pf-up").onclick = () => $("pf-file").click();
+        $("pf-file").onchange = async ev => {
+            const f = ev.target.files[0]; if (!f) return;
+            const img = new Image(); img.onload = async () => {
+                const c = document.createElement("canvas"); c.width = c.height = 256; const x = c.getContext("2d"), m = Math.min(img.width, img.height);
+                x.drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, 256, 256);
+                try { await call("globerSocAvatar", { image: c.toDataURL("image/jpeg", 0.8) }); toast("Аватар оновлено."); await load(); render(); } catch (e) { toast(e.message); }
+            }; img.src = URL.createObjectURL(f);
+        };
+        if ($("pf-temp")) $("pf-temp").onclick = async () => { try { await call("globerTempTeacher"); toast("Режим вчителя активовано на 12 год."); await load(); render(); } catch (e) { toast(e.message); } };
+    }
+
+    /* --- гараж --- */
+    async function garage() {
+        const p = me.profile, groups = {}; Object.keys(me.catalog).forEach(id => { const it = me.catalog[id]; (groups[it[0]] = groups[it[0]] || []).push([id, it]); });
+        body().innerHTML = card(p) + Object.keys(groups).map(slot => `<div><div class="font-bold mb-1">${NAMES[slot]}</div><div class="flex flex-wrap gap-2">${groups[slot].map(([id, it]) => {
+            const own = p.owned.indexOf(id) >= 0, on = p[slot] === it[1];
+            return `<button data-item="${id}" data-slot="${slot}" data-val="${it[1]}" class="${btn} ${on ? "theme-btn-primary" : ""}">${LBL[id]} ${own ? (on ? "✓" : "· одягнути") : "· " + it[2] + " 💎"}</button>`;
+        }).join("")}${p[slot] ? `<button data-off="${slot}" class="${btn}">Зняти</button>` : ""}</div></div>`).join("");
+        body().onclick = async e => {
+            const d = e.target.dataset; try {
+                if (d.off) await call("globerSocEquip", { slot: d.off, value: "" });
+                else if (d.item) { if (p.owned.indexOf(d.item) >= 0) await call("globerSocEquip", { slot: d.slot, value: d.val }); else await call("globerSocBuy", { item: d.item }); }
+                else return; await load(); render();
+            } catch (er) { toast(er.message); }
+        };
+    }
+
+    /* --- ЛС --- */
+    async function dm(withId) {
+        if (withId) return thread(withId);
+        const r = await call("globerDmInbox");
+        body().innerHTML = `<div class="flex gap-2"><input id="dm-to" class="${inp}" placeholder="Пошта користувача"><input id="dm-tx" class="${inp}" placeholder="Повідомлення"><button id="dm-go" class="${btn} theme-btn-primary">➤</button></div>
+        <div class="flex gap-2 flex-wrap"><button id="dm-keys" class="${btn}">🔑 Передати ключі</button><button id="dm-card" class="${btn}">🎁 Вітальна картка</button><button id="dm-prof" class="${btn}">👤 Профіль за поштою</button></div>
+        <div>${r.threads.length ? r.threads.map(t => `<button data-th="${t.withId}" class="w-full text-left p-2 rounded-xl border theme-border mb-1"><b>${esc(t.name)}</b> ${t.unread ? `<span class="text-xs bg-red-500 text-white rounded-full px-1.5">${t.unread}</span>` : ""}<div class="text-xs theme-text-secondary truncate">${esc(t.last)}</div></button>`).join("") : "<div class='theme-text-secondary'>Листування порожнє.</div>"}</div>`;
+        $("dm-go").onclick = async () => { try { await call("globerDmSend", { email: $("dm-to").value, text: $("dm-tx").value }); toast("Надіслано."); render(); } catch (e) { toast(e.message); } };
+        $("dm-keys").onclick = async () => {
+            const email = $("dm-to").value.trim() || prompt("Пошта одержувача:"); if (!email) return; const amount = Number(prompt("Скільки ключів (1–100)?")); if (!amount) return;
+            const temp = me.wallet.role === "teacher" && confirm("OK — тимчасово (4 год, вільні ключі). Скасувати — подарувати куплені назавжди.");
+            try { await call("globerTransfer", { email, amount, kind: temp ? "temp" : "paid" }); toast("Ключі передано."); await load(); walTxt(); } catch (e) { toast(e.message); }
+        };
+        $("dm-card").onclick = () => { tab = "cards"; $("hb-tabs").dataset.pre = $("dm-to").value; render(); };
+        $("dm-prof").onclick = async () => { try { const u = (await call("globerSocUser", { email: $("dm-to").value })).user; showUser(u); } catch (e) { toast(e.message); } };
+        body().onclick = e => { const t = e.target.closest("[data-th]"); if (t) thread(t.dataset.th); };
+    }
+    async function thread(id) {
+        const r = await call("globerDmThread", { withId: id });
+        body().innerHTML = `<button id="th-back" class="${btn}">← Назад</button><div class="font-bold">${esc(r.with ? r.with.name : "")}</div><div class="space-y-1">${r.messages.map(m => `<div class="${m.mine ? "ml-10 bg-sky-500/20" : "mr-10 theme-accent-bg-light"} p-2 rounded-xl break-words">${esc(m.text)}</div>`).join("")}</div>
+        <div class="flex gap-2"><input id="th-tx" class="${inp}" maxlength="1000"><button id="th-go" class="${btn} theme-btn-primary">➤</button></div>`;
+        $("th-back").onclick = () => render();
+        $("th-go").onclick = async () => { try { await call("globerDmSend", { email: r.with.email, text: $("th-tx").value }); thread(id); } catch (e) { toast(e.message); } };
+        body().onclick = null;
+    }
+    function showUser(u) {
+        body().innerHTML = `<button id="u-back" class="${btn}">← Назад</button>` + card(u, u.titles.length ? " · 🏆 " + u.titles.join(", ") : "") +
+            `<div class="flex flex-wrap gap-2">${Object.keys(u.socials || {}).map(k => `<a class="${btn}" target="_blank" rel="noopener noreferrer" href="${esc(u.socials[k])}">${esc(k)}</a>`).join("") || "<span class='theme-text-secondary'>Соцмереж немає.</span>"}</div>` +
+            (u.achievements.length ? `<div>🎖 ${u.achievements.map(esc).join(" · ")}</div>` : "") +
+            (u.role === "Учитель" ? `<div class="font-bold">Стіна привітань</div>${u.cards.length ? u.cards.map(c => `<div class="p-2 rounded-xl border theme-border"><b>${esc(c.from)}</b> · ${c.gems} 💎<div>${esc(c.text)}</div></div>`).join("") : "<div class='theme-text-secondary'>Поки порожньо.</div>"}` : "");
+        $("u-back").onclick = () => render();
+    }
+
+    /* --- картки --- */
+    async function cards() {
+        body().innerHTML = `<div class="font-bold">Вітальна картка вчителю (5–5000 💎, залишається на його профілі назавжди)</div>
+        <input id="cd-to" class="${inp}" placeholder="Пошта вчителя" value="${esc($("hb-tabs").dataset.pre || "")}"><input id="cd-g" type="number" min="5" max="5000" class="${inp}" placeholder="Скільки 💎">
+        <textarea id="cd-tx" maxlength="300" class="${inp}" rows="3" placeholder="Текст привітання"></textarea><button id="cd-go" class="${btn} theme-btn-primary">Подарувати</button>`;
+        $("cd-go").onclick = async () => { try { await call("globerCardSend", { email: $("cd-to").value, gems: Number($("cd-g").value), text: $("cd-tx").value }); toast("Картку подаровано 🎁"); await load(); render(); } catch (e) { toast(e.message); } };
+    }
+
+    /* --- класи --- */
+    async function cls() {
+        const r = await call("globerClassBoard"), teacher = me.profile.role === "Учитель";
+        body().innerHTML = `<div class="flex gap-2"><input id="cl-code" class="${inp}" placeholder="Код класу"><button id="cl-join" class="${btn} theme-btn-primary">Вступити</button></div>
+        ${teacher ? `<div class="flex gap-2"><input id="cl-name" class="${inp}" placeholder="Назва класу (8-А)"><button id="cl-new" class="${btn}">Створити</button></div>${r.owned.length ? "<div class='text-xs'>Ваші класи: " + r.owned.map(c => `<b>${esc(c.name)}</b> — код <code>${esc(c.code)}</code>`).join(" · ") + "</div>" : ""}` : ""}
+        ${r.mine ? `<div class="font-bold">Мій клас: ${esc(r.mine.name)}</div>${r.students.map((s, i) => `<div>${i + 1}. ${esc(s.name)} — ${s.gems} 💎</div>`).join("")}` : ""}
+        <div class="font-bold">Рейтинг класів (скарбничка = гемі за підтверджені олімпіади)</div>${r.board.map((c, i) => `<div class="p-2 rounded-xl border theme-border">${i + 1}. <b>${esc(c.name)}</b> · ${c.members} уч. · скарбничка ${c.vault} 💎 · цього місяця ${c.month}</div>`).join("") || "<div class='theme-text-secondary'>Класів поки немає.</div>"}
+        <div class="text-xs theme-text-secondary">Щомісяця переможний клас отримує бонус 💎 для кожного учасника.</div>`;
+        $("cl-join").onclick = async () => { try { const j = await call("globerClassJoin", { code: $("cl-code").value }); toast("Ви у класі " + j.joined); render(); } catch (e) { toast(e.message); } };
+        if ($("cl-new")) $("cl-new").onclick = async () => { try { const j = await call("globerClassCreate", { name: $("cl-name").value }); toast("Клас створено. Код: " + j.code); render(); } catch (e) { toast(e.message); } };
+    }
+
+    /* --- ліга --- */
+    async function league() {
+        const r = await call("globerLeague"), list = a => a.length ? a.map((x, i) => `<div>${["🥇", "🥈", "🥉"][i] || i + 1 + "."} ${esc(x.name)} — ${x.score}</div>`).join("") : "<div class='theme-text-secondary'>Поки порожньо.</div>";
+        body().innerHTML = `<div class="font-bold">Ліга ${esc(r.month)} · учні (гемі)</div>${list(r.now.students)}<div class="font-bold">Ліга ${esc(r.month)} · вчителі (здані роботи на олімпіадах)</div>${list(r.now.teachers)}
+        <div class="pt-2 border-t theme-border font-bold">Чемпіони ${esc(r.prevMonth)} — «Чемпіон місяця»</div>${list(r.prev.students.slice(0, 1))}${list(r.prev.teachers.slice(0, 1))}`;
+    }
+
+    /* --- дуелі --- */
+    const stTxt = { pending: "очікує відповіді", active: "триває", finished: "завершена", declined: "відхилена", disqualified: "дискваліфікація", expired: "прострочена" };
+    async function duel() {
+        const r = await call("globerDuelList");
+        body().innerHTML = `<div class="font-bold">Викликати друга (без ставок 💎; тест генерують Екзаменатор #17 + Анонімайзер #22; −1 🔑)</div>
+        <div class="grid grid-cols-3 gap-2"><input id="du-to" class="${inp}" placeholder="Пошта друга"><input id="du-s" class="${inp}" placeholder="Предмет"><input id="du-t" class="${inp}" placeholder="Тема"></div><button id="du-go" class="${btn} theme-btn-primary">Кинути виклик ⚔️</button>
+        <div class="font-bold pt-2">Мої дуелі</div>${r.duels.map(d => `<div class="p-2 rounded-xl border theme-border flex items-center justify-between gap-2"><div><b>${esc(d.subject)}: ${esc(d.topic)}</b><div class="text-xs">${d.mine ? "Ви → " : "Від "}${esc(d.opponent)} · ${stTxt[d.status] || d.status}${d.oppScore !== null ? ` · ${d.myScore}:${d.oppScore} ${d.winner === "me" ? "🏆 перемога" : d.winner === "opp" ? "поразка" : d.winner === "draw" ? "нічия" : ""}` : ""}</div></div>
+          <div class="flex gap-1">${d.status === "pending" && !d.mine ? `<button data-ac="${d.duelId}" class="${btn} theme-btn-primary">Прийняти</button><button data-no="${d.duelId}" class="${btn}">Ні</button>` : ""}${d.status === "active" && !d.iSubmitted ? `<button data-play="${d.duelId}" class="${btn} theme-btn-primary">Грати</button>` : ""}</div></div>`).join("") || "<div class='theme-text-secondary'>Дуелей ще немає.</div>"}`;
+        $("du-go").onclick = async () => { $("du-go").disabled = true; toast("Агенти складають унікальний тест…"); try { await call("globerDuelCreate", { email: $("du-to").value, subject: $("du-s").value, topic: $("du-t").value }); toast("Виклик надіслано."); await load(); } catch (e) { toast(e.message); } render(); };
+        body().onclick = async e => {
+            const d = e.target.dataset;
+            try {
+                if (d.ac) { await call("globerDuelAccept", { duelId: d.ac }); play(d.ac); }
+                else if (d.no) { await call("globerDuelDecline", { duelId: d.no }); render(); }
+                else if (d.play) play(d.play);
+            } catch (er) { toast(er.message); }
+        };
+    }
+    async function play(id) {
+        const r = await call("globerDuelGet", { duelId: id }); if (!r.questions.length) { toast("Дуель уже завершена."); return render(); }
+        const ans = {}, end = new Date(r.duel.endsAt).getTime(); let over = false;
+        const ov = document.createElement("div"); ov.id = "du-ov"; ov.className = "fixed inset-0 z-[100] theme-bg-card overflow-y-auto p-4 space-y-3 select-none";
+        ov.innerHTML = `<div class="flex justify-between font-extrabold"><span>⚔️ ${esc(r.duel.subject)}: ${esc(r.duel.topic)}</span><span id="du-clock"></span></div><div class="text-xs text-red-500">Не залишайте вкладку: втрата фокуса = дискваліфікація.</div>` +
+            r.questions.map((q, i) => `<div class="p-3 rounded-2xl border theme-border"><div class="font-bold mb-2">${i + 1}. ${esc(q.q)}</div>${q.options.map(o => `<label class="block p-2 rounded-xl border theme-border mb-1"><input type="radio" name="q${q.id}" value="${esc(o)}"> ${esc(o)}</label>`).join("")}</div>`).join("") + `<button id="du-fin" class="${btn} theme-btn-primary">Здати</button>`;
+        document.body.appendChild(ov);
+        ["copy", "paste", "cut", "contextmenu"].forEach(ev => ov.addEventListener(ev, e => e.preventDefault()));
+        ov.addEventListener("change", e => { if (e.target.name) ans[e.target.name.slice(1)] = e.target.value; });
+        const clean = () => { over = true; clearInterval(duelTimer); document.removeEventListener("visibilitychange", vis); window.removeEventListener("blur", vis); ov.remove(); };
+        const vis = async () => { if (over || !(document.hidden || document.visibilityState === "hidden" || !document.hasFocus())) return; clean(); try { await call("globerDuelDq", { duelId: id, reason: "focus" }); } catch (_) {} toast("Дискваліфікація: втрачено фокус."); render(); };
+        const fin = async () => { if (over) return; clean(); try { const s = await call("globerDuelSubmit", { duelId: id, answers: ans }); toast(s.note || "Роботу здано. Результат — у списку дуелей."); } catch (e) { toast(e.message); } render(); };
+        document.addEventListener("visibilitychange", vis); window.addEventListener("blur", vis);
+        $("du-fin").onclick = fin;
+        duelTimer = setInterval(() => { const l = Math.max(0, Math.round((end - Date.now()) / 1000)); $("du-clock").textContent = Math.floor(l / 60) + ":" + String(l % 60).padStart(2, "0"); if (!l) fin(); }, 500);
+    }
+
+    /* --- ШІ-конструктор олімпіад --- */
+    async function build() {
+        if (!me.canCreate) { body().innerHTML = `<div>Конструктор доступний вчителям або в режимі «тимчасовий учитель» (профіль → 200 💎).</div>`; return; }
+        body().innerHTML = `<div class="font-bold">Швидка форма (−1 🔑). Екзаменатор #17 складає питання, Анонімайзер #22 перевіряє унікальність у БД.</div>
+        <div class="grid grid-cols-2 gap-2"><input id="bd-s" class="${inp}" placeholder="Предмет"><input id="bd-t" class="${inp}" placeholder="Тема"><input id="bd-n" type="number" min="3" max="20" value="8" class="${inp}" placeholder="Питань (3–20)"><input id="bd-g" class="${inp}" placeholder="Клас / рівень"></div>
+        <button id="bd-go" class="${btn} theme-btn-primary">Згенерувати</button><div id="bd-out" class="space-y-2"></div>`;
+        $("bd-go").onclick = async () => {
+            $("bd-go").disabled = true; $("bd-out").innerHTML = "<div class='theme-text-secondary'>Агенти працюють…</div>";
+            try { const r = await call("globerBuild", { subject: $("bd-s").value, topic: $("bd-t").value, count: Number($("bd-n").value), grade: $("bd-g").value }); me.wallet = r.wallet; walTxt(); preview(r.test); }
+            catch (e) { $("bd-out").innerHTML = `<div class="text-red-500">${esc(e.message)}</div>`; }
+            $("bd-go").disabled = false;
+        };
+    }
+    function preview(t) {
+        const out = $("bd-out");
+        out.innerHTML = `<input id="pv-title" class="${inp} font-bold" value="${esc(t.title)}">` + t.questions.map((q, i) => `<div class="p-2 rounded-xl border theme-border space-y-1"><textarea data-q="${i}" class="${inp}" rows="2">${esc(q.title)}</textarea>${q.options.map((o, j) => `<div class="flex items-center gap-1"><input type="radio" name="pc${i}" value="${j}" ${q.correct === j ? "checked" : ""}><input data-o="${i}:${j}" class="${inp}" value="${esc(o)}"></div>`).join("")}</div>`).join("") +
+            `<label class="block text-xs"><input id="pv-pub" type="checkbox"> Публічна олімпіада</label><button id="pv-go" class="${btn} theme-btn-primary">Опублікувати олімпіаду</button>`;
+        $("pv-go").onclick = async () => {
+            t.title = $("pv-title").value; t.isPublic = $("pv-pub").checked;
+            out.querySelectorAll("[data-q]").forEach(el => t.questions[el.dataset.q].title = el.value);
+            out.querySelectorAll("[data-o]").forEach(el => { const [i, j] = el.dataset.o.split(":"); t.questions[i].options[j] = el.value; });
+            t.questions.forEach((q, i) => { const c = out.querySelector(`input[name=pc${i}]:checked`); q.correct = c ? Number(c.value) : 0; });
+            try { const r = await call("createTest", { test: t }); out.innerHTML = `<div class="p-3 rounded-xl border theme-border">✅ Опубліковано! Код доступу: <b>${esc(r.code)}</b>. Олімпіаду має підтвердити адміністратор, щоб учні отримували 💎.</div>`; }
+            catch (e) { toast(e.message); }
+        };
+    }
+
+    setInterval(() => {   // під час тесту хаб прихований
+        const s = $("section-test"), inTest = s && !s.classList.contains("hidden");
+        $("hb-fab").style.display = inTest ? "none" : ""; if (inTest) $("hb-modal").classList.add("hidden");
+    }, 1000);
+})();
+</script>
 
 </body>
 </html>
