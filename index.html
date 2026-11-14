@@ -1089,7 +1089,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbzB3_wKRfxjbxBtM883rAht9Gv6oRYi8VUiMU-Ik58erYdZ1PZ9JF-UXkiVCt1ObCw0/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbwUn_FY9ro3DBS16axTMMTnaPHqJKt4KP8n9QTeegmySoboz8CjtdwyAoGSIlW4IRMi/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -4511,58 +4511,190 @@
     window.__stopAntiCheat = stop;
 })();
 </script>
-<!-- ===== Glober AI widget (gems, keys, Deep pipeline) ===== -->
+<!-- ===== Glober AI widget v2 + "return to task" bar ===== -->
 <style>
 #gl-fab{position:fixed;left:14px;bottom:14px;z-index:70;width:48px;height:48px;border-radius:16px;font-size:22px;background:var(--bg-card,#fff);border:1px solid var(--border-color,#bae6fd);box-shadow:0 6px 18px rgba(0,0,0,.25);cursor:pointer}
-#gl-panel{position:fixed;left:14px;bottom:70px;z-index:70;width:min(380px,calc(100vw - 28px));max-height:70vh;display:none;flex-direction:column;background:var(--bg-card,#fff);color:inherit;border:1px solid var(--border-color,#bae6fd);border-radius:18px;box-shadow:0 12px 32px rgba(0,0,0,.3);overflow:hidden;font-size:13px}
+#gl-panel{position:fixed;left:14px;bottom:70px;z-index:70;width:min(430px,calc(100vw - 28px));height:min(620px,76vh);display:none;flex-direction:column;background:var(--bg-card,#fff);color:inherit;border:1px solid var(--border-color,#bae6fd);border-radius:18px;box-shadow:0 12px 32px rgba(0,0,0,.3);overflow:hidden;font-size:13px}
 #gl-panel header{padding:8px 12px;display:flex;gap:8px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-color,#bae6fd);font-weight:700}
-#gl-log{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:6px;min-height:120px}
+#gl-tabs{display:flex;gap:4px;padding:6px;overflow-x:auto;border-bottom:1px solid var(--border-color,#bae6fd)}
+#gl-tabs button{white-space:nowrap;padding:4px 9px;border-radius:9px;border:1px solid var(--border-color,#bae6fd);font-weight:700;cursor:pointer}
+#gl-tabs button.on{background:#2563eb;color:#fff}
+#gl-body{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
 .gl-m{padding:6px 10px;border-radius:12px;max-width:92%;white-space:pre-wrap;word-break:break-word}
-.gl-u{align-self:flex-end;background:#2563eb;color:#fff}.gl-a{align-self:flex-start;background:rgba(125,125,125,.15)}.gl-s{align-self:flex-start;opacity:.7;font-style:italic}
-#gl-panel footer{padding:8px;border-top:1px solid var(--border-color,#bae6fd);display:flex;flex-direction:column;gap:6px}
-#gl-panel input,#gl-panel select{background:transparent;border:1px solid var(--border-color,#bae6fd);border-radius:10px;padding:6px 8px;color:inherit}
-#gl-panel button.gl-b{border:1px solid var(--border-color,#bae6fd);border-radius:10px;padding:5px 9px;font-weight:700;cursor:pointer}
+.gl-u{align-self:flex-end;background:#2563eb;color:#fff}.gl-a{align-self:flex-start;background:rgba(125,125,125,.15)}.gl-s{align-self:flex-start;opacity:.75;font-style:italic}
+#gl-foot{padding:8px;border-top:1px solid var(--border-color,#bae6fd);display:flex;flex-direction:column;gap:6px}
+#gl-panel input,#gl-panel select,#gl-panel textarea{background:transparent;border:1px solid var(--border-color,#bae6fd);border-radius:10px;padding:5px 8px;color:inherit;max-width:100%}
+#gl-panel .gl-b{border:1px solid var(--border-color,#bae6fd);border-radius:10px;padding:4px 9px;font-weight:700;cursor:pointer}
+#gl-panel .gl-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+#gl-panel .gl-card{border:1px solid var(--border-color,#bae6fd);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:5px}
+#gl-panel h4{font-weight:800;margin:2px 0}
+.gl-frame-gold{box-shadow:0 0 0 3px #f59e0b}.gl-frame-neon{box-shadow:0 0 0 3px #22d3ee,0 0 10px #22d3ee}.gl-frame-olympian{box-shadow:0 0 0 3px #a855f7}.gl-frame-sysadmin{box-shadow:0 0 0 3px #22c55e}
+.gl-bg-sunset{background:linear-gradient(135deg,#fb923c33,#ec489933)}.gl-bg-aurora{background:linear-gradient(135deg,#22d3ee33,#a855f733)}.gl-bg-midnight{background:linear-gradient(135deg,#1e3a8a44,#0f172a44)}
+#resume-bar{position:fixed;top:0;left:0;right:0;z-index:95;display:none;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 12px;background:#f59e0b;color:#111;font-weight:700;font-size:13px;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+#resume-bar button{padding:5px 12px;border-radius:10px;font-weight:800;cursor:pointer;border:2px solid #111}
+#rb-return{background:#111;color:#fff}#rb-finish{background:#fff;color:#b91c1c;border-color:#b91c1c}
 </style>
+<div id="resume-bar"><span id="rb-text">⏳ Ви не завершили завдання.</span><button id="rb-return">↩ Повернутися до завдання</button><button id="rb-finish">Завершити</button></div>
 <button id="gl-fab" title="Glober AI">🤖</button>
 <div id="gl-panel" role="dialog" aria-label="Glober AI">
   <header><span>Glober AI</span><span id="gl-bal" style="font-weight:600;font-size:12px"></span></header>
-  <div id="gl-log"></div>
-  <footer>
-    <div style="display:flex;gap:6px;flex-wrap:wrap">
-      <select id="gl-mode"><option value="standard">Glober 1.0 · 1 🔑</option><option value="deep">Deep 1.1 · 3 🔑</option></select>
-      <select id="gl-pack"><option value="p30">30 🔑 — 300 💎</option><option value="p105">105 🔑 — 1000 💎</option><option value="p300">300 🔑 — 2600 💎</option><option value="p500">500 🔑 — 4000 💎</option></select>
-      <button class="gl-b" id="gl-buy">Купити</button><button class="gl-b" id="gl-freeze" title="Заморозка серії 25 💎">❄️ 25💎</button>
-    </div>
-    <div style="display:flex;gap:6px"><input id="gl-in" style="flex:1" placeholder="Запитай Glober AI…" maxlength="3000"><button class="gl-b" id="gl-send">➤</button></div>
-  </footer>
+  <div id="gl-tabs"></div><div id="gl-body"></div>
+  <div id="gl-foot">
+    <div class="gl-row"><select id="gl-mode"><option value="standard">Glober 1.0 · 1 🔑</option><option value="deep">Deep 1.1 · 3 🔑</option></select>
+    <select id="gl-pack"><option value="p30">30 🔑 — 300 💎</option><option value="p105">105 🔑 — 1000 💎</option><option value="p300">300 🔑 — 2600 💎</option><option value="p500">500 🔑 — 4000 💎</option></select>
+    <button class="gl-b" id="gl-buy">Купити</button><button class="gl-b" id="gl-freeze" title="Заморозка серії">❄️ 25💎</button></div>
+    <div class="gl-row"><input id="gl-in" style="flex:1" placeholder="Запитай Glober AI…" maxlength="3000"><button class="gl-b" id="gl-send">➤</button></div>
+  </div>
 </div>
 <script>
 (function(){
-  const $=id=>document.getElementById(id), hist=[]; let busy=false, st=null;
-  const add=(c,t)=>{const d=document.createElement('div');d.className='gl-m '+c;d.textContent=t;$('gl-log').appendChild(d);$('gl-log').scrollTop=1e9;return d};
-  function paint(w){ if(!w) return; st=w;
-    $('gl-bal').textContent=`💎 ${w.gems} · 🔑 ${w.keysTotal} · 🔥 ${w.streakDays}`+(w.penaltyLevel?' · ⛔ штраф':'')+(w.nyBuff?' · 🎄':'');
-    $('gl-mode').options[1].textContent=`Deep 1.1 · ${w.deepCost} 🔑`; }
-  async function refresh(){ if(typeof authToken==='undefined'||!authToken) return; try{ paint((await apiRequest('globerState')).wallet);}catch(e){} }
-  $('gl-fab').onclick=()=>{const p=$('gl-panel');const open=p.style.display!=='flex';p.style.display=open?'flex':'none';if(open)refresh();};
-  async function send(){
-    if(busy) return; const t=$('gl-in').value.trim(); if(!t) return;
-    if(!authToken){ add('gl-s','Увійдіть в акаунт, щоб користуватися Glober AI.'); return; }
-    if(!navigator.onLine){ add('gl-s','Офлайн: запит не надіслано.'); return; }
-    busy=true; $('gl-in').value=''; add('gl-u',t);
-    const wait=add('gl-s', $('gl-mode').value==='deep'?'Підключаю агентів…':'Думаю…');
-    try{
-      const r=await apiRequest('globerChat',{message:t,mode:$('gl-mode').value,history:hist.slice(-8)});
-      // Apps Script cannot stream: replay the server's pipeline trail as live-style status lines
-      for(const p of (r.pipeline||[]).slice(1)){ wait.textContent=p.status; await new Promise(x=>setTimeout(x,350)); }
-      wait.remove(); add('gl-a',r.reply); hist.push({role:'user',content:t},{role:'assistant',content:r.reply}); paint(r.wallet);
-    }catch(e){ wait.remove(); add('gl-s','⚠️ '+e.message); } busy=false;
-  }
-  $('gl-send').onclick=send; $('gl-in').onkeydown=e=>{if(e.key==='Enter')send()};
-  $('gl-buy').onclick=async()=>{try{paint((await apiRequest('buyKeys',{packId:$('gl-pack').value})).wallet);add('gl-s','Ключі куплено ✅')}catch(e){add('gl-s','⚠️ '+e.message)}};
-  $('gl-freeze').onclick=async()=>{try{paint((await apiRequest('buyFreeze')).wallet);add('gl-s','Заморозку серії придбано ❄️')}catch(e){add('gl-s','⚠️ '+e.message)}};
+  const $=id=>document.getElementById(id), E=s=>escapeHtml(String(s??''));
+  let hist=[],summary='',busy=false,tab='chat',prof=null,duelTimer=null;
+  try{hist=JSON.parse(localStorage.getItem('gl_hist')||'[]');summary=localStorage.getItem('gl_sum')||'';}catch(_){}
+  const save=()=>{try{localStorage.setItem('gl_hist',JSON.stringify(hist.slice(-30)));localStorage.setItem('gl_sum',summary)}catch(_){}};
+  const gl=(op,d={})=>apiRequest('gl',{op,...d});
+  const note=t=>{const l=$('gl-log');if(l){const d=document.createElement('div');d.className='gl-m gl-s';d.textContent=t;l.appendChild(d);l.scrollTop=1e9}else if(typeof showNotification==='function')showNotification(t)};
+  function paint(w){if(!w)return;try{localStorage.setItem('gl_wallet',JSON.stringify(w))}catch(_){}$('gl-bal').textContent=`💎 ${w.gems} · 🔑 ${w.keysTotal} · 🔥 ${w.streakDays}`+(w.penaltyLevel?' · ⛔':'')+(w.nyBuff?' · 🎄':'');$('gl-mode').options[1].textContent=`Deep 1.1 · ${w.deepCost} 🔑`}
+  const refresh=async()=>{if(!authToken)return;try{paint((await apiRequest('globerState')).wallet)}catch(_){try{paint(JSON.parse(localStorage.getItem('gl_wallet')||'null'))}catch(__){}}};
+  const TABS=[['chat','💬 Чат'],['prof','👤 Профіль'],['mail','✉️ Листи'],['lg','🏆 Ліга'],['duel','⚔️ Дуелі'],['build','🧪 Конструктор'],['arb','🎯 Розбір'],['train','📚 Тренування']];
+  function tabs(){$('gl-tabs').innerHTML=TABS.map(([k,l])=>`<button data-t="${k}" class="${k===tab?'on':''}">${l}</button>`).join('');
+    $('gl-foot').style.display=tab==='chat'?'flex':'none'}
+  $('gl-tabs').onclick=e=>{const k=e.target.dataset.t;if(k){tab=k;render()}};
+  function render(){tabs();clearInterval(duelTimer);({chat:rChat,prof:rProf,mail:rMail,lg:rLeague,duel:rDuel,build:rBuild,arb:rArb,train:rTrain})[tab]()}
+  const body=h=>{$('gl-body').innerHTML=h};
+  const guard=async(fn)=>{try{await fn()}catch(e){note('⚠️ '+e.message)}};
+
+  /* ---- chat (+offline queue) ---- */
+  function rChat(){body('<div id="gl-log" style="display:flex;flex-direction:column;gap:6px"></div>');
+    hist.forEach(h=>add(h.role==='user'?'gl-u':'gl-a',h.content));}
+  function add(c,t){const d=document.createElement('div');d.className='gl-m '+c;d.textContent=t;const l=$('gl-log');if(l){l.appendChild(d);$('gl-body').scrollTop=1e9}return d}
+  async function ask(t){
+    busy=true;const wait=add('gl-s',$('gl-mode').value==='deep'?'Підключаю агентів…':'Думаю…');
+    try{const r=await apiRequest('globerChat',{message:t,mode:$('gl-mode').value,history:hist.slice(-30),summary});
+      for(const p of (r.pipeline||[]).slice(1)){wait.textContent=p.status;await new Promise(x=>setTimeout(x,300))}
+      wait.remove();add('gl-a',r.reply);hist.push({role:'user',content:t},{role:'assistant',content:r.reply});
+      if(r.summary){summary=r.summary;hist=hist.slice(-6)}save();paint(r.wallet);if(r.achievement)add('gl-s','🏆 Секретне досягнення: «'+r.achievement+'»');
+    }catch(e){wait.remove();add('gl-s','⚠️ '+e.message)}busy=false}
+  async function send(){if(busy)return;const t=$('gl-in').value.trim();if(!t)return;if(!authToken){note('Увійдіть в акаунт.');return}
+    $('gl-in').value='';if(tab!=='chat'){tab='chat';render()}add('gl-u',t);
+    if(!navigator.onLine){const q=JSON.parse(localStorage.getItem('gl_q')||'[]');q.push(t);localStorage.setItem('gl_q',JSON.stringify(q));add('gl-s','📴 Офлайн: запит у черзі, надішлю після відновлення зв’язку.');return}
+    await ask(t)}
+  window.addEventListener('online',async()=>{const q=JSON.parse(localStorage.getItem('gl_q')||'[]');localStorage.removeItem('gl_q');for(const t of q){await ask(t)}});
+  $('gl-send').onclick=send;$('gl-in').onkeydown=e=>{if(e.key==='Enter')send()};
+  $('gl-buy').onclick=()=>guard(async()=>{paint((await apiRequest('buyKeys',{packId:$('gl-pack').value})).wallet);note('Ключі куплено ✅')});
+  $('gl-freeze').onclick=()=>guard(async()=>{paint((await apiRequest('buyFreeze')).wallet);note('Заморозку серії придбано ❄️')});
+
+  /* ---- profile & shop ---- */
+  async function rProf(){body('Завантаження…');await guard(async()=>{prof=(await gl('profile')).profile;drawProf()})}
+  function drawProf(){const p=prof,own=k=>p.owned.filter(x=>x.startsWith(k+':')).map(x=>x.split(':').slice(1).join(':'));
+    const sel=(k,label)=>`<label>${label}: <select data-k="${k}"><option value="">—</option>${own(k).map(v=>`<option ${p[k]===v?'selected':''}>${E(v)}</option>`).join('')}</select></label>`;
+    const shop=Object.keys(p.shop).map(k=>`<div><b>${k}</b>: `+Object.keys(p.shop[k]).map(id=>own(k).includes(id)?`✔${E(id)} `:`<button class="gl-b" data-buy="${k}|${E(id)}">${E(id)} ${p.shop[k][id]}💎</button> `).join('')+'</div>').join('');
+    const soc=p.socials||{};
+    body(`<div class="gl-card gl-frame-${E(p.frame)} gl-bg-${E(p.background)}"><b style="color:${E(p.nameColor)}">${E(p.activeTitle?'['+p.activeTitle+'] ':'')}${E(p.name)}</b><div>${(p.badges||[]).map(b=>'🏅'+E(b)).join(' ')}</div></div>
+    <div class="gl-card"><h4>Стиль</h4><div class="gl-row">${sel('frame','Рамка')}${sel('background','Фон')}${sel('nameColor','Колір імені')}</div>
+      <label>Титул: <select data-k="activeTitle"><option value="">—</option>${p.titles.map(t=>`<option ${p.activeTitle===t?'selected':''}>${E(t)}</option>`).join('')}</select></label>${shop}</div>
+    <div class="gl-card"><h4>Профіль</h4>${['tiktok','youtube','chess','facebook','telegram'].map(k=>`<input data-s="${k}" placeholder="${k} (https://…)" value="${E(soc[k]||'')}">`).join('')}
+      <div class="gl-row"><label>День народження <input type="date" id="gp-bd" value="${E(p.birthDate)}"></label>
+      <label>Повідомлення від: <select id="gp-dm"><option value="all">усіх</option><option value="teachers">лише вчителів</option><option value="none">нікого</option></select></label></div>
+      <select id="gp-class"><option value="">Без класу</option></select><button class="gl-b" id="gp-save">Зберегти</button></div>
+    <div class="gl-card"><h4>Тимчасовий режим вчителя</h4><div>${p.tempTeacherUntil&&new Date(p.tempTeacherUntil)>new Date()?'Активний до '+new Date(p.tempTeacherUntil).toLocaleString():'12 годин за 200 💎 — відкриває конструктор олімпіад'}</div><button class="gl-b" id="gp-temp">Активувати (200 💎)</button>
+      <div class="gl-row"><input id="gp-exp" placeholder="ID простроченого тесту"><button class="gl-b" id="gp-expb">Відкрити за 20 💎</button></div></div>`);
+    $('gp-dm').value=p.dmPrivacy||'all';
+    guard(async()=>{const c=(await gl('classes')).classes;$('gp-class').innerHTML='<option value="">Без класу</option>'+c.map(x=>`<option value="${E(x.id)}" ${x.id===p.classId?'selected':''}>${E(x.name)}</option>`).join('')})}
+  $('gl-body').addEventListener('click',e=>{const t=e.target;
+    if(t.dataset.buy)guard(async()=>{const[k,id]=t.dataset.buy.split('|');const r=await gl('buyCosmetic',{kind:k,id});paint(r.wallet);prof=r.profile;drawProf()});
+    if(t.id==='gp-save')guard(async()=>{const d={socials:{},birthDate:$('gp-bd').value,dmPrivacy:$('gp-dm').value,classId:$('gp-class').value};
+      document.querySelectorAll('#gl-body [data-s]').forEach(i=>d.socials[i.dataset.s]=i.value);
+      document.querySelectorAll('#gl-body select[data-k]').forEach(i=>d[i.dataset.k]=i.value);
+      if(!navigator.onLine){localStorage.setItem('gl_pending',JSON.stringify(d));note('📴 Збережено локально — синхронізується автоматично.');return}
+      prof=(await gl('saveProfile',{data:d})).profile;drawProf();note('Збережено ✅')});
+    if(t.id==='gp-temp')guard(async()=>{const r=await gl('tempTeacher');paint(r.wallet);rProf()});
+    if(t.id==='gp-expb')guard(async()=>{const r=await gl('expiredAccess',{testId:$('gp-exp').value});paint(r.wallet);note('Доступ відкрито (без 💎 за проходження).')});
+  });
+
+  /* ---- mail: DMs, cards, key transfers ---- */
+  async function rMail(){body('Завантаження…');await guard(async()=>{const m=(await gl('dmList')).messages;
+    body(`<div class="gl-card"><h4>Повідомлення</h4>${m.map(x=>`<div class="gl-m ${x.mine?'gl-u':'gl-a'}">${E(x.mine?'→ '+x.to:x.from)}: ${E(x.text)}</div>`).join('')||'Порожньо'}
+      <input id="m-e" placeholder="email отримувача"><textarea id="m-t" maxlength="500" placeholder="Текст"></textarea><button class="gl-b" id="m-s">Надіслати</button></div>
+      <div class="gl-card"><h4>🎁 Листівка вчителю (5–5000 💎)</h4><input id="c-e" placeholder="email вчителя"><input id="c-g" type="number" min="5" max="5000" value="5"><textarea id="c-t" maxlength="300" placeholder="Привітання"></textarea><button class="gl-b" id="c-s">Подарувати</button></div>
+      <div class="gl-card"><h4>🔑 Передати ключі</h4><input id="k-e" placeholder="email"><input id="k-n" type="number" min="1" value="3"><label><input type="checkbox" id="k-p"> назавжди (куплені ключі)</label><button class="gl-b" id="k-s">Передати</button></div>`)})}
+  $('gl-body').addEventListener('click',e=>{const id=e.target.id;
+    if(id==='m-s')guard(async()=>{await gl('dmSend',{email:$('m-e').value,text:$('m-t').value});rMail()});
+    if(id==='c-s')guard(async()=>{const r=await gl('card',{email:$('c-e').value,gems:$('c-g').value,text:$('c-t').value});paint(r.wallet);note('Листівку надіслано 🎁')});
+    if(id==='k-s')guard(async()=>{const r=await apiRequest('transferKeys',{email:$('k-e').value,keys:$('k-n').value,permanent:$('k-p').checked});paint(r.wallet);note('Ключі передано ✅')});
+  });
+
+  /* ---- league & classes ---- */
+  async function rLeague(){body('Завантаження…');await guard(async()=>{const L=(await gl('league')).league;
+    let news='';try{news=(await gl('news')).note}catch(_){}
+    const li=(a,f)=>a.map((x,i)=>`<div>${i+1}. ${E(x.name)} — ${f(x)}</div>`).join('')||'—';
+    body(`<div class="gl-card">📣 <i>${E(news)}</i></div><div class="gl-card"><h4>Ліга ${E(L.month)} · учні</h4>${li(L.students,x=>x.gems+' 💎')}</div><div class="gl-card"><h4>Вчителі (проходжень)</h4>${li(L.teachers,x=>x.attempts)}</div>
+      <div class="gl-card"><h4>Класи</h4>${li(L.classes,x=>x.gems+' 💎')}<div class="gl-row"><input id="cl-n" placeholder="Новий клас (8-А), для вчителів"><button class="gl-b" id="cl-s">Створити</button></div></div>`)})}
+  $('gl-body').addEventListener('click',e=>{if(e.target.id==='cl-s')guard(async()=>{await gl('createClass',{name:$('cl-n').value});rLeague()})});
+
+  /* ---- duels ---- */
+  async function rDuel(){body('Завантаження…');await guard(async()=>{const d=(await gl('duelList')).duels;
+    body(`<div class="gl-card"><h4>Новий виклик (2 🔑, без ставок)</h4><input id="d-e" placeholder="email друга"><input id="d-s" placeholder="Предмет/тема"><button class="gl-b" id="d-c">Кинути виклик</button></div>`+
+      d.map(x=>`<div class="gl-card"><b>${E(x.topic)}</b> vs ${E(x.opponent)} · ${E(x.status)}${x.result?` · ${x.result.winner?(x.result.winner===x.result[Object.keys(x.result)[0]]?'':''):''}`:''}
+        ${x.status==='pending'&&!x.iAmChallenger?`<button class="gl-b" data-da="${E(x.duelId)}">Прийняти</button>`:''}${x.status==='active'&&!x.mine?`<button class="gl-b" data-dp="${E(x.duelId)}">Грати</button>`:''}
+        ${x.result?Object.entries(x.result).filter(([k])=>k!=='winner').map(([k,v])=>`<div>${v.status==='disqualified'?'🚫 дискваліфіковано':'✔ '+v.score+'/5'}</div>`).join(''):''}</div>`).join(''))})}
+  $('gl-body').addEventListener('click',e=>{const t=e.target;
+    if(t.id==='d-c')guard(async()=>{const s=$('d-s').value;await gl('duelCreate',{email:$('d-e').value,subject:s,topic:s});rDuel()});
+    if(t.dataset.da)guard(async()=>{await gl('duel',{sub:'accept',duelId:t.dataset.da});play(t.dataset.da)});
+    if(t.dataset.dp)play(t.dataset.dp)});
+  async function play(id){await guard(async()=>{const d=(await gl('duel',{sub:'get',duelId:id})).duel;if(!d.questions.length){note('Немає питань для гри.');return}
+    let lost=false;const t0=Date.now(),picks={};const vis=()=>{if(document.hidden)lost=true};document.addEventListener('visibilitychange',vis);
+    body(`<div class="gl-card"><b>⚔️ ${E(d.topic)}</b><div>Не залишайте вкладку — це дискваліфікація.</div></div>`+d.questions.map((q,n)=>`<div class="gl-card"><b>${n+1}. ${E(q.title)}</b>${q.options.map(o=>`<label><input type="radio" name="q${q.i}" value="${o.k}"> ${E(o.t)}</label>`).join('')}</div>`).join('')+'<button class="gl-b" id="d-done">Завершити дуель</button>');
+    $('d-done').onclick=()=>guard(async()=>{d.questions.forEach(q=>{const c=document.querySelector(`input[name=q${q.i}]:checked`);if(c)picks[q.i]=c.value});
+      document.removeEventListener('visibilitychange',vis);await gl('duel',{sub:'submit',duelId:id,picks,ms:Date.now()-t0,focusLost:lost});rDuel()})})}
+
+  /* ---- AI olympiad builder (#17 + #22) ---- */
+  let draft=null;
+  function rBuild(){body(`<div class="gl-card"><h4>AI-конструктор олімпіад</h4><input id="b-s" placeholder="Предмет"><input id="b-t" placeholder="Тема"><input id="b-g" placeholder="Клас/рівень"><input id="b-n" type="number" min="1" max="15" value="5"><button class="gl-b" id="b-go">Згенерувати (унікальні питання)</button></div><div id="b-out"></div>`);if(draft)showDraft()}
+  function showDraft(){$('b-out').innerHTML=`<div class="gl-card"><b>${E(draft.title)}</b>${draft.questions.map((q,i)=>`<div>${i+1}. ${E(q.title)}<br>${q.options.map((o,k)=>(k===q.correct?'✅ ':'▫️ ')+E(o)).join('<br>')}</div>`).join('<hr>')}<button class="gl-b" id="b-pub">Опублікувати олімпіаду (7 днів)</button> <button class="gl-b" id="b-off">📥 Зберегти для офлайн-тренування</button></div>`}
+  $('gl-body').addEventListener('click',e=>{
+    if(e.target.id==='b-go')guard(async()=>{$('b-out').textContent='Генерую…';const r=await gl('aiBuild',{subject:$('b-s').value,topic:$('b-t').value,grade:$('b-g').value,count:$('b-n').value});draft=r.test;showDraft();refresh()});
+    if(e.target.id==='b-off'&&draft){const a=JSON.parse(localStorage.getItem('gl_train')||'[]');a.push({title:draft.title,questions:draft.questions});localStorage.setItem('gl_train',JSON.stringify(a.slice(-10)));note('Збережено для офлайн-тренування ✅')}
+    if(e.target.id==='b-pub')guard(async()=>{const r=await apiRequest('createTest',{test:{...draft,deadline:new Date(Date.now()+7*864e5).toISOString()}});note('Створено! Код доступу: '+r.code);draft=null;rBuild()})});
+
+  /* ---- Arbiter: post-olympiad error analysis ---- */
+  async function rArb(){body('Завантаження…');const saved=JSON.parse(localStorage.getItem('gl_plans')||'[]');
+    const savedHtml=saved.map(x=>`<div class="gl-card"><b>💾 ${E(x.title)}</b><div style="white-space:pre-wrap">${E(x.plan)}</div></div>`).join('');
+    await guard(async()=>{const a=(await gl('attempts')).attempts;
+      body(`<div class="gl-card"><h4>Розбір помилок (2 🔑)</h4>${a.map(x=>`<div class="gl-row"><span>${E(x.title)} — ${E(x.score)}/${E(x.maxScore)}</span><button class="gl-b" data-arb="${E(x.attemptId)}" data-ti="${E(x.title)}">Розібрати</button></div>`).join('')||'Ще немає зданих робіт.'}</div><div id="arb-out"></div>`+savedHtml)})
+    .catch?.(()=>{});
+    if(!navigator.onLine)body('📴 Офлайн: збережені плани<br>'+savedHtml)}
+  $('gl-body').addEventListener('click',e=>{const t=e.target;if(!t.dataset.arb)return;
+    guard(async()=>{$('arb-out').textContent='Арбітр аналізує…';const r=await gl('arbiter',{attemptId:t.dataset.arb});
+      $('arb-out').innerHTML=`<div class="gl-card" style="white-space:pre-wrap">${E(r.plan)}<button class="gl-b" id="arb-save">💾 Зберегти офлайн</button></div>`;
+      $('arb-save').onclick=()=>{const a=JSON.parse(localStorage.getItem('gl_plans')||'[]');a.push({title:t.dataset.ti,plan:r.plan});localStorage.setItem('gl_plans',JSON.stringify(a.slice(-10)));note('Збережено ✅')};refresh()})});
+
+  /* ---- offline local training (no server, no keys) ---- */
+  function rTrain(){const a=JSON.parse(localStorage.getItem('gl_train')||'[]');
+    body(`<div class="gl-card"><h4>Тренування (працює офлайн)</h4>${a.map((x,i)=>`<div class="gl-row"><span>${E(x.title)} · ${x.questions.length} пит.</span><button class="gl-b" data-tr="${i}">Почати</button></div>`).join('')||'Збережіть чернетку з «🧪 Конструктор».'}</div><div id="tr-out"></div>`)}
+  $('gl-body').addEventListener('click',e=>{const t=e.target;if(t.dataset.tr===undefined)return;
+    const x=JSON.parse(localStorage.getItem('gl_train')||'[]')[+t.dataset.tr];if(!x)return;
+    $('tr-out').innerHTML=x.questions.map((q,n)=>`<div class="gl-card"><b>${n+1}. ${E(q.title)}</b>${q.options.map((o,k)=>`<label><input type="radio" name="tq${n}" value="${k}"> ${E(o)}</label>`).join('')}</div>`).join('')+'<button class="gl-b" id="tr-done">Перевірити</button><div id="tr-res"></div>';
+    $('tr-done').onclick=()=>{let ok=0,fb='';x.questions.forEach((q,n)=>{const c=document.querySelector(`input[name=tq${n}]:checked`);const good=c&&+c.value===q.correct;if(good)ok++;else fb+=`<div>❌ ${n+1}: правильно — ${E(q.options[q.correct])}. ${E(q.description||'')}</div>`});
+      $('tr-res').innerHTML=`<div class="gl-card"><b>Результат: ${ok}/${x.questions.length}</b>${fb}</div>`}});
+
+  /* ---- periodic background sync (one batched request) ---- */
+  async function sync(){if(!authToken||!navigator.onLine||busy)return;let d=null;try{d=JSON.parse(localStorage.getItem('gl_pending')||'null')}catch(_){}
+    try{const r=await gl('sync',d?{data:d}:{});if(d)localStorage.removeItem('gl_pending');paint(r.wallet)}catch(_){}}
+  setInterval(()=>{if(!document.hidden)sync()},60000);window.addEventListener('online',sync);setTimeout(sync,2500);
+
+  $('gl-fab').onclick=()=>{const p=$('gl-panel'),o=p.style.display!=='flex';p.style.display=o?'flex':'none';if(o){render();refresh()}};
+
+  /* ---- return to task / finish (works from the landing page) ---- */
+  const vis=id=>{const e=document.getElementById(id);return e&&!e.classList.contains('hidden')};
+  function pending(){return !!(window.currentAttemptId&&window.activeTest&&!window.isPreviewSession&&!window.finishInProgress&&!vis('section-test')&&!vis('section-results'))}
+  setInterval(()=>{const on=pending(),b=$('resume-bar');b.style.display=on?'flex':'none';if(on)$('rb-text').textContent='⏳ Ви не завершили «'+(window.activeTest.title||'завдання')+'».'},700);
+  $('rb-return').onclick=async()=>{try{await document.documentElement.requestFullscreen()}catch(_){}showSection('test')};
+  $('rb-finish').onclick=async()=>{if(!confirm('Завершити роботу зараз? Незаповнені відповіді буде зараховано як порожні.'))return;
+    if(document.fullscreenElement)try{await document.exitFullscreen()}catch(_){}finishTest()};
 })();
 </script>
+
 
 </body>
 </html>
