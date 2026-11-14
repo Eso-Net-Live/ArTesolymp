@@ -1089,7 +1089,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbxxWWOGG3N3IUYDe0Gj5W3wFvNiQKkXGVOV6vGeiF4diOvsg7ywtIccdpPVN2RjUGvH/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbxTKBwUIHrXZ2QW9WIaOFXnbQcE1cwqTgnpLuViinKAAGKNjHRBf5MGa2t1LqWyfIyk/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -4707,7 +4707,7 @@
     }
     async function render() {
         setTabs(); if (!me) await load(); if (!me) return;
-        const f = { dm, cards, cls, league, duel, build }[tab]; body().innerHTML = "<div class='theme-text-secondary'>Завантаження…</div>"; try { await f(); } catch (e) { body().innerHTML = `<div class="text-red-500">${esc(e.message)}</div>`; }
+        const f = { dm, cards, class: cls, league, duel, build }[tab]; body().innerHTML = "<div class='theme-text-secondary'>Завантаження…</div>"; try { await f(); } catch (e) { body().innerHTML = `<div class="text-red-500">${esc(e.message)}</div>`; }
         walTxt();
     }
     function openHub() { if (!requireLogin()) return; $("hb-modal").classList.remove("hidden"); load().then(render); }
@@ -4896,6 +4896,44 @@
         };
     }
 
+
+    /* --- вікно «Повернення»: незавершений тест/олімпіада на головній --- */
+    document.body.insertAdjacentHTML("beforeend", `
+    <div id="rt-modal" class="hidden fixed inset-0 z-[95] bg-black/60 flex items-center justify-center p-4">
+      <div class="theme-bg-card border theme-border rounded-3xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+        <div class="text-xl font-black">Повернення</div>
+        <div><div id="rt-text"></div><div id="rt-title" class="text-sm theme-text-secondary mt-1"></div></div>
+        <div class="flex flex-wrap gap-2 justify-end">
+          <button id="rt-close" class="px-4 py-2 rounded-xl border theme-border font-bold text-sm">Закрити вікно</button>
+          <button id="rt-finish" class="px-4 py-2 rounded-xl border border-red-400 text-red-500 font-bold text-sm">Завершити</button>
+          <button id="rt-go" class="theme-btn-primary px-4 py-2 rounded-xl font-bold text-sm">Продовжити</button>
+        </div>
+      </div>
+    </div>`);
+    let rtAttempt = null, rtBusy = false; const rtSeen = {};
+    const rtHide = () => $("rt-modal").classList.add("hidden");
+    async function checkReturn() {
+        if (rtBusy || typeof authToken === "undefined" || !authToken) return;
+        const land = $("section-landing"); if (!land || land.classList.contains("hidden")) return;
+        if (!$("rt-modal").classList.contains("hidden")) return;
+        rtBusy = true;
+        try {
+            const r = await call("globerOpenAttempt"); const a = r.attempt;
+            if (!a || rtSeen[a.attemptId] || land.classList.contains("hidden")) return;
+            rtAttempt = a; rtSeen[a.attemptId] = true;
+            $("rt-text").textContent = "Ви ще не завершили " + (a.kind === "olympiad" ? "олімпіаду" : "тест") + ", ви будете продовжати?";
+            $("rt-title").textContent = "«" + a.title + "»";
+            $("rt-modal").classList.remove("hidden");
+        } catch (e) {} finally { rtBusy = false; }
+    }
+    $("rt-close").onclick = rtHide;
+    $("rt-go").onclick = async () => { rtHide(); if (rtAttempt) await startTestSession(rtAttempt.testId); };
+    $("rt-finish").onclick = async () => { rtHide(); if (!rtAttempt) return; const ok = await startTestSession(rtAttempt.testId); if (ok) await finishTest(false); };
+    const _show2 = window.showSection;
+    window.showSection = function (s) { const r = _show2.apply(this, arguments); if (s === "landing") setTimeout(checkReturn, 400); return r; };
+    setInterval(checkReturn, 5000);
+    setTimeout(checkReturn, 1500);
+
     setInterval(() => {   // під час тесту хаб прихований
         const s = $("section-test"), inTest = s && !s.classList.contains("hidden");
         $("hb-fab").style.display = inTest ? "none" : ""; if (inTest) $("hb-modal").classList.add("hidden");
@@ -4903,5 +4941,44 @@
 })();
 </script>
 
+<script>
+/* ===== Діалог «Повернення» для незавершеного тесту/олімпіади ===== */
+(function () {
+    const dismissed = {}; let busy = false, lastToken = null;
+    const landingVisible = () => { const s = document.getElementById("section-landing"); return s && !s.classList.contains("hidden"); };
+    const inTest = () => !!(window.currentAttemptId && window.activeTest);
+    function close() { const m = document.getElementById("ret-modal"); if (m) m.remove(); }
+    function dialog(a) {
+        close(); const what = a.kind === "olympiad" ? "олімпіаду" : "тест";
+        const m = document.createElement("div"); m.id = "ret-modal"; m.className = "fixed inset-0 z-[120] bg-black/60 flex items-center justify-center p-4";
+        m.innerHTML = `<div class="theme-bg-card border theme-border rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+            <h3 class="text-xl font-black">Повернення</h3>
+            <p class="text-sm">Ви ще не завершили ${what} <b></b>, ви будете продовжувати?</p>
+            <div class="flex flex-wrap gap-2 justify-end">
+              <button id="ret-close" class="px-4 py-2 rounded-xl border theme-border font-bold text-sm">Закрити вікно</button>
+              <button id="ret-end" class="px-4 py-2 rounded-xl border border-red-400 text-red-500 font-bold text-sm">Завершити</button>
+              <button id="ret-go" class="theme-btn-primary px-4 py-2 rounded-xl font-bold text-sm">Продовжити</button></div></div>`;
+        m.querySelector("b").textContent = "«" + a.title + "»";
+        document.body.appendChild(m);
+        document.getElementById("ret-close").onclick = () => { dismissed[a.attemptId] = 1; close(); };
+        document.getElementById("ret-go").onclick = async () => { dismissed[a.attemptId] = 1; close(); try { await startTestSession(a.testId); } catch (e) { showNotification(e.message); } };
+        document.getElementById("ret-end").onclick = async () => {
+            if (!confirm("Завершити й надіслати збережені відповіді? Це незворотно.")) return;
+            dismissed[a.attemptId] = 1; close();
+            try { await apiRequest("submitAttempt", { attemptId: a.attemptId, answers: a.answers || {} }); showNotification("Роботу завершено та надіслано."); if (typeof renderTestsList === "function") renderTestsList(); if (typeof loadStudentProgress === "function") loadStudentProgress(); }
+            catch (e) { showNotification(e.message); }
+        };
+    }
+    async function check() {
+        if (busy || !authToken || !landingVisible() || inTest() || document.getElementById("ret-modal")) return;
+        busy = true; lastToken = authToken;
+        try { const r = await apiRequest("pendingAttempts"); const a = (r.attempts || []).find(x => !dismissed[x.attemptId]); if (a && landingVisible() && !inTest()) dialog(a); }
+        catch (e) { /* тихо */ } finally { busy = false; }
+    }
+    const prev = window.showSection;
+    window.showSection = function (s) { const r = prev.apply(this, arguments); if (s === "landing") setTimeout(check, 300); else close(); return r; };
+    setInterval(() => { if (authToken && authToken !== lastToken) check(); }, 2000);   // після входу / завантаження сторінки
+})();
+</script>
 </body>
 </html>
