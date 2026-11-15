@@ -1089,7 +1089,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbzQBzQo-TvV_1mYMClJANCcSVVbt2HBpimAusH-SKrU9WAI6H6OiMhg9-lv3rsqrC1P/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbzPuMR9jG77tsmVx1QK0nd6kljtKzlHdYDsvOcmHa3stqvxCwPcgNzAMOhpd98CRW-G/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -4588,7 +4588,7 @@
                 const p = info.trim().split(/\s+/), lang = (p[0] || "").toLowerCase(); let fn = p.slice(1).join(" ").replace(/^filename=/, "").replace(/[^\w.\-А-Яа-яІіЇїЄєҐґ ]/g, "").trim();
                 if (!fn && /\.\w{1,6}$/.test(p[0] || "")) fn = p[0].replace(/[^\w.\-]/g, "");
                 const body = code.replace(/\n$/, ""), name = fn || ("glober." + (EXT[lang] || "txt")), id = blocks.push({ code: body, name }) - 1;
-                return keep(`<div class="gl-code"><div class="gl-code-h"><span>${escH(lang || "код")}</span><span><button type="button" data-act="copy" data-b="${id}">Копіювати</button><button type="button" data-act="dl" data-b="${id}">⬇ ${escH(name)}</button></span></div><pre><code>${escH(body)}</code></pre></div>`);
+                return keep(`<div class="gl-code"><div class="gl-code-h"><span>${escH(lang || "код")}</span><span><button type="button" data-act="copy" data-b="${id}">Копіювати</button><button type="button" data-act="dl" data-b="${id}">⬇ ${escH(name)}</button>${lang === "html" ? `<button type="button" data-act="preview" data-b="${id}">▶ Перегляд</button>` : ""}</span></div><pre><code>${escH(body)}</code></pre></div>`);
             });
             const math = (t, disp) => { t = t.trim(); if (window.katex) { try { return keep(window.katex.renderToString(t, { displayMode: disp, throwOnError: false })); } catch (_) {} } return keep(`<code class="gl-ic">${escH(t)}</code>`); };
             s = s.replace(/\\\[([\s\S]+?)\\\]/g, (m, t) => math(t, true)).replace(/\$\$([\s\S]+?)\$\$/g, (m, t) => math(t, true)).replace(/\\\(([\s\S]+?)\\\)/g, (m, t) => math(t, false));
@@ -4637,6 +4637,11 @@
         const b = e.target.closest("[data-act]"); if (!b) return; const act = b.dataset.act, host = b.closest("[data-msg]");
         if (act === "copy") { const x = blocks[+b.dataset.b]; if (x) navigator.clipboard.writeText(x.code).then(() => showNotification("Скопійовано.")); }
         else if (act === "dl") { const x = blocks[+b.dataset.b]; if (x) saveFile(x.name, x.code); }
+        else if (act === "preview" && host) {
+            const x = blocks[+b.dataset.b], old = host.querySelector('.gl-embed[data-pv="' + b.dataset.b + '"]'); if (old) { old.remove(); return; } if (!x) return;
+            const w = document.createElement("div"); w.className = "gl-embed"; w.dataset.pv = b.dataset.b; const f = document.createElement("iframe");
+            f.setAttribute("sandbox", "allow-scripts allow-popups"); f.srcdoc = x.code; f.style.aspectRatio = "4/3"; f.style.background = "#fff"; w.appendChild(f); host.appendChild(w); msgs.scrollTop = msgs.scrollHeight;
+        }
         else if (act === "embed" && host) embed(host, b.dataset.url);
         else if (act === "unembed") b.closest(".gl-embed").remove();
         else if (act === "msgmd" && host) saveFile("glober-відповідь.md", host._raw || "");
