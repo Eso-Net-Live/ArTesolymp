@@ -1093,7 +1093,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbzwSIzo0JKhGGXso4A1mIhgJEHLVG_B8Md8JKCJM-Krt4ydVfhlGauPuTP4erxZgi4o/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbwjPvhOQNDzIENMzcxmDBfTX1DVVUAPgshu_deR6xBu9fnDq-QGElry4GZ7RWTESP6Z/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -4835,7 +4835,7 @@
     const NC = { red: "#ef4444", gold: "#eab308", cyan: "#06b6d4", pink: "#ec4899", lime: "#84cc16" };
     const NAMES = { frame: "Рамки", bg: "Фони профілю", nameColor: "Кольори імені" };
     const LBL = { frame_gold: "Золота", frame_neon: "Неон", frame_olympian: "Олімпієць", frame_sysadmin: "Сисадмін", bg_sunset: "Захід", bg_ocean: "Океан", bg_forest: "Ліс", bg_space: "Космос", nc_red: "Червоний", nc_gold: "Золотий", nc_cyan: "Блакитний", nc_pink: "Рожевий", nc_lime: "Лаймовий" };
-    let me = null, tab = "dm", duelTimer = null;
+    let me = null, tab = "dm", duelTimer = null, curThread = null, curClass = null, curSub = "stream", navSeq = 0, soft = null;
     const call = async (a, p) => apiRequest(a, p || {});
     const toast = m => showNotification(m);
 
@@ -4851,7 +4851,25 @@
     const TABS = [["dm", "💬 ЛС"], ["cards", "🎁 Картки"], ["class", "🏫 Класи"], ["league", "🏅 Ліга"], ["duel", "⚔️ Дуелі"], ["build", "🧠 Конструктор"]];
     const btn = "px-3 py-2 rounded-xl border theme-border font-bold text-xs hover:border-sky-400";
     const inp = "w-full p-2 rounded-xl border theme-border theme-bg-card text-sm";
-    const body = () => mount || $("hb-body");
+    const body = () => {
+        const el = mount || $("hb-body");
+        if (soft) {   // тихе автооновлення: якщо користувач вже перейшов в інший розділ — відкидаємо застарілу відповідь
+            if (soft.seq !== navSeq) return document.createElement("div");
+            if (!soft.done) { soft.done = true; soft.snap = snapEl(el); }
+        }
+        return el;
+    };
+    function snapEl(el) {
+        const v = {}; el.querySelectorAll("input,textarea,select").forEach(x => { if (x.id) v[x.id] = x.value; });
+        const a = document.activeElement;
+        return { v, focus: a && a.id && el.contains(a) ? { id: a.id, s: a.selectionStart, e: a.selectionEnd } : null, top: el.scrollTop, bottom: el.scrollHeight - el.scrollTop - el.clientHeight < 40 };
+    }
+    function restoreEl(el, s) {
+        if (!s) return;
+        Object.keys(s.v).forEach(id => { const x = document.getElementById(id); if (x && x.value !== s.v[id]) x.value = s.v[id]; });
+        if (s.focus) { const f = document.getElementById(s.focus.id); if (f) { f.focus(); try { f.setSelectionRange(s.focus.s, s.focus.e); } catch (_) {} } }
+        el.scrollTop = s.bottom ? el.scrollHeight : s.top;
+    }
     const walTxt = () => { if (me && me.wallet) $("hb-wal").textContent = `· 💎 ${me.wallet.gems} · 🔑 ${me.wallet.freeKeys + me.wallet.paidKeys}`; };
 
     function avatar(p, size) {
@@ -4867,13 +4885,33 @@
         $("hb-tabs").innerHTML = TABS.map(t => `<button data-tab="${t[0]}" class="px-3 py-1.5 rounded-xl border theme-border ${t[0] === tab ? "theme-btn-primary" : ""}">${t[1]}</button>`).join("");
     }
     async function render() {
-        setTabs(); if (!me) await load(); if (!me) return;
+        navSeq++; curThread = null; curClass = null; setTabs(); if (!me) await load(); if (!me) return;
         const f = { dm, cards, class: cls, league, duel, build }[tab]; body().innerHTML = "<div class='theme-text-secondary'>Завантаження…</div>"; try { await f(); } catch (e) { body().innerHTML = `<div class="text-red-500">${esc(e.message)}</div>`; }
         walTxt();
     }
     function openHub() { if (!requireLogin()) return; $("hb-modal").classList.remove("hidden"); load().then(render); }
     $("hb-fab").onclick = openHub; $("hb-close").onclick = () => $("hb-modal").classList.add("hidden");
     $("hb-tabs").addEventListener("click", e => { const t = e.target.dataset && e.target.dataset.tab; if (t) { tab = t; render(); } });
+    /* --- автооновлення кожні 5 с: чат, класи, дуелі, ліга --- */
+    let softBusy = false, softTick = 0;
+    async function softRender() {
+        if (softBusy) return; softBusy = true; soft = { seq: navSeq, done: false, snap: null };
+        try {
+            const f = tab === "dm" ? (curThread ? () => thread(curThread) : () => dm()) : tab === "class" ? (curClass ? () => openClass(curClass) : cls) : tab === "duel" ? duel : tab === "league" ? league : null;
+            if (f) { await f(); const snap = soft && soft.snap; soft = null; try { restoreEl(body(), snap); } catch (_) {} }
+        } catch (_) { /* тиха помилка мережі — повторимо через 5 с */ }
+        finally { soft = null; softBusy = false; }
+    }
+    setInterval(() => {
+        if (document.hidden || softBusy || !me) return;
+        const modal = $("hb-modal"); if (!modal || modal.classList.contains("hidden")) return;
+        if ($("du-clock")) return;   // іде дуель — не чіпаємо
+        const a = document.activeElement;
+        if (a && /^(INPUT|TEXTAREA)$/.test(a.tagName) && a.value && body().contains(a)) return;   // користувач щось вводить
+        if (++softTick % 3 === 0) call("globerSocMe").then(x => { me = x; walTxt(); }).catch(() => {});
+        softRender();
+    }, 5000);
+
 
     /* --- профіль (рендериться у розділі showSection('profile')) --- */
     let mount = null;
@@ -4953,6 +4991,7 @@
         body().onclick = e => { const t = e.target.closest("[data-th]"); if (t) thread(t.dataset.th); };
     }
     async function thread(id) {
+        if (!soft) navSeq++; curThread = id;
         const r = await call("globerDmThread", { withId: id });
         body().innerHTML = `<button id="th-back" class="${btn}">← Назад</button><div class="font-bold">${esc(r.with ? r.with.name : "")}</div><div class="space-y-1">${r.messages.map(m => `<div class="${m.mine ? "ml-10 bg-sky-500/20" : "mr-10 theme-accent-bg-light"} p-2 rounded-xl break-words">${esc(m.text)}</div>`).join("")}</div>
         <div class="flex gap-2"><input id="th-tx" class="${inp}" maxlength="1000"><button id="th-go" class="${btn} theme-btn-primary">➤</button></div>`;
@@ -4976,16 +5015,60 @@
         $("cd-go").onclick = async () => { try { await call("globerCardSend", { email: $("cd-to").value, gems: Number($("cd-g").value), text: $("cd-tx").value }); toast("Картку подаровано 🎁"); await load(); render(); } catch (e) { toast(e.message); } };
     }
 
-    /* --- класи --- */
+    /* --- класи (стиль Google Classroom) --- */
+    const CL_COLORS = ["#1967d2", "#188038", "#e37400", "#a142f4", "#d93025", "#00796b", "#c2185b", "#455a64"];
+    const clColor = t => { let h = 0; String(t).split("").forEach(ch => { h = (h * 31 + ch.charCodeAt(0)) >>> 0; }); return CL_COLORS[h % CL_COLORS.length]; };
+    const fmtDt = x => { try { return new Date(x).toLocaleString("uk-UA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch (_) { return ""; } };
+    const ini = n => esc(String(n || "?").trim()[0] || "?");
+    const circ = (bg, inner) => `<div style="background:${bg};color:#fff;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex:none">${inner}</div>`;
     async function cls() {
-        const r = await call("globerClassBoard"), teacher = me.profile.role === "Учитель";
-        body().innerHTML = `<div class="flex gap-2"><input id="cl-code" class="${inp}" placeholder="Код класу"><button id="cl-join" class="${btn} theme-btn-primary">Вступити</button></div>
-        ${teacher ? `<div class="flex gap-2"><input id="cl-name" class="${inp}" placeholder="Назва класу (8-А)"><button id="cl-new" class="${btn}">Створити</button></div>${r.owned.length ? "<div class='text-xs'>Ваші класи: " + r.owned.map(c => `<b>${esc(c.name)}</b> — код <code>${esc(c.code)}</code>`).join(" · ") + "</div>" : ""}` : ""}
-        ${r.mine ? `<div class="font-bold">Мій клас: ${esc(r.mine.name)}</div>${r.students.map((s, i) => `<div>${i + 1}. ${esc(s.name)} — ${s.gems} 💎</div>`).join("")}` : ""}
-        <div class="font-bold">Рейтинг класів (скарбничка = гемі за підтверджені олімпіади)</div>${r.board.map((c, i) => `<div class="p-2 rounded-xl border theme-border">${i + 1}. <b>${esc(c.name)}</b> · ${c.members} уч. · скарбничка ${c.vault} 💎 · цього місяця ${c.month}</div>`).join("") || "<div class='theme-text-secondary'>Класів поки немає.</div>"}
-        <div class="text-xs theme-text-secondary">Щомісяця переможний клас отримує бонус 💎 для кожного учасника.</div>`;
-        $("cl-join").onclick = async () => { try { const j = await call("globerClassJoin", { code: $("cl-code").value }); toast("Ви у класі " + j.joined); render(); } catch (e) { toast(e.message); } };
+        const [r, bd] = await Promise.all([call("globerClassList"), call("globerClassBoard")]);
+        body().innerHTML = `<div class="flex flex-wrap gap-2"><input id="cl-code" class="${inp} flex-1" placeholder="Код класу"><button id="cl-join" class="${btn} theme-btn-primary">Приєднатися</button></div>
+        ${r.canCreate ? `<div class="flex flex-wrap gap-2"><input id="cl-name" class="${inp} flex-1" placeholder="Назва класу (8-А)"><button id="cl-new" class="${btn}">＋ Створити клас</button></div>` : ""}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${r.classes.map(c => `<div data-open="${esc(c.classId)}" class="rounded-2xl border theme-border overflow-hidden cursor-pointer hover:shadow-lg transition">
+          <div style="background:${clColor(c.name)};color:#fff" class="p-3 h-20 flex flex-col justify-between"><div class="font-extrabold text-base truncate">${esc(c.name)}</div><div class="text-xs opacity-90 truncate">${esc(c.owner)}${c.isOwner ? " · ви вчитель" : ""}</div></div>
+          <div class="p-2 text-xs theme-text-secondary flex justify-between"><span>👥 ${c.members} уч.</span>${c.isOwner ? `<span>Код: <code>${esc(c.code)}</code></span>` : "<span>Відкрити →</span>"}</div></div>`).join("") || "<div class='theme-text-secondary sm:col-span-2'>Ви ще не в жодному класі. Введіть код від вчителя" + (r.canCreate ? " або створіть власний клас." : ".") + "</div>"}</div>
+        <details class="pt-1"><summary class="font-bold cursor-pointer">🏅 Рейтинг класів</summary><div class="space-y-1 pt-2">${bd.board.map((c, i) => `<div class="p-2 rounded-xl border theme-border">${i + 1}. <b>${esc(c.name)}</b> · ${c.members} уч. · скарбничка ${c.vault} 💎 · цього місяця ${c.month}</div>`).join("") || "<div class='theme-text-secondary'>Класів поки немає.</div>"}<div class="text-xs theme-text-secondary">Щомісяця переможний клас отримує бонус 💎 для кожного учасника.</div></div></details>`;
+        $("cl-join").onclick = async () => { try { const j = await call("globerClassJoin", { code: $("cl-code").value }); toast("Ви у класі " + j.joined); curSub = "stream"; openClass(j.classId); } catch (e) { toast(e.message); } };
         if ($("cl-new")) $("cl-new").onclick = async () => { try { const j = await call("globerClassCreate", { name: $("cl-name").value }); toast("Клас створено. Код: " + j.code); render(); } catch (e) { toast(e.message); } };
+        body().onclick = e => { const o = e.target.closest("[data-open]"); if (o) { curSub = "stream"; openClass(o.dataset.open); } };
+    }
+    async function openClass(id) {
+        if (!soft) navSeq++; curClass = id;
+        const r = await call("globerClassView", { classId: id }), c = r.cls, col = clColor(c.name);
+        const tests = (typeof testsDatabase !== "undefined" ? testsDatabase : []).filter(t => t.isOwner && t.id !== DEMO_TEST_ID);
+        const postHtml = p => `<div class="rounded-2xl border theme-border p-3 space-y-2">
+          <div class="flex items-center gap-2">${circ(p.kind === "assignment" ? col : "#64748b", p.kind === "assignment" ? "📝" : ini(p.author))}
+            <div class="min-w-0 flex-1"><div class="font-bold truncate">${p.kind === "assignment" ? esc(p.title) : esc(p.author)}</div><div class="text-xs theme-text-secondary">${p.kind === "assignment" ? esc(p.author) + " · завдання · " : ""}${fmtDt(p.createdAt)}${p.dueAt ? " · ⏰ до " + fmtDt(p.dueAt) : ""}</div></div>
+            ${c.isOwner ? `<button data-del="${esc(p.postId)}" class="px-2 text-gray-400 hover:text-red-500" title="Видалити">🗑</button>` : ""}</div>
+          ${p.kind !== "assignment" && p.title ? `<div class="font-bold">${esc(p.title)}</div>` : ""}${p.text ? `<div class="whitespace-pre-wrap break-words">${esc(p.text)}</div>` : ""}
+          ${p.test ? `<button data-run="${esc(p.test.id)}" class="${btn} theme-btn-primary">▶ Відкрити тест: ${esc(p.test.title)}</button>` : ""}</div>`;
+        const composer = c.isOwner ? `<div class="rounded-2xl border theme-border p-3 space-y-2">
+          <div class="flex gap-2"><select id="cl-kind" class="${inp}"><option value="announcement">📢 Оголошення</option><option value="assignment">📝 Завдання</option></select><input id="cl-ti" class="${inp}" maxlength="120" placeholder="Назва (обов'язково для завдання)"></div>
+          <textarea id="cl-tx" rows="2" maxlength="2000" class="${inp}" placeholder="Оголосіть щось своєму класу"></textarea>
+          <div class="flex flex-wrap gap-2"><select id="cl-test" class="${inp} flex-1"><option value="">Без тесту</option>${tests.map(t => `<option value="${esc(t.id)}">${esc(t.title)}</option>`).join("")}</select><input id="cl-due" type="datetime-local" class="${inp} flex-1"><button id="cl-post" class="${btn} theme-btn-primary">Опублікувати</button></div></div>` : "";
+        const works = r.posts.filter(p => p.kind === "assignment");
+        let main;
+        if (curSub === "work") main = works.length ? works.map(postHtml).join("") : "<div class='theme-text-secondary'>Завдань поки немає.</div>";
+        else if (curSub === "people") main = `<div class="text-xl font-extrabold pb-1 border-b" style="color:${col};border-color:${col}">Вчитель</div><div class="flex items-center gap-2 py-2">${circ(col, ini(c.owner))}<b>${esc(c.owner)}</b></div>
+          <div class="text-xl font-extrabold pb-1 border-b flex justify-between" style="color:${col};border-color:${col}"><span>Учні</span><span class="text-sm">${r.students.length}</span></div>${r.students.map(st => `<div class="flex items-center gap-2 py-1.5">${circ("#64748b", ini(st.name))}<span class="flex-1">${esc(st.name)}</span><span class="text-xs theme-text-secondary">${st.gems} 💎</span></div>`).join("") || "<div class='theme-text-secondary'>Учнів поки немає.</div>"}`;
+        else main = composer + (r.posts.length ? r.posts.map(postHtml).join("") : "<div class='theme-text-secondary'>У стрічці поки порожньо.</div>");
+        body().innerHTML = `<button id="cl-back" class="${btn}">← Усі класи</button>
+        <div class="rounded-2xl p-4 text-white" style="background:${col}"><div class="text-2xl font-extrabold break-words">${esc(c.name)}</div><div class="text-sm opacity-90">${esc(c.owner)}</div>${c.isOwner ? `<div class="text-xs mt-2 opacity-90">Код класу: <code class="bg-white/20 px-1.5 py-0.5 rounded">${esc(c.code)}</code></div>` : ""}</div>
+        <div class="flex gap-1 border-b theme-border">${[["stream", "Стрічка"], ["work", "Завдання"], ["people", "Учасники"]].map(t => `<button data-sub="${t[0]}" class="px-3 py-2 text-xs font-bold" style="${curSub === t[0] ? `color:${col};border-bottom:3px solid ${col}` : ""}">${t[1]}</button>`).join("")}</div>
+        <div class="space-y-3">${main}</div>${!c.isOwner ? `<button id="cl-leave" class="${btn} text-red-500">Покинути клас</button>` : ""}`;
+        $("cl-back").onclick = () => render();
+        if ($("cl-leave")) $("cl-leave").onclick = async () => { if (!confirm("Покинути клас " + c.name + "?")) return; try { await call("globerClassLeave", { classId: id }); toast("Ви покинули клас."); } catch (e) { toast(e.message); } render(); };
+        if ($("cl-post")) $("cl-post").onclick = async () => {
+            $("cl-post").disabled = true;
+            try { const due = $("cl-due").value; await call("globerClassPost", { classId: id, kind: $("cl-kind").value, title: $("cl-ti").value, text: $("cl-tx").value, testId: $("cl-test").value, dueAt: due ? new Date(due).toISOString() : "" }); toast("Опубліковано."); } catch (e) { toast(e.message); }
+            openClass(id);
+        };
+        body().onclick = async e => {
+            const sub = e.target.closest("[data-sub]"); if (sub) { curSub = sub.dataset.sub; return openClass(id); }
+            const del = e.target.closest("[data-del]"); if (del) { if (!confirm("Видалити публікацію?")) return; try { await call("globerClassPostDelete", { postId: del.dataset.del }); } catch (er) { toast(er.message); } return openClass(id); }
+            const run = e.target.closest("[data-run]"); if (run) { $("hb-modal").classList.add("hidden"); try { await startTestSession(run.dataset.run); } catch (er) { toast(er.message); } }
+        };
     }
 
     /* --- ліга --- */
@@ -5001,7 +5084,7 @@
         const r = await call("globerDuelList");
         body().innerHTML = `<div class="font-bold">Викликати друга (без ставок 💎; тест генерують Екзаменатор #17 + Анонімайзер #22; −1 🔑)</div>
         <div class="grid grid-cols-3 gap-2"><input id="du-to" class="${inp}" placeholder="Пошта друга"><input id="du-s" class="${inp}" placeholder="Предмет"><input id="du-t" class="${inp}" placeholder="Тема"></div><button id="du-go" class="${btn} theme-btn-primary">Кинути виклик ⚔️</button>
-        <div class="font-bold pt-2">Мої дуелі</div>${r.duels.map(d => `<div class="p-2 rounded-xl border theme-border flex items-center justify-between gap-2"><div><b>${esc(d.subject)}: ${esc(d.topic)}</b><div class="text-xs">${d.mine ? "Ви → " : "Від "}${esc(d.opponent)} · ${stTxt[d.status] || d.status}${d.oppScore !== null ? ` · ${d.myScore}:${d.oppScore} ${d.winner === "me" ? "🏆 перемога" : d.winner === "opp" ? "поразка" : d.winner === "draw" ? "нічия" : ""}` : ""}</div></div>
+        <div class="font-bold pt-2">Мої дуелі</div>${r.duels.map(d => `<div class="p-2 rounded-xl border theme-border flex items-center justify-between gap-2"><div><b>${esc(d.subject)}: ${esc(d.topic)}</b><div class="text-xs">${d.mine ? "Ви → " : "Від "}${esc(d.opponent)} · ${stTxt[d.status] || d.status}${d.oppScore !== null ? ` · ${d.myScore}:${d.oppScore} ${d.winner === "me" ? "🏆 перемога" : d.winner === "opp" ? "поразка" : d.winner === "draw" ? "нічия" : ""}` : ""}.</div></div>
           <div class="flex gap-1">${d.status === "pending" && !d.mine ? `<button data-ac="${d.duelId}" class="${btn} theme-btn-primary">Прийняти</button><button data-no="${d.duelId}" class="${btn}">Ні</button>` : ""}${d.status === "active" && !d.iSubmitted ? `<button data-play="${d.duelId}" class="${btn} theme-btn-primary">Грати</button>` : ""}</div></div>`).join("") || "<div class='theme-text-secondary'>Дуелей ще немає.</div>"}`;
         $("du-go").onclick = async () => { $("du-go").disabled = true; toast("Агенти складають унікальний тест…"); try { await call("globerDuelCreate", { email: $("du-to").value, subject: $("du-s").value, topic: $("du-t").value }); toast("Виклик надіслано."); await load(); } catch (e) { toast(e.message); } render(); };
         body().onclick = async e => {
