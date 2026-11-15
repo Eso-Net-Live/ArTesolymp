@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://script.google.com">
     <title>ArTesolymp — Платформа для тестів та олімпіад у реальному часі</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,7 +15,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+    <link rel="stylesheet" media="print" onload="this.media='all'" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
@@ -30,13 +34,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/anyword-hint.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/monokai.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/eclipse.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/solarized.min.css">
+    <link rel="stylesheet" media="print" onload="this.media='all'" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.css">
+    <link rel="stylesheet" media="print" onload="this.media='all'" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.css">
+    <link rel="stylesheet" media="print" onload="this.media='all'" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css">
+    <link rel="stylesheet" media="print" onload="this.media='all'" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+    <link rel="stylesheet" media="print" onload="this.media='all'" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/monokai.min.css">
+    <link rel="stylesheet" media="print" onload="this.media='all'" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/eclipse.min.css">
+    <link rel="stylesheet" media="print" onload="this.media='all'" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/solarized.min.css">
     <style>
         .cm-tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px 8px;background:#0f172a;border-bottom:1px solid #1e293b;font-size:11px;color:#cbd5e1}
         .cm-tools button,.cm-tools select{background:#1e293b;color:#7dd3fc;border:1px solid #334155;border-radius:8px;padding:3px 8px;font-weight:700;cursor:pointer}
@@ -1089,7 +1093,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbyZYK0tAwElzBMn37PSf-4P4JZ4fy425iqgujBlAI6Q8yh_orNX6kkMm5tETAYA-HPR/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbzwSIzo0JKhGGXso4A1mIhgJEHLVG_B8Md8JKCJM-Krt4ydVfhlGauPuTP4erxZgi4o/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -1369,7 +1373,18 @@
             document.getElementById('auth-name-field').classList.toggle('hidden', isLogin);
             document.getElementById('auth-role-field').classList.toggle('hidden', isLogin);
         }
-        async function apiRequest(action, payload = {}) {
+        const _inflight = new Map();
+        function apiRequest(action, payload = {}) {
+            if (action === "catalog" || action === "bootstrap") {
+                const k = action + "|" + (authToken || "");
+                if (_inflight.has(k)) return _inflight.get(k);
+                const p = _apiRequest(action, payload).finally(() => _inflight.delete(k));
+                _inflight.set(k, p);
+                return p;
+            }
+            return _apiRequest(action, payload);
+        }
+        async function _apiRequest(action, payload = {}) {
             if (!API_URL) throw new Error("Google Apps Script не налаштовано: відсутній URL /exec.");
             let response;
             try {
@@ -3527,7 +3542,7 @@
         [...cont.children].forEach((p, i) => { if (qs[i] && window.flagged.has(String(qs[i].id)) && !p.classList.contains('q-flag')) { p.classList.add('q-flag'); p.insertAdjacentText('beforeend', ' 🚩'); } });
     }
     const _rp = window.renderPills; window.renderPills = function () { _rp(); try { refreshExtras(); } catch (_) {} };
-    setInterval(() => { try { refreshExtras(); } catch (_) {} }, 1500);
+    setInterval(() => { if (document.hidden) return; try { refreshExtras(); } catch (_) {} }, 3000);
 
     document.addEventListener('keydown', e => {
         if (!inTest() || !e.altKey) return;
