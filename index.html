@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://script.google.com">
     <title>ArTesolymp — Платформа для тестів та олімпіад у реальному часі</title>
     <!-- Tailwind CSS -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin><link rel="dns-prefetch" href="https://script.google.com"><link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1093,7 +1094,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbwjPvhOQNDzIENMzcxmDBfTX1DVVUAPgshu_deR6xBu9fnDq-QGElry4GZ7RWTESP6Z/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbx9_9-cGMogoq0iNzJXmGUuWOKt6dgCzAI7oBr6HCEb-t0in9iZy1PFfKIR0yWiuvfF/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -4835,7 +4836,8 @@
     const NC = { red: "#ef4444", gold: "#eab308", cyan: "#06b6d4", pink: "#ec4899", lime: "#84cc16" };
     const NAMES = { frame: "Рамки", bg: "Фони профілю", nameColor: "Кольори імені" };
     const LBL = { frame_gold: "Золота", frame_neon: "Неон", frame_olympian: "Олімпієць", frame_sysadmin: "Сисадмін", bg_sunset: "Захід", bg_ocean: "Океан", bg_forest: "Ліс", bg_space: "Космос", nc_red: "Червоний", nc_gold: "Золотий", nc_cyan: "Блакитний", nc_pink: "Рожевий", nc_lime: "Лаймовий" };
-    let me = null, tab = "dm", duelTimer = null, curThread = null, curClass = null, curSub = "stream", navSeq = 0, soft = null;
+    let me = null, tab = "dm", duelTimer = null, curThread = null, curClass = null, curPost = null, curSub = "stream", navSeq = 0, soft = null, clTick = 0, cxPend = [];
+    const cxc = {};   // кеш «показати зразу — оновити тихо»
     const call = async (a, p) => apiRequest(a, p || {});
     const toast = m => showNotification(m);
 
@@ -4848,7 +4850,7 @@
         <div id="hb-body" class="flex-1 overflow-y-auto p-3 text-sm space-y-3"></div>
       </div>
     </div>`);
-    const TABS = [["dm", "💬 ЛС"], ["cards", "🎁 Картки"], ["class", "🏫 Класи"], ["league", "🏅 Ліга"], ["duel", "⚔️ Дуелі"], ["build", "🧠 Конструктор"]];
+    const TABS = [["dm", "💬 ЛС"], ["cards", "🎁 Картки"], ["class", "🏫 Класи"], ["league", "🏅 Ліга"], ["duel", "⚔️ Дуелі"], ["build", "🧠 Конструктор"], ["fb", "⭐ Відгуки / 🚩 Скарги"]];
     const btn = "px-3 py-2 rounded-xl border theme-border font-bold text-xs hover:border-sky-400";
     const inp = "w-full p-2 rounded-xl border theme-border theme-bg-card text-sm";
     const body = () => {
@@ -4885,8 +4887,8 @@
         $("hb-tabs").innerHTML = TABS.map(t => `<button data-tab="${t[0]}" class="px-3 py-1.5 rounded-xl border theme-border ${t[0] === tab ? "theme-btn-primary" : ""}">${t[1]}</button>`).join("");
     }
     async function render() {
-        navSeq++; curThread = null; curClass = null; setTabs(); if (!me) await load(); if (!me) return;
-        const f = { dm, cards, class: cls, league, duel, build }[tab]; body().innerHTML = "<div class='theme-text-secondary'>Завантаження…</div>"; try { await f(); } catch (e) { body().innerHTML = `<div class="text-red-500">${esc(e.message)}</div>`; }
+        navSeq++; curThread = null; curClass = null; curPost = null; setTabs(); if (!me) await load(); if (!me) return;
+        const f = { dm, cards, class: cls, league, duel, build, fb }[tab]; body().innerHTML = "<div class='theme-text-secondary'>Завантаження…</div>"; try { await f(); } catch (e) { body().innerHTML = `<div class="text-red-500">${esc(e.message)}</div>`; }
         walTxt();
     }
     function openHub() { if (!requireLogin()) return; $("hb-modal").classList.remove("hidden"); load().then(render); }
@@ -4897,13 +4899,14 @@
     async function softRender() {
         if (softBusy) return; softBusy = true; soft = { seq: navSeq, done: false, snap: null };
         try {
-            const f = tab === "dm" ? (curThread ? () => thread(curThread) : () => dm()) : tab === "class" ? (curClass ? () => openClass(curClass) : cls) : tab === "duel" ? duel : tab === "league" ? league : null;
+            const f = tab === "dm" ? (curThread ? () => thread(curThread) : () => dm()) : tab === "class" ? (curClass ? (curPost ? () => openPost(curClass, curPost) : () => openClass(curClass)) : cls) : tab === "duel" ? duel : tab === "league" ? league : null;
             if (f) { await f(); const snap = soft && soft.snap; soft = null; try { restoreEl(body(), snap); } catch (_) {} }
         } catch (_) { /* тиха помилка мережі — повторимо через 5 с */ }
         finally { soft = null; softBusy = false; }
     }
     setInterval(() => {
         if (document.hidden || softBusy || !me) return;
+        if (tab === "class" && (clTick = (clTick + 1) % 4)) return;
         const modal = $("hb-modal"); if (!modal || modal.classList.contains("hidden")) return;
         if ($("du-clock")) return;   // іде дуель — не чіпаємо
         const a = document.activeElement;
@@ -4993,11 +4996,20 @@
     async function thread(id) {
         if (!soft) navSeq++; curThread = id;
         const r = await call("globerDmThread", { withId: id });
-        body().innerHTML = `<button id="th-back" class="${btn}">← Назад</button><div class="font-bold">${esc(r.with ? r.with.name : "")}</div><div class="space-y-1">${r.messages.map(m => `<div class="${m.mine ? "ml-10 bg-sky-500/20" : "mr-10 theme-accent-bg-light"} p-2 rounded-xl break-words">${esc(m.text)}</div>`).join("")}</div>
-        <div class="flex gap-2"><input id="th-tx" class="${inp}" maxlength="1000"><button id="th-go" class="${btn} theme-btn-primary">➤</button></div>`;
+        body().innerHTML = `<button id="th-back" class="${btn}">← Назад</button><div class="font-bold">${esc(r.with ? r.with.name : "")}</div><div class="space-y-1">${r.messages.map(m => `<div class="${m.mine ? "ml-10 bg-sky-500/20" : "mr-10 theme-accent-bg-light"} p-2 rounded-xl break-words">${esc(m.text)}${attHtml(m.attach)}${!m.mine ? ` <button data-mrep="${esc(m.msgId)}" class="text-xs opacity-50" title="Поскаржитися">🚩</button>` : ""}</div>`).join("")}</div>
+        <div class="flex gap-2"><input id="th-tx" class="${inp}" maxlength="1000"><button id="th-att" class="${btn}" title="Надіслати файл (до 10 МБ)">📎</button><input id="th-file" type="file" class="hidden"><button id="th-go" class="${btn} theme-btn-primary">➤</button></div><div id="th-prog" class="text-xs theme-text-secondary"></div>`;
         $("th-back").onclick = () => render();
         $("th-go").onclick = async () => { try { await call("globerDmSend", { email: r.with.email, text: $("th-tx").value }); thread(id); } catch (e) { toast(e.message); } };
-        body().onclick = null;
+        $("th-att").onclick = () => $("th-file").click();
+        $("th-file").onchange = async ev => {
+            const f = ev.target.files[0]; if (!f) return;
+            try { const up = await ATX.upload(f, "dm", id, v => { $("th-prog").textContent = "Завантаження " + f.name + ": " + Math.round(v * 100) + "%"; }); await call("globerDmSend", { email: r.with.email, text: $("th-tx").value, attach: [up.id] }); thread(id); }
+            catch (e) { toast(e.message); $("th-prog").textContent = ""; }
+        };
+        body().onclick = e => {
+            const f = e.target.closest("[data-file]"); if (f) return ATX.download(f.dataset.file, f.dataset.fname).catch(er => toast(er.message));
+            const m = e.target.closest("[data-mrep]"); if (m) { const msg = r.messages.find(x => x.msgId === m.dataset.mrep); ATX.report("message", m.dataset.mrep, "Повідомлення від " + (r.with ? r.with.name : ""), msg ? msg.text : ""); }
+        };
     }
     function showUser(u) {
         body().innerHTML = `<button id="u-back" class="${btn}">← Назад</button>` + card(u, u.titles.length ? " · 🏆 " + u.titles.join(", ") : "") +
@@ -5034,41 +5046,215 @@
         body().onclick = e => { const o = e.target.closest("[data-open]"); if (o) { curSub = "stream"; openClass(o.dataset.open); } };
     }
     async function openClass(id) {
-        if (!soft) navSeq++; curClass = id;
-        const r = await call("globerClassView", { classId: id }), c = r.cls, col = clColor(c.name);
+        if (!soft) navSeq++; curClass = id; curPost = null; const my = navSeq;
+        const key = "c:" + id, hit = cxc[key];
+        if (hit && !soft) paintClass(hit, id);
+        const r = await call("globerCxClassView", { classId: id }); if (!soft && my !== navSeq) return;
+        const s = JSON.stringify(r); if (hit && hit._s === s) return; r._s = s; cxc[key] = r; paintClass(r, id);
+    }
+    const gradeTxt = (g, max) => g === null || g === undefined ? "—" : (g === 0 && max === 12 ? "Н/А" : g + "/" + max);
+    const attHtml = (list, extra) => (list && list.length ? `<div class="flex flex-wrap gap-1.5">${list.map(f => `<button data-file="${esc(f.id)}" data-fname="${esc(f.name)}" class="${btn}" title="Завантажити">📎 ${esc(f.name)} <span class="opacity-60">${ATX.fmtSize(f.size)}</span></button>`).join("")}${extra || ""}</div>` : "");
+    function postBadges(p) {
+        const b = [];
+        if (p.pinned) b.push("📌 закріплено");
+        if (p.kind === "assignment") { if (p.closed) b.push("🔒 закрито (видно)"); else if (p.closeAt) b.push("⏳ закриється " + fmtDt(p.closeAt)); }
+        if (p.hideAt) b.push(p.hidden ? "🙈 прихована" : "🕒 зникне " + fmtDt(p.hideAt));
+        return b.map(x => `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-lg theme-badge">${x}</span>`).join(" ");
+    }
+    function paintClass(r, id) {
+        const c = r.cls, col = clColor(c.name), T = c.isTeacher;
         const tests = (typeof testsDatabase !== "undefined" ? testsDatabase : []).filter(t => t.isOwner && t.id !== DEMO_TEST_ID);
-        const postHtml = p => `<div class="rounded-2xl border theme-border p-3 space-y-2">
-          <div class="flex items-center gap-2">${circ(p.kind === "assignment" ? col : "#64748b", p.kind === "assignment" ? "📝" : ini(p.author))}
-            <div class="min-w-0 flex-1"><div class="font-bold truncate">${p.kind === "assignment" ? esc(p.title) : esc(p.author)}</div><div class="text-xs theme-text-secondary">${p.kind === "assignment" ? esc(p.author) + " · завдання · " : ""}${fmtDt(p.createdAt)}${p.dueAt ? " · ⏰ до " + fmtDt(p.dueAt) : ""}</div></div>
-            ${c.isOwner ? `<button data-del="${esc(p.postId)}" class="px-2 text-gray-400 hover:text-red-500" title="Видалити">🗑</button>` : ""}</div>
-          ${p.kind !== "assignment" && p.title ? `<div class="font-bold">${esc(p.title)}</div>` : ""}${p.text ? `<div class="whitespace-pre-wrap break-words">${esc(p.text)}</div>` : ""}
-          ${p.test ? `<button data-run="${esc(p.test.id)}" class="${btn} theme-btn-primary">▶ Відкрити тест: ${esc(p.test.title)}</button>` : ""}</div>`;
-        const composer = c.isOwner ? `<div class="rounded-2xl border theme-border p-3 space-y-2">
-          <div class="flex gap-2"><select id="cl-kind" class="${inp}"><option value="announcement">📢 Оголошення</option><option value="assignment">📝 Завдання</option></select><input id="cl-ti" class="${inp}" maxlength="120" placeholder="Назва (обов'язково для завдання)"></div>
-          <textarea id="cl-tx" rows="2" maxlength="2000" class="${inp}" placeholder="Оголосіть щось своєму класу"></textarea>
-          <div class="flex flex-wrap gap-2"><select id="cl-test" class="${inp} flex-1"><option value="">Без тесту</option>${tests.map(t => `<option value="${esc(t.id)}">${esc(t.title)}</option>`).join("")}</select><input id="cl-due" type="datetime-local" class="${inp} flex-1"><button id="cl-post" class="${btn} theme-btn-primary">Опублікувати</button></div></div>` : "";
+        const card = p => {
+            let st = "";
+            if (p.kind === "assignment") st = T ? `<span class="text-xs theme-text-secondary">${p.stats.submitted}/${p.stats.total} здано · ${p.stats.graded} оцінено${p.stats.late ? " · ⚠ " + p.stats.late + " із запізненням" : ""}</span>`
+                : p.my ? (p.my.grade !== null ? `<span class="text-xs font-bold text-emerald-600">✅ Оцінка: ${gradeTxt(p.my.grade, p.my.max)}</span>` : `<span class="text-xs font-bold text-sky-600">📤 Здано${p.my.late ? " (із запізненням)" : ""}</span>`) : `<span class="text-xs font-bold ${p.closed ? "text-red-500" : "text-amber-600"}">${p.closed ? "🔒 Не здано — закрито" : "❗ Не здано"}</span>`;
+            return `<div data-post="${esc(p.postId)}" class="rounded-2xl border theme-border p-3 space-y-1.5 cursor-pointer hover:shadow-md transition ${p.hidden ? "opacity-60" : ""}">
+              <div class="flex items-center gap-2">${circ(p.kind === "assignment" ? col : "#64748b", p.kind === "assignment" ? "📝" : ini(p.author))}
+                <div class="min-w-0 flex-1"><div class="font-bold truncate">${p.kind === "assignment" ? esc(p.title) : esc(p.author)}</div><div class="text-xs theme-text-secondary">${p.kind === "assignment" ? esc(p.author) + " · завдання · " : ""}${fmtDt(p.createdAt)}${p.dueAt ? " · ⏰ до " + fmtDt(p.dueAt) : ""}</div></div>
+                ${T ? `<button data-pin="${esc(p.postId)}" data-v="${p.pinned ? 0 : 1}" class="px-1 text-gray-400 hover:text-amber-500" title="${p.pinned ? "Відкріпити" : "Закріпити"}">📌</button><button data-del="${esc(p.postId)}" class="px-1 text-gray-400 hover:text-red-500" title="Видалити">🗑</button>` : ""}</div>
+              <div>${postBadges(p)}</div>
+              ${p.kind !== "assignment" && p.title ? `<div class="font-bold">${esc(p.title)}</div>` : ""}${p.text ? `<div class="whitespace-pre-wrap break-words line-clamp-4">${esc(p.text)}</div>` : ""}
+              ${p.attach.length ? `<div class="text-xs theme-text-secondary">📎 Файлів: ${p.attach.length}</div>` : ""}
+              <div class="flex items-center justify-between gap-2 text-xs"><span>${st}</span><span class="theme-text-secondary">💬 ${p.comments}${p.privateCount ? " · 🔒 " + p.privateCount : ""}</span></div></div>`;
+        };
+        const chips = () => cxPend.map((f, i) => `<span class="text-xs px-2 py-1 rounded-lg theme-badge">📎 ${esc(f.name)} <button data-rm="${i}" class="text-red-500">✕</button></span>`).join(" ");
+        const composer = T ? `<div class="rounded-2xl border theme-border p-3 space-y-2">
+          <div class="flex gap-2"><select id="cl-kind" class="${inp}"><option value="announcement">📢 Публікація</option><option value="assignment">📝 Завдання</option></select><input id="cl-ti" class="${inp}" maxlength="120" placeholder="Назва (обов'язково для завдання)"></div>
+          <textarea id="cl-tx" rows="2" maxlength="2000" class="${inp}" placeholder="Текст для класу"></textarea>
+          <div class="flex flex-wrap gap-2 items-center"><button id="cl-att" class="${btn}">📎 Додати файл (до 10 МБ)</button><input id="cl-file" type="file" multiple class="hidden"><span id="cl-chips" class="flex flex-wrap gap-1">${chips()}</span><span id="cl-prog" class="text-xs theme-text-secondary"></span></div>
+          <select id="cl-test" class="${inp}"><option value="">Без тесту/олімпіади</option>${tests.map(t => `<option value="${esc(t.id)}">${esc(t.title)}</option>`).join("")}</select>
+          <details class="text-xs"><summary class="cursor-pointer font-bold">⚙ Терміни, шкала, тимчасовість</summary><div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+            <label>⏰ Дедлайн (після нього — «із запізненням»)<input id="cl-due" type="datetime-local" class="${inp}"></label>
+            <label>🔒 Закрити завдання (залишиться видимим)<input id="cl-close" type="datetime-local" class="${inp}"></label>
+            <label>🕒 Публікація зникне<input id="cl-hide" type="datetime-local" class="${inp}"></label>
+            <label>🎯 Шкала оцінювання<select id="cl-scale" class="${inp}"><option value="12">12-бальна (0 = Н/А)</option><option value="100">100 балів</option><option value="custom">Своя (напр. 800)…</option></select><input id="cl-scalen" type="number" min="1" max="100000" class="${inp} hidden mt-1" placeholder="Максимальний бал"></label>
+            <label class="flex items-center gap-2"><input id="cl-pin" type="checkbox"> 📌 Закріпити</label></div></details>
+          <div class="text-right"><button id="cl-post" class="${btn} theme-btn-primary">Опублікувати</button></div></div>` : "";
         const works = r.posts.filter(p => p.kind === "assignment");
         let main;
-        if (curSub === "work") main = works.length ? works.map(postHtml).join("") : "<div class='theme-text-secondary'>Завдань поки немає.</div>";
-        else if (curSub === "people") main = `<div class="text-xl font-extrabold pb-1 border-b" style="color:${col};border-color:${col}">Вчитель</div><div class="flex items-center gap-2 py-2">${circ(col, ini(c.owner))}<b>${esc(c.owner)}</b></div>
-          <div class="text-xl font-extrabold pb-1 border-b flex justify-between" style="color:${col};border-color:${col}"><span>Учні</span><span class="text-sm">${r.students.length}</span></div>${r.students.map(st => `<div class="flex items-center gap-2 py-1.5">${circ("#64748b", ini(st.name))}<span class="flex-1">${esc(st.name)}</span><span class="text-xs theme-text-secondary">${st.gems} 💎</span></div>`).join("") || "<div class='theme-text-secondary'>Учнів поки немає.</div>"}`;
-        else main = composer + (r.posts.length ? r.posts.map(postHtml).join("") : "<div class='theme-text-secondary'>У стрічці поки порожньо.</div>");
-        body().innerHTML = `<button id="cl-back" class="${btn}">← Усі класи</button>
-        <div class="rounded-2xl p-4 text-white" style="background:${col}"><div class="text-2xl font-extrabold break-words">${esc(c.name)}</div><div class="text-sm opacity-90">${esc(c.owner)}</div>${c.isOwner ? `<div class="text-xs mt-2 opacity-90">Код класу: <code class="bg-white/20 px-1.5 py-0.5 rounded">${esc(c.code)}</code></div>` : ""}</div>
-        <div class="flex gap-1 border-b theme-border">${[["stream", "Стрічка"], ["work", "Завдання"], ["people", "Учасники"]].map(t => `<button data-sub="${t[0]}" class="px-3 py-2 text-xs font-bold" style="${curSub === t[0] ? `color:${col};border-bottom:3px solid ${col}` : ""}">${t[1]}</button>`).join("")}</div>
-        <div class="space-y-3">${main}</div>${!c.isOwner ? `<button id="cl-leave" class="${btn} text-red-500">Покинути клас</button>` : ""}`;
+        if (curSub === "work") main = works.length ? works.map(card).join("") : "<div class='theme-text-secondary'>Завдань поки немає.</div>";
+        else if (curSub === "grades") main = `<div id="cl-grades" class="space-y-2"><div class="theme-text-secondary">Завантаження журналу…</div></div>`;
+        else if (curSub === "people") main = `<div class="text-xl font-extrabold pb-1 border-b" style="color:${col};border-color:${col}">Вчителі</div>
+          <div class="flex items-center gap-2 py-2">${circ(col, ini(c.owner))}<b class="flex-1">${esc(c.owner)}</b><span class="text-xs theme-text-secondary">власник</span></div>
+          ${r.teachers.map(t => `<div class="flex items-center gap-2 py-1">${circ(col, ini(t.name))}<span class="flex-1">${esc(t.name)}</span><span class="text-xs theme-text-secondary">співвикладач</span>${c.isOwner ? `<button data-tdel="${esc(t.userId)}" class="px-2 text-red-500" title="Прибрати">✕</button>` : ""}</div>`).join("")}
+          ${c.isOwner ? `<div class="flex gap-2 pt-1"><input id="cl-tmail" class="${inp}" placeholder="Пошта вчителя, щоб додати як співвикладача"><button id="cl-tadd" class="${btn}">＋ Додати</button></div>` : ""}
+          <div class="text-xl font-extrabold pb-1 border-b flex justify-between mt-3" style="color:${col};border-color:${col}"><span>Учні</span><span class="text-sm">${r.students.length}</span></div>
+          ${r.students.map(st => `<div class="flex items-center gap-2 py-1.5">${circ("#64748b", ini(st.name))}<span class="flex-1">${esc(st.name)}</span><span class="text-xs theme-text-secondary">${st.gems} 💎</span>${T ? `<button data-sdel="${esc(st.userId)}" data-sname="${esc(st.name)}" class="px-2 text-red-500" title="Видалити з класу">✕</button>` : ""}</div>`).join("") || "<div class='theme-text-secondary'>Учнів поки немає.</div>"}`;
+        else main = composer + (r.posts.length ? r.posts.map(card).join("") : "<div class='theme-text-secondary'>У стрічці поки порожньо.</div>");
+        body().innerHTML = `<div class="flex gap-2"><button id="cl-back" class="${btn}">← Усі класи</button>${!c.isOwner ? `<button id="cl-rep" class="${btn}" title="Поскаржитися на клас">🚩 Скарга</button>` : ""}</div>
+        <div class="rounded-2xl p-4 text-white" style="background:${col}"><div class="text-2xl font-extrabold break-words">${esc(c.name)}</div><div class="text-sm opacity-90">${esc(c.owner)}</div>${T ? `<div class="text-xs mt-2 opacity-90">Код класу: <code class="bg-white/20 px-1.5 py-0.5 rounded">${esc(c.code)}</code></div>` : ""}</div>
+        <div class="flex gap-1 border-b theme-border">${[["stream", "Стрічка"], ["work", "Завдання"], ["grades", "Оцінки"], ["people", "Учасники"]].map(t => `<button data-sub="${t[0]}" class="px-3 py-2 text-xs font-bold" style="${curSub === t[0] ? `color:${col};border-bottom:3px solid ${col}` : ""}">${t[1]}</button>`).join("")}</div>
+        <div class="space-y-3">${main}</div>${c.isOwner ? `<button id="cl-delclass" class="${btn} text-red-500">🗑 Видалити клас</button>` : `<button id="cl-leave" class="${btn} text-red-500">Покинути клас</button>`}`;
         $("cl-back").onclick = () => render();
+        if ($("cl-rep")) $("cl-rep").onclick = () => ATX.report("class", id, c.name);
         if ($("cl-leave")) $("cl-leave").onclick = async () => { if (!confirm("Покинути клас " + c.name + "?")) return; try { await call("globerClassLeave", { classId: id }); toast("Ви покинули клас."); } catch (e) { toast(e.message); } render(); };
+        if ($("cl-delclass")) $("cl-delclass").onclick = async () => {
+            if (prompt("Видалити клас «" + c.name + "» разом з усіма публікаціями, роботами, оцінками й файлами? Це незворотно.\nНапишіть назву класу для підтвердження:") !== c.name) return toast("Назву введено неправильно — клас не видалено.");
+            try { await call("globerCxClassDelete", { classId: id }); delete cxc["c:" + id]; toast("Клас видалено."); } catch (e) { toast(e.message); } render();
+        };
+        if ($("cl-scale")) $("cl-scale").onchange = () => $("cl-scalen").classList.toggle("hidden", $("cl-scale").value !== "custom");
+        if ($("cl-att")) { $("cl-att").onclick = () => $("cl-file").click(); $("cl-file").onchange = async ev => {
+            for (const f of Array.from(ev.target.files)) { if (cxPend.length >= 5) { toast("Максимум 5 файлів."); break; }
+                try { $("cl-prog").textContent = "Завантаження " + f.name + "…"; cxPend.push(await ATX.upload(f, "class", id, p => { $("cl-prog").textContent = f.name + ": " + Math.round(p * 100) + "%"; })); }
+                catch (e) { toast(e.message); } }
+            $("cl-prog").textContent = ""; $("cl-chips").innerHTML = chips(); ev.target.value = ""; }; }
         if ($("cl-post")) $("cl-post").onclick = async () => {
-            $("cl-post").disabled = true;
-            try { const due = $("cl-due").value; await call("globerClassPost", { classId: id, kind: $("cl-kind").value, title: $("cl-ti").value, text: $("cl-tx").value, testId: $("cl-test").value, dueAt: due ? new Date(due).toISOString() : "" }); toast("Опубліковано."); } catch (e) { toast(e.message); }
+            $("cl-post").disabled = true; const val = k => $(k).value, dt = k => val(k) ? new Date(val(k)).toISOString() : "";
+            try { await call("globerCxPost", { classId: id, kind: val("cl-kind"), title: val("cl-ti"), text: val("cl-tx"), testId: val("cl-test"), dueAt: dt("cl-due"), closeAt: dt("cl-close"), hideAt: dt("cl-hide"),
+                scaleMax: val("cl-scale") === "custom" ? Number(val("cl-scalen")) : Number(val("cl-scale")), pinned: $("cl-pin").checked, attach: cxPend.map(f => f.id) }); cxPend = []; toast("Опубліковано."); delete cxc["c:" + id]; }
+            catch (e) { toast(e.message); }
             openClass(id);
         };
+        if (curSub === "grades") loadGrades(id, c);
         body().onclick = async e => {
-            const sub = e.target.closest("[data-sub]"); if (sub) { curSub = sub.dataset.sub; return openClass(id); }
-            const del = e.target.closest("[data-del]"); if (del) { if (!confirm("Видалити публікацію?")) return; try { await call("globerClassPostDelete", { postId: del.dataset.del }); } catch (er) { toast(er.message); } return openClass(id); }
-            const run = e.target.closest("[data-run]"); if (run) { $("hb-modal").classList.add("hidden"); try { await startTestSession(run.dataset.run); } catch (er) { toast(er.message); } }
+            const q = s => e.target.closest(s);
+            try {
+                let x;
+                if ((x = q("[data-sub]"))) { curSub = x.dataset.sub; return openClass(id); }
+                if ((x = q("[data-file]"))) { e.stopPropagation(); return ATX.download(x.dataset.file, x.dataset.fname).catch(er => toast(er.message)); }
+                if ((x = q("[data-rm]"))) { cxPend.splice(+x.dataset.rm, 1); $("cl-chips").innerHTML = chips(); return; }
+                if ((x = q("[data-del]"))) { e.stopPropagation(); if (!confirm("Видалити публікацію разом із роботами та коментарями?")) return; await call("globerCxPostDelete", { postId: x.dataset.del }); delete cxc["c:" + id]; return openClass(id); }
+                if ((x = q("[data-pin]"))) { e.stopPropagation(); await call("globerCxPostPin", { postId: x.dataset.pin, pinned: x.dataset.v === "1" }); delete cxc["c:" + id]; return openClass(id); }
+                if ((x = q("[data-sdel]"))) { if (!confirm("Видалити учня " + x.dataset.sname + " з класу? Його роботи й оцінки в цьому класі буде видалено.")) return; await call("globerCxStudentRemove", { classId: id, userId: x.dataset.sdel }); delete cxc["c:" + id]; toast("Учня видалено з класу."); return openClass(id); }
+                if ((x = q("[data-tdel]"))) { if (!confirm("Прибрати співвикладача?")) return; await call("globerCxTeacherRemove", { classId: id, userId: x.dataset.tdel }); delete cxc["c:" + id]; return openClass(id); }
+                if (q("#cl-tadd")) { const j = await call("globerCxTeacherAdd", { classId: id, email: $("cl-tmail").value }); delete cxc["c:" + id]; toast(j.added + " тепер співвикладач 🎓"); return openClass(id); }
+                if ((x = q("[data-run]"))) { $("hb-modal").classList.add("hidden"); return await startTestSession(x.dataset.run); }
+                if ((x = q("[data-post]"))) { return openPost(id, x.dataset.post); }
+            } catch (er) { toast(er.message); }
         };
+    }
+    async function loadGrades(cid, c) {
+        let g; try { g = await call("globerCxGradebook", { classId: cid }); } catch (e) { const el = $("cl-grades"); if (el) el.textContent = e.message; return; }
+        const el = $("cl-grades"); if (!el) return;
+        const cell = x => x.status === "graded" ? `<b>${gradeTxt(x.grade, x.max)}</b>` : x.status === "submitted" ? "📤" : x.status === "late" ? "⚠📤" : x.status === "missing" ? "<span class='text-red-500'>✗</span>" : "·";
+        if (!g.posts.length) return void (el.innerHTML = "<div class='theme-text-secondary'>Оцінюваних завдань поки немає.</div>");
+        el.innerHTML = `<div class="overflow-x-auto"><table class="text-xs w-full border-collapse"><thead><tr><th class="text-left p-1.5 border-b theme-border">Учень</th>${g.posts.map(p => `<th class="p-1.5 border-b theme-border" title="${esc(p.title)}">${esc(p.title.slice(0, 14))}<div class="font-normal opacity-60">/${p.scaleMax}</div></th>`).join("")}</tr></thead>
+          <tbody>${g.students.map(s => `<tr><td class="p-1.5 border-b theme-border whitespace-nowrap">${esc(s.name)}</td>${s.cells.map(x => `<td class="p-1.5 border-b theme-border text-center" title="${esc(x.feedback)}">${cell(x)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+          <div class="text-[11px] theme-text-secondary">📤 здано, не оцінено · ⚠ із запізненням · ✗ не здано · Н/А = 0 у 12-бальній системі</div>
+          ${c.isTeacher ? `<button id="gr-csv" class="${btn}">⬇ Завантажити журнал (CSV)</button>` : ""}`;
+        if ($("gr-csv")) $("gr-csv").onclick = () => {
+            const q = v => '"' + String(v).replace(/"/g, '""') + '"', rows = [["Учень"].concat(g.posts.map(p => p.title + " (макс " + p.scaleMax + ")"))].concat(g.students.map(s => [s.name].concat(s.cells.map(x => x.grade === null ? (x.status === "missing" ? "не здано" : "") : (x.grade === 0 && x.max === 12 ? "Н/А" : x.grade)))));
+            const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\ufeff" + rows.map(r => r.map(q).join(";")).join("\r\n")], { type: "text/csv;charset=utf-8" })); a.download = "журнал_" + c.name + ".csv"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        };
+    }
+
+    /* --- сторінка завдання / публікації: здача, оцінювання, коментарі --- */
+    async function openPost(cid, pid) {
+        if (!soft) navSeq++; curClass = cid; curPost = pid; const my = navSeq;
+        const key = "p:" + pid, hit = cxc[key];
+        if (hit && !soft) paintPost(hit, cid);
+        let r; try { r = await call("globerCxPostView", { postId: pid }); } catch (e) { toast(e.message); delete cxc["c:" + cid]; return openClass(cid); }
+        if (!soft && my !== navSeq) return;
+        const s = JSON.stringify(r); if (hit && hit._s === s) return; r._s = s; cxc[key] = r; paintPost(r, cid);
+    }
+    function subBody(s) {
+        return (s.text ? `<div class="whitespace-pre-wrap break-words p-2 rounded-xl border theme-border">${esc(s.text)}</div>` : "") +
+            (s.link ? `<a class="${btn} inline-block" target="_blank" rel="noopener noreferrer" href="${esc(s.link)}">🔗 Відкрити файл на Drive</a>` : "") + attHtml(s.attach);
+    }
+    function paintPost(r, cid) {
+        const p = r.post, T = r.role !== "student", col = clColor("x" + cid), A = p.kind === "assignment", mine = p.my;
+        const tl = { file: "📎 Файл", drive: "🔗 Посилання на Drive", text: "✍ Текст" };
+        let work = "";
+        if (A && !T) {
+            const locked = p.closed || (mine && mine.grade !== null);
+            work = `<div class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-bold">Ваша робота</div>
+              ${mine ? `<div class="text-xs ${mine.late ? "text-amber-600" : "text-emerald-600"}">${mine.kind === "none" ? "Оцінено вчителем" : (tl[mine.kind] || "") + " · здано " + fmtDt(mine.submittedAt) + (mine.late ? " (із запізненням)" : "")}</div>${subBody(mine)}` : "<div class='text-xs theme-text-secondary'>Ще не здано.</div>"}
+              ${mine && mine.grade !== null ? `<div class="p-2 rounded-xl bg-emerald-500/15"><b>Оцінка: ${gradeTxt(mine.grade, mine.max)}</b>${mine.feedback ? `<div class="whitespace-pre-wrap break-words">${esc(mine.feedback)}</div>` : ""}</div>` : (mine && mine.feedback ? `<div class="text-xs">Коментар вчителя: ${esc(mine.feedback)}</div>` : "")}
+              ${p.closed && !mine ? "<div class='text-red-500 text-xs'>🔒 Приймання робіт завершено.</div>" : ""}
+              ${locked ? "" : `<div class="space-y-2 pt-1 border-t theme-border"><div class="text-xs font-bold">${mine ? "Замінити роботу" : "Здати роботу"}</div>
+                <select id="sb-kind" class="${inp}"><option value="file">📎 Файл (до 10 МБ)</option><option value="drive">🔗 Посилання на файл Google Drive</option><option value="text">✍ Текст</option></select>
+                <div id="sb-file"><button id="sb-pick" class="${btn}">Обрати файл…</button><input id="sb-input" type="file" class="hidden"> <span id="sb-name" class="text-xs"></span> <span id="sb-prog" class="text-xs theme-text-secondary"></span></div>
+                <input id="sb-link" class="${inp} hidden" placeholder="https://drive.google.com/… (доступ «усім, хто має посилання» або для вчителя)">
+                <textarea id="sb-text" rows="4" maxlength="5000" class="${inp} hidden" placeholder="Ваша відповідь"></textarea>
+                <button id="sb-go" class="${btn} theme-btn-primary">Здати</button></div>`}</div>`;
+        }
+        if (A && T) {
+            work = `<div class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-bold">Роботи учнів · шкала 0–${p.scaleMax}${p.scaleMax === 12 ? " (0 = Н/А)" : ""} · здано ${p.stats.submitted}/${p.stats.total}</div>
+              ${(r.subs || []).map((x, i) => { const s = x.sub, sid = esc(x.studentId); return `<div class="rounded-xl border theme-border p-2 space-y-1.5"><div class="flex items-center gap-2 flex-wrap"><b class="flex-1">${esc(x.name)}</b>
+                <span class="text-xs ${s && s.kind !== "none" ? (s.late ? "text-amber-600" : "text-emerald-600") : "text-red-500"}">${s && s.kind !== "none" ? (tl[s.kind] + " · " + fmtDt(s.submittedAt) + (s.late ? " · із запізненням" : "")) : "не здано"}</span></div>
+                ${s && s.kind !== "none" ? subBody(s) : ""}
+                <div class="flex flex-wrap gap-2 items-center"><input id="gr-${sid}" type="number" min="0" max="${p.scaleMax}" step="${p.scaleMax === 12 ? 1 : "any"}" class="${inp} !w-24" placeholder="0–${p.scaleMax}" value="${s && s.grade !== null ? s.grade : ""}"><input id="gf-${sid}" class="${inp} flex-1" maxlength="1000" placeholder="Коментар до оцінки" value="${esc(s ? s.feedback : "")}"><button data-grade="${sid}" class="${btn} theme-btn-primary">Оцінити</button></div></div>`; }).join("") || "<div class='theme-text-secondary'>У класі немає учнів.</div>"}</div>`;
+        }
+        const cm = r.comments, pub = cm.filter(m => !m.isPrivate), prv = cm.filter(m => m.isPrivate);
+        const one = m => `<div class="p-2 rounded-xl ${m.mine ? "bg-sky-500/15" : "theme-accent-bg-light"} text-sm"><div class="flex items-center gap-2 text-xs"><b>${esc(m.author)}</b>${m.teacher ? "<span class='px-1 rounded theme-badge'>вчитель</span>" : ""}<span class="theme-text-secondary flex-1">${fmtDt(m.createdAt)}</span>
+          ${m.mine || T ? `<button data-cdel="${esc(m.commentId)}" class="text-gray-400 hover:text-red-500">🗑</button>` : ""}${!m.mine ? `<button data-crep="${esc(m.commentId)}" class="text-gray-400 hover:text-red-500" title="Поскаржитися">🚩</button>` : ""}</div><div class="whitespace-pre-wrap break-words">${esc(m.text)}</div></div>`;
+        let priv;
+        if (!T) priv = `<div class="space-y-2"><div class="font-bold">🔒 Особисті коментарі вчителю <span class="text-xs font-normal theme-text-secondary">(бачите лише ви та вчителі)</span></div>${prv.map(one).join("")}<div class="flex gap-2"><input id="pc-tx" class="${inp}" maxlength="1000" placeholder="Особисте повідомлення вчителю"><button id="pc-go" class="${btn}">➤</button></div></div>`;
+        else { const by = {}; prv.forEach(m => { (by[m.studentId] = by[m.studentId] || []).push(m); });
+            const nm = id => (r.students.find(s => s.userId === id) || {}).name || "—";
+            priv = `<div class="space-y-2"><div class="font-bold">🔒 Особисті коментарі</div>${Object.keys(by).map(k => `<div class="space-y-1"><div class="text-xs font-bold">${esc(nm(k))}</div>${by[k].map(one).join("")}</div>`).join("") || "<div class='text-xs theme-text-secondary'>Особистих повідомлень немає.</div>"}
+              <div class="flex gap-2"><select id="pc-who" class="${inp} !w-40">${r.students.map(s => `<option value="${esc(s.userId)}">${esc(s.name)}</option>`).join("")}</select><input id="pc-tx" class="${inp}" maxlength="1000" placeholder="Особисте повідомлення учню"><button id="pc-go" class="${btn}">➤</button></div></div>`; }
+        body().innerHTML = `<div class="flex gap-2"><button id="po-back" class="${btn}">← До класу</button><button id="po-rep" class="${btn}" title="Поскаржитися на публікацію">🚩</button></div>
+          <div class="rounded-2xl p-4 text-white" style="background:${col}"><div class="text-xl font-extrabold break-words">${esc(p.title || p.author)}</div><div class="text-xs opacity-90">${esc(p.author)} · ${fmtDt(p.createdAt)}${p.dueAt ? " · ⏰ дедлайн " + fmtDt(p.dueAt) : ""}</div></div>
+          <div>${postBadges(p)}</div>${p.text ? `<div class="whitespace-pre-wrap break-words">${esc(p.text)}</div>` : ""}${attHtml(p.attach)}
+          ${p.test ? `<button data-run="${esc(p.test.id)}" class="${btn} theme-btn-primary">▶ Відкрити тест: ${esc(p.test.title)}</button>` : ""}${work}
+          <div class="space-y-2"><div class="font-bold">💬 Коментарі класу</div>${pub.map(one).join("") || "<div class='text-xs theme-text-secondary'>Коментарів поки немає.</div>"}<div class="flex gap-2"><input id="pb-tx" class="${inp}" maxlength="1000" placeholder="Публічний коментар для класу"><button id="pb-go" class="${btn}">➤</button></div></div>${priv}`;
+        $("po-back").onclick = () => { curPost = null; openClass(cid); };
+        $("po-rep").onclick = () => ATX.report("post", p.postId, p.title || p.text.slice(0, 80));
+        const reload = () => { delete cxc["p:" + p.postId]; delete cxc["c:" + cid]; return openPost(cid, p.postId); };
+        const send = async (txId, priv, who) => { const t = $(txId).value.trim(); if (!t) return; try { await call("globerCxComment", { postId: p.postId, text: t, isPrivate: priv, studentId: who }); $(txId).value = ""; await reload(); } catch (e) { toast(e.message); } };
+        $("pb-go").onclick = () => send("pb-tx", false); $("pb-tx").onkeydown = e => { if (e.key === "Enter") send("pb-tx", false); };
+        if ($("pc-go")) { $("pc-go").onclick = () => send("pc-tx", true, $("pc-who") ? $("pc-who").value : ""); $("pc-tx").onkeydown = e => { if (e.key === "Enter") $("pc-go").click(); }; }
+        let picked = null;
+        if ($("sb-kind")) {
+            const sw = () => { const k = $("sb-kind").value; $("sb-file").classList.toggle("hidden", k !== "file"); $("sb-link").classList.toggle("hidden", k !== "drive"); $("sb-text").classList.toggle("hidden", k !== "text"); }; $("sb-kind").onchange = sw; sw();
+            $("sb-pick").onclick = () => $("sb-input").click(); $("sb-input").onchange = ev => { picked = ev.target.files[0] || null; $("sb-name").textContent = picked ? picked.name + " (" + ATX.fmtSize(picked.size) + ")" : ""; };
+            $("sb-go").onclick = async () => {
+                $("sb-go").disabled = true; const k = $("sb-kind").value;
+                try {
+                    const pl = { postId: p.postId, kind: k };
+                    if (k === "file") { if (!picked) throw new Error("Оберіть файл."); const f = await ATX.upload(picked, "submission", p.postId, v => { $("sb-prog").textContent = Math.round(v * 100) + "%"; }); pl.attach = [f.id]; }
+                    else if (k === "drive") pl.link = $("sb-link").value; else pl.text = $("sb-text").value;
+                    const j = await call("globerCxSubmit", pl); toast(j.late ? "Роботу здано (із запізненням)." : "Роботу здано ✅"); await reload();
+                } catch (e) { toast(e.message); $("sb-go").disabled = false; }
+            };
+        }
+        body().onclick = async e => {
+            const q = s => e.target.closest(s); let x;
+            try {
+                if ((x = q("[data-file]"))) return ATX.download(x.dataset.file, x.dataset.fname).catch(er => toast(er.message));
+                if ((x = q("[data-run]"))) { $("hb-modal").classList.add("hidden"); return await startTestSession(x.dataset.run); }
+                if ((x = q("[data-cdel]"))) { if (!confirm("Видалити коментар?")) return; await call("globerCxCommentDelete", { commentId: x.dataset.cdel }); return reload(); }
+                if ((x = q("[data-crep]"))) { const m = cm.find(c => c.commentId === x.dataset.crep); return ATX.report("comment", x.dataset.crep, "Коментар: " + (m ? m.author : ""), m ? m.text : ""); }
+                if ((x = q("[data-grade]"))) { const sid = x.dataset.grade; await call("globerCxGrade", { postId: p.postId, studentId: sid, grade: $("gr-" + sid).value, feedback: $("gf-" + sid).value }); toast("Оцінку збережено ✅"); return reload(); }
+            } catch (er) { toast(er.message); }
+        };
+    }
+
+    /* --- відгуки та скарги (хаб) --- */
+    async function fb() {
+        const ai = await call("globerCxReviews", { targetType: "ai", targetId: "glober" });
+        body().innerHTML = `<div class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-bold">⭐ Відгук про Glober AI <span class="text-xs font-normal theme-text-secondary">${ai.count ? ai.avg + "/5 · " + ai.count + " відгуків" : "ще немає відгуків"}</span></div><button id="fb-ai" class="${btn} theme-btn-primary">${ai.mine ? "Змінити мій відгук (" + ai.mine.rating + "★)" : "Залишити відгук"}</button></div>
+          <div class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-bold">⭐ Відгук про олімпіаду</div><div class="flex gap-2"><input id="fb-ol" class="${inp}" placeholder="ID або код олімпіади"><button id="fb-olgo" class="${btn} theme-btn-primary">Оцінити</button></div><div class="text-xs theme-text-secondary">Також кнопка ⭐ є прямо на картках олімпіад у каталозі.</div></div>
+          <div class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-bold">🚩 Поскаржитися</div><select id="fb-ty" class="${inp}"><option value="class">Клас (за кодом)</option><option value="user">Користувача (за поштою)</option><option value="olympiad">Олімпіаду (за ID)</option><option value="other">Інше</option></select><input id="fb-id" class="${inp}" placeholder="Код класу / пошта / ID"><button id="fb-go" class="${btn} theme-btn-primary">Далі</button><div class="text-xs theme-text-secondary">На повідомлення в ЛС, коментарі, публікації та відповіді ШІ скаржтеся кнопкою 🚩 поруч із ними.</div></div>
+          <div id="fb-admin"></div>`;
+        $("fb-ai").onclick = () => ATX.review("ai", "glober"); $("fb-olgo").onclick = () => { const v = $("fb-ol").value; if (v) ATX.review("olympiad", v, "олімпіада"); };
+        $("fb-go").onclick = () => { const t = $("fb-ty").value; ATX.report(t, $("fb-id").value.trim() || "—", $("fb-id").value); };
+        if (me.isAdmin) {
+            const rp = await call("globerCxReports", { status: "new" }), RN = { inappropriate: "недоречне", abuse: "образи", spam: "спам", cheating: "списування", wrong: "помилка", other: "інше" };
+            $("fb-admin").innerHTML = `<div class="font-bold pt-2">🛡 Нові скарги (${rp.reports.length})</div>` + (rp.reports.map(x => `<div class="p-2 rounded-xl border theme-border text-xs space-y-1"><div><b>${esc(x.targetType)}</b> · ${esc(RN[x.reason] || x.reason)} · від ${esc(x.reporter)} · ${fmtDt(x.createdAt)}</div>${x.quote ? `<div class="p-1.5 rounded theme-accent-bg-light break-words">${esc(x.quote)}</div>` : ""}${x.text ? `<div class="break-words">${esc(x.text)}</div>` : ""}<div class="text-[10px] opacity-60 break-all">${esc(x.targetId)}</div><div class="flex gap-1"><button data-rh="${esc(x.reportId)}" data-st="done" class="${btn}">✅ Розглянуто</button><button data-rh="${esc(x.reportId)}" data-st="rejected" class="${btn}">Відхилити</button></div></div>`).join("") || "<div class='theme-text-secondary text-xs'>Нових скарг немає.</div>");
+            $("fb-admin").onclick = async e => { const k = e.target.closest("[data-rh]"); if (!k) return; try { await call("globerCxReportHandle", { reportId: k.dataset.rh, status: k.dataset.st }); render(); } catch (er) { toast(er.message); } };
+        }
     }
 
     /* --- ліга --- */
@@ -5222,6 +5408,121 @@
     const prev = window.showSection;
     window.showSection = function (s) { const r = prev.apply(this, arguments); if (s === "landing") setTimeout(check, 300); else close(); return r; };
     setInterval(() => { if (authToken && authToken !== lastToken) check(); }, 2000);   // після входу / завантаження сторінки
+})();
+</script>
+<script>
+/* ===== ArTesolymp: ATX — файли, скарги, відгуки (спільний модуль) ===== */
+(function () {
+    "use strict";
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const call = (a, p) => apiRequest(a, p || {});
+    const toast = m => showNotification(m);
+    const CH = 384 * 1024, MAX = 10 * 1024 * 1024;
+    const fmtSize = n => n > 1048576 ? (n / 1048576).toFixed(1) + " МБ" : Math.max(1, Math.round(n / 1024)) + " КБ";
+    const b64 = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] || ""); r.onerror = () => rej(new Error("Не вдалося прочитати файл.")); r.readAsDataURL(blob); });
+
+    /* завантаження: малі файли — 1 запит; великі — частинами по 3 паралельно */
+    async function upload(file, scope, scopeId, onp) {
+        if (!file.size) throw new Error("Порожній файл.");
+        if (file.size > MAX) throw new Error("Файл завеликий (максимум 10 МБ).");
+        const meta = { name: file.name, mime: file.type || "application/octet-stream", scope, scopeId };
+        if (file.size <= CH) { const r = await call("globerCxUploadSmall", Object.assign({ data: await b64(file) }, meta)); if (onp) onp(1); return r.file; }
+        const total = Math.ceil(file.size / CH), st = await call("globerCxUploadStart", Object.assign({ size: file.size, total }, meta));
+        let next = 0, done = 0;
+        const worker = async () => { for (;;) { const i = next++; if (i >= total) return; await call("globerCxUploadPart", { uploadId: st.uploadId, index: i, data: await b64(file.slice(i * CH, (i + 1) * CH)) }); done++; if (onp) onp(done / total); } };
+        await Promise.all([worker(), worker(), worker()]);
+        return (await call("globerCxUploadDone", { uploadId: st.uploadId })).file;
+    }
+    async function download(id, name) {
+        toast("Завантажую файл…");
+        const r = await call("globerCxFileGet", { fileId: id }), bin = atob(r.data), arr = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+        const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([arr], { type: r.mime || "application/octet-stream" })); a.download = r.name || name || "file";
+        document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 5000);
+    }
+
+    /* модальне вікно */
+    function modal(html) {
+        const m = document.createElement("div"); m.className = "fixed inset-0 z-[140] bg-black/60 flex items-center justify-center p-4";
+        m.innerHTML = `<div class="theme-bg-card border theme-border rounded-3xl p-5 w-full max-w-md space-y-3 shadow-2xl max-h-[90vh] overflow-y-auto">${html}</div>`;
+        m.addEventListener("mousedown", e => { if (e.target === m) m.remove(); }); document.body.appendChild(m); return m;
+    }
+    const IN = "w-full p-2 rounded-xl border theme-border theme-bg-card text-sm", BT = "px-3 py-2 rounded-xl border theme-border font-bold text-xs hover:border-sky-400";
+    const RT = { message: "повідомлення", class: "клас", post: "публікацію", comment: "коментар", ai: "відповідь Glober AI", olympiad: "олімпіаду/тест", user: "користувача", other: "інше" };
+
+    function report(type, id, title, quote) {
+        if (!requireLogin()) return;
+        const m = modal(`<div class="text-lg font-black">🚩 Скарга: ${esc(RT[type] || type)}</div>${title ? `<div class="text-xs theme-text-secondary break-words">${esc(title)}</div>` : ""}
+          <select id="rp-r" class="${IN}"><option value="inappropriate">Недоречний вміст</option><option value="abuse">Образи / цькування</option><option value="spam">Спам</option><option value="cheating">Списування / нечесність</option><option value="wrong">Помилка / неправдива інформація</option><option value="other">Інше</option></select>
+          <textarea id="rp-t" rows="3" maxlength="500" class="${IN}" placeholder="Опишіть, що не так (необов'язково для повідомлень і ШІ)"></textarea>
+          <div class="flex gap-2 justify-end"><button id="rp-x" class="${BT}">Скасувати</button><button id="rp-go" class="${BT} theme-btn-primary">Надіслати</button></div>`);
+        m.querySelector("#rp-x").onclick = () => m.remove();
+        m.querySelector("#rp-go").onclick = async () => {
+            const go = m.querySelector("#rp-go"); go.disabled = true;
+            try { await call("globerCxReport", { targetType: type, targetId: id, reason: m.querySelector("#rp-r").value, text: m.querySelector("#rp-t").value, quote: quote || "" }); toast("Скаргу надіслано адміністраторам. Дякуємо!"); m.remove(); }
+            catch (e) { toast(e.message); go.disabled = false; }
+        };
+    }
+    const stars = n => "★".repeat(n) + "☆".repeat(5 - n);
+    async function review(type, id, title) {
+        if (!requireLogin()) return;
+        let s; try { s = await call("globerCxReviews", { targetType: type, targetId: id }); } catch (e) { return toast(e.message); }
+        let rating = s.mine ? s.mine.rating : 0;
+        const m = modal(`<div class="text-lg font-black">⭐ Відгук: ${type === "ai" ? "Glober AI" : esc(title || "олімпіада")}</div>
+          <div class="text-xs theme-text-secondary">Середня оцінка: <b>${s.count ? s.avg + " / 5" : "—"}</b> · відгуків: ${s.count}</div>
+          <div id="rv-st" class="text-3xl cursor-pointer select-none text-amber-400"></div>
+          <textarea id="rv-t" rows="3" maxlength="500" class="${IN}" placeholder="Ваш відгук (необов'язково)">${esc(s.mine ? s.mine.text : "")}</textarea>
+          <div class="flex gap-2 justify-end"><button id="rv-x" class="${BT}">Закрити</button><button id="rv-go" class="${BT} theme-btn-primary">Зберегти відгук</button></div>
+          ${s.recent.length ? `<div class="pt-2 border-t theme-border space-y-1 text-xs">${s.recent.map(r => `<div><b>${esc(r.name)}</b> <span class="text-amber-400">${stars(r.rating)}</span><div class="break-words">${esc(r.text)}</div></div>`).join("")}</div>` : ""}`);
+        const paint = () => { m.querySelector("#rv-st").innerHTML = [1, 2, 3, 4, 5].map(i => `<span data-s="${i}">${i <= rating ? "★" : "☆"}</span>`).join(""); };
+        paint(); m.querySelector("#rv-st").onclick = e => { const v = e.target.dataset && e.target.dataset.s; if (v) { rating = +v; paint(); } };
+        m.querySelector("#rv-x").onclick = () => m.remove();
+        m.querySelector("#rv-go").onclick = async () => {
+            if (!rating) return toast("Оберіть кількість зірок.");
+            try { await call("globerCxReview", { targetType: type, targetId: id, rating, text: m.querySelector("#rv-t").value }); toast("Дякуємо за відгук! ⭐"); m.remove(); R = null; if (window.renderTestsList) window.renderTestsList(); }
+            catch (e) { toast(e.message); }
+        };
+    }
+
+    /* рейтинги й кнопки на картках каталогу (кеш 2 хв) */
+    let R = null, Rt = 0, Rp = null;
+    async function ratings() {
+        if (R && Date.now() - Rt < 120000) return R;
+        if (!Rp) Rp = call("globerCxRatings").then(r => { R = r.ratings || {}; Rt = Date.now(); }).catch(() => { R = R || {}; }).finally(() => { Rp = null; });
+        await Rp; return R;
+    }
+    async function decorate() {
+        const grid = $("tests-grid"); if (!grid || typeof authToken === "undefined" || !authToken) return;
+        const rt = await ratings();
+        grid.querySelectorAll(":scope > div").forEach(card => {
+            if (card.dataset.cx) return;
+            const b = card.querySelector('button[onclick^="startTestSession"]'); if (!b) return;
+            const m = /startTestSession\('((?:[^'\\]|\\.)*)'/.exec(b.getAttribute("onclick") || ""); if (!m) return;
+            const id = m[1].replace(/\\(.)/g, "$1"); card.dataset.cx = "1";
+            const t = (window.testsDatabase || testsDatabase || []).find(x => String(x.id) === id);
+            const row = b.parentElement; if (!row || id === (typeof DEMO_TEST_ID !== "undefined" ? DEMO_TEST_ID : "")) return;
+            const w = document.createElement("div"); w.className = "flex items-center gap-1";
+            const x = rt[id], isOl = t && t.kind === "olympiad";
+            w.innerHTML = (isOl ? `<button type="button" data-cx="rate" class="${BT}" title="Відгук про олімпіаду">⭐ ${x ? x.avg + " (" + x.count + ")" : "Оцінити"}</button>` : "") + `<button type="button" data-cx="rep" class="${BT}" title="Поскаржитися">🚩</button>`;
+            w.onclick = e => { const k = e.target.closest("[data-cx]"); if (!k) return; e.stopPropagation(); if (k.dataset.cx === "rate") review("olympiad", id, t && t.title); else report("olympiad", id, t && t.title); };
+            row.insertBefore(w, b);
+        });
+    }
+    if (typeof window.renderTestsList === "function") { const o = window.renderTestsList; window.renderTestsList = function () { const r = o.apply(this, arguments); try { decorate(); } catch (_) {} return r; }; }
+
+    /* кнопки «Оцінити» / «Скарга» під відповідями Glober AI */
+    const gm = $("gl-msgs");
+    if (gm) {
+        const add = () => gm.querySelectorAll("[data-msg].mr-8 .gl-tools").forEach(t => { if (t.dataset.cx) return; t.dataset.cx = "1"; t.insertAdjacentHTML("beforeend", '<button type="button" data-cx="rate">⭐ Оцінити</button><button type="button" data-cx="rep">🚩 Скарга</button>'); });
+        new MutationObserver(add).observe(gm, { childList: true, subtree: true });
+        gm.addEventListener("click", e => {
+            const k = e.target.closest("[data-cx]"); if (!k) return; const host = k.closest("[data-msg]");
+            if (k.dataset.cx === "rate") review("ai", "glober"); else report("ai", "glober", "Відповідь Glober AI", host && host._raw ? host._raw.slice(0, 500) : "");
+        });
+    }
+    setTimeout(decorate, 1500); setInterval(decorate, 4000);
+    window.ATX = { upload, download, report, review, fmtSize, esc, modal };
 })();
 </script>
 </body>
