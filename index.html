@@ -1089,7 +1089,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbzb5IpPtQdS0o1puq924g9zJqL3RxbqFkrQVu2R8V0QDZixUOY27SR1_d7ZceX9RDnt/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbzQBzQo-TvV_1mYMClJANCcSVVbt2HBpimAusH-SKrU9WAI6H6OiMhg9-lv3rsqrC1P/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -4528,8 +4528,8 @@
       </div>
       <div id="gl-banner" class="hidden text-[11px] px-3 py-2 bg-amber-500/15 text-amber-600"></div>
       <div class="p-2 flex gap-2 text-xs font-bold">
-        <button id="gl-m-std" class="flex-1 py-2 rounded-xl border theme-border">Glober 1.0 · 1🔑</button>
-        <button id="gl-m-deep" class="flex-1 py-2 rounded-xl border theme-border">Deep 1.1 · <span id="gl-cost">3</span>🔑</button>
+        <button id="gl-m-std" class="flex-1 py-2 rounded-xl border theme-border">Glober 1.0 · від 2🔑</button>
+        <button id="gl-m-deep" class="flex-1 py-2 rounded-xl border theme-border">Deep 1.1 · від <span id="gl-cost">3</span>🔑</button>
       </div>
       <div id="gl-msgs" class="flex-1 overflow-y-auto p-3 space-y-2 text-sm"></div>
       <div id="gl-status" class="px-3 pb-1 text-[11px] theme-accent-color font-bold min-h-[1rem]"></div>
@@ -4708,6 +4708,7 @@
                 while (!r.done) {
                     status(r.status);
                     r = await apiRequest("globerStep", { jobId: r.jobId });
+                    if (r.wallet) { wallet = r.wallet; paint(); }
                 }
             } else {
                 status("Glober думає...");
@@ -4715,6 +4716,7 @@
             }
             if (r.wallet) wallet = r.wallet;
             add("bot", r.reply);
+            if (r.usage) { const n = document.createElement("div"); n.className = "text-[10px] opacity-60 mt-1"; n.textContent = "🧮 " + r.usage.tokens.toLocaleString("uk-UA") + " токенів → " + r.usage.keys + " 🔑" + (r.usage.short ? " · швидке завершення" : ""); msgs.lastElementChild.appendChild(n); }
             if (!r.blocked && !r.penalty) { history.push({ role: "user", content: text }, { role: "assistant", content: r.reply }); history = history.slice(-12); }
         } catch (e) { add("bot", "⚠️ " + (e.message || "Помилка.")); await refresh(); }
         finally { busy = false; $("gl-send").disabled = false; status(""); paint(); }
