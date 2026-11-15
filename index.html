@@ -1094,7 +1094,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbx9_9-cGMogoq0iNzJXmGUuWOKt6dgCzAI7oBr6HCEb-t0in9iZy1PFfKIR0yWiuvfF/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbxdPOqAjZT4YVAqyzYsdxGRUjmCrjt9P23SFzQrC7Gl6hwD_voctGD4K-9-kUCaGvkI/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -1607,7 +1607,7 @@
                 const pending=(data.tracking&&data.tracking.requests)||[], students=(data.tracking&&data.tracking.students)||[];
                 pending.forEach(x=>{const d=document.createElement("div");d.className="text-xs border-b theme-border py-2";d.textContent="Очікує згоди: "+x.email;list.appendChild(d);});
                 students.forEach(x=>{const d=document.createElement("div");d.className="flex items-center justify-between gap-2 border-b theme-border py-2";
-                    const label=document.createElement("span");label.textContent=(x.name||x.email)+" · "+x.email;
+                    const label=document.createElement("span");label.textContent=(x.name||x.email)+" · "+x.email;if(x.studentId){label.dataset.uid=x.studentId;label.setAttribute("role","link");label.tabIndex=0;label.className="pf-link";}
                     const btn=document.createElement("button");btn.className="text-red-500 font-bold text-xs";btn.textContent="−";btn.title="Скасувати відстеження";btn.onclick=()=>cancelTrackingRequest(x.requestId);
                     d.append(label,btn);list.appendChild(d);});
                 if(!pending.length&&!students.length) list.textContent="Поки немає учнів або запитів.";
@@ -1794,7 +1794,7 @@
                         summary.className = "flex flex-wrap items-center justify-between gap-2";
                         const label = document.createElement("div");
                         label.className = "text-sm";
-                        label.textContent = `${a.testTitle} · ${a.participantName} (${a.participantEmail}) · ${a.score}/${a.maxScore} · ${new Date(a.finishedAt).toLocaleString("uk-UA")}` + (a.integrityTerminated ? " · анти-списування: 0 балів" : "");
+                        label.innerHTML = `${escapeHtml(a.testTitle)} · ${window.pfLink ? window.pfLink(a.userId, a.participantName) : escapeHtml(a.participantName)} (${escapeHtml(a.participantEmail)}) · ${a.score}/${a.maxScore} · ${escapeHtml(new Date(a.finishedAt).toLocaleString("uk-UA"))}` + (a.integrityTerminated ? " · анти-списування: 0 балів" : "");
                         summary.appendChild(label);
                         const removeBtn = document.createElement("button");
                         removeBtn.className = "text-xs text-red-500 font-bold";
@@ -2009,6 +2009,7 @@
                         <p class="text-sm theme-text-secondary line-clamp-3 break-words">${escapeHtml(test.description || '')}</p>
                         <p class="text-xs theme-text-secondary"><i class="fa-regular fa-clock mr-1"></i>Дедлайн: ${escapeHtml(deadlineFormatted)}</p>
                         <p class="text-xs theme-text-secondary">${test.allowRepeat ? 'Повторне проходження дозволено' : 'Одне проходження'}${test.requiresPassword ? ' · потрібен пароль' : ''}</p>
+                        ${test.ownerName ? `<p class="text-xs theme-text-secondary">Автор: ${window.pfLink ? window.pfLink(test.ownerId, test.ownerName) : escapeHtml(test.ownerName)}</p>` : ''}
                         <div class="flex flex-wrap gap-1.5 pt-1">
                             ${(test.tabs || []).slice(0,5).map(tab => `<span class="text-[10px] font-bold px-2 py-1 rounded-lg theme-badge">${escapeHtml(tab)}</span>`).join('')}
                         </div>
@@ -4213,7 +4214,7 @@
         RES.rows = atts.map(a => {
             const sc = {};
             (a.responses || []).forEach(r => { sc[r.questionId] = Number(r.score) || 0; });
-            return { attemptId: a.attemptId, name: a.participantName || a.participantEmail || "—", email: a.participantEmail || "", total: Number(a.score) || 0, max: Number(a.maxScore) || 0, sc, finishedAt: a.finishedAt };
+            return { attemptId: a.attemptId, userId: a.userId || "", name: a.participantName || a.participantEmail || "—", email: a.participantEmail || "", total: Number(a.score) || 0, max: Number(a.maxScore) || 0, sc, finishedAt: a.finishedAt };
         });
         const sorted = [...RES.rows].sort((x, y) => y.total - x.total);
         sorted.forEach((r, i) => { r.place = i > 0 && r.total === sorted[i - 1].total ? sorted[i - 1].place : i + 1; });
@@ -4262,7 +4263,7 @@
             <th class="px-3 py-2 border theme-border text-center">Результат</th><th class="px-3 py-2 border theme-border text-center">Дії</th></tr></thead><tbody>`;
         rows.forEach(r => {
             html += `<tr><td class="px-3 py-2 border theme-border text-center font-bold">${medal(r.place)} ${r.place}</td>
-                <td class="px-3 py-2 border theme-border"><div class="font-semibold">${esc(r.name)}</div><div class="text-[10px] theme-text-secondary">${esc(r.email)}</div></td>`;
+                <td class="px-3 py-2 border theme-border"><div class="font-semibold">${window.pfLink ? window.pfLink(r.userId, r.name) : esc(r.name)}</div><div class="text-[10px] theme-text-secondary">${esc(r.email)}</div></td>`;
             RES.cols.forEach(c => { html += cell(r.sc[c.id] || 0, c.max, false); });
             html += cell(r.total, r.max, true) + `<td class="px-2 py-2 border theme-border text-center"><button type="button" onclick="removeParticipantFromTable('${esc(r.attemptId || "")}')" class="text-[11px] font-bold text-red-500 hover:underline whitespace-nowrap">Прибрати</button></td></tr>`;
         });
@@ -4876,11 +4877,80 @@
 
     function avatar(p, size) {
         const s = size || 56, ring = FR[p.frame] || "none";
-        const inner = p.avatarUrl ? `<img src="${esc(p.avatarUrl)}" alt="" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover">` : `<div style="width:${s}px;height:${s}px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#64748b;color:#fff;font-weight:800">${esc((p.name || "?")[0])}</div>`;
+        const inner = p.avatarUrl ? `<img src="${esc(p.avatarUrl)}" alt="" loading="lazy" decoding="async" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover">` : `<div style="width:${s}px;height:${s}px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#64748b;color:#fff;font-weight:800">${esc((p.name || "?")[0])}</div>`;
         return `<div style="box-shadow:${ring};border-radius:50%;display:inline-block">${inner}</div>`;
     }
     function nameHtml(p) { return `<span style="color:${NC[p.nameColor] || "inherit"};font-weight:800">${esc(p.title ? "[" + p.title + "] " : "")}${esc(p.name)}</span>`; }
     function card(p, extra) { return `<div class="rounded-2xl p-3 flex items-center gap-3" style="background:${BG[p.bg] || "transparent"};${BG[p.bg] ? "color:#fff" : ""}">${avatar(p)}<div class="min-w-0">${nameHtml(p)}<div class="text-xs opacity-80">${esc(p.role || "")}${extra || ""}</div></div></div>`; }
+
+    /* ===== перегляд профілю будь-якого користувача (дуелі, ЛС, класи, ліга, автор олімпіади, результати…) ===== */
+    (function () { const st = document.createElement("style"); st.textContent = ".pf-link{cursor:pointer}.pf-link:hover{text-decoration:underline;color:#0ea5e9}.pf-link:focus-visible{outline:2px solid #0ea5e9;border-radius:4px}#tests-grid>div{content-visibility:auto;contain-intrinsic-size:auto 280px}"; document.head.appendChild(st); })();
+    const who = (id, name) => id ? `<span data-uid="${esc(id)}" role="link" tabindex="0" class="pf-link">${esc(name)}</span>` : esc(name);
+    let duelTo = null, cardTo = null;
+    const PF = { cache: {}, busy: {}, hist: [], cur: null, seq: 0 };
+    function pfFetch(arg) {
+        const key = arg.userId ? "u:" + arg.userId : "e:" + String(arg.email || "").trim().toLowerCase(), hit = PF.cache[key];
+        if (hit && Date.now() - hit.t < 30000) return Promise.resolve(hit.v);
+        return PF.busy[key] || (PF.busy[key] = call("globerSocUser", arg.userId ? { userId: arg.userId } : { email: String(arg.email || "").trim() })
+            .then(r => { const e = { t: Date.now(), v: r.user }; PF.cache[key] = e; PF.cache["u:" + r.user.userId] = e; return r.user; })
+            .finally(() => { delete PF.busy[key]; }));
+    }
+    function pfModal() {
+        let m = $("pf-modal"); if (m) return m;
+        document.body.insertAdjacentHTML("beforeend", `<div id="pf-modal" class="hidden fixed inset-0 z-[120] bg-black/60 flex items-center justify-center p-3"><div class="theme-bg-card border theme-border rounded-3xl w-full max-w-md max-h-[88vh] flex flex-col overflow-hidden shadow-2xl" role="dialog" aria-modal="true" aria-label="Профіль користувача"><div class="flex justify-end p-2 pb-0"><button id="pf-close" class="px-2 text-gray-400 hover:text-red-500" aria-label="Закрити">✕</button></div><div id="pf-body" class="overflow-y-auto p-4 pt-1 text-sm space-y-3"></div></div></div>`);
+        m = $("pf-modal");
+        m.addEventListener("click", e => { if (e.target === m || e.target.id === "pf-close") pfClose(); });
+        $("pf-body").addEventListener("click", e => {
+            const a = e.target.closest("[data-pf]"); if (!a) return; const k = a.dataset.pf, u = PF.user;
+            if (k === "back") { const p = PF.hist.pop(); if (p) openProfile(p, true); return; }
+            if (!u) return;
+            pfClose();
+            if (k === "dm") gotoHub("dm", () => thread(u.userId));
+            else if (k === "duel") { duelTo = { id: u.userId, name: u.name }; gotoHub("duel"); }
+            else if (k === "card") { cardTo = { id: u.userId, name: u.name }; gotoHub("cards"); }
+        });
+        return m;
+    }
+    function pfClose() { const m = $("pf-modal"); if (m) m.classList.add("hidden"); PF.seq++; PF.hist = []; PF.cur = null; PF.user = null; }
+    async function openProfile(arg, fromBack) {
+        if (typeof requireLogin === "function" && !requireLogin()) return;
+        arg = typeof arg === "string" ? { userId: arg } : (arg || {});
+        if (!arg.userId && !String(arg.email || "").trim()) { toast("Вкажіть користувача."); return; }
+        const m = pfModal(), b = $("pf-body"), isOpen = !m.classList.contains("hidden");
+        if (!isOpen) PF.hist = []; else if (PF.cur && !fromBack) PF.hist.push(PF.cur);
+        m.classList.remove("hidden"); const seq = ++PF.seq;
+        b.innerHTML = "<div class='theme-text-secondary py-8 text-center'>Завантаження…</div>";
+        try { const u = await pfFetch(arg); if (seq !== PF.seq) return; PF.cur = { userId: u.userId }; PF.user = u; pfPaint(u); }
+        catch (e) { if (seq !== PF.seq) return; b.innerHTML = (PF.hist.length ? `<button data-pf="back" class="${btn}">← Назад</button>` : "") + `<div class="text-red-500 py-4">${esc(e.message)}</div>`; }
+    }
+    function pfPaint(u) {
+        const s = u.stats || {}, isT = u.role === "Учитель";
+        const stat = (v, l) => `<div class="px-3 py-2 rounded-xl border theme-border text-center flex-1"><div class="text-base font-extrabold">${v}</div><div class="text-[10px] theme-text-secondary uppercase font-bold">${l}</div></div>`;
+        const stats = isT ? stat(s.olympiads || 0, "олімпіад") + stat(s.tests || 0, "тестів") : stat(s.attempts || 0, "робіт") + stat(s.avgPct == null ? "—" : s.avgPct + "%", "середній") + stat((s.gems || 0) + " 💎", "гемів");
+        const soc = Object.keys(u.socials || {});
+        const acts = (u.canDm ? `<button data-pf="dm" class="${btn} theme-btn-primary">💬 Написати</button>` : "") + (!u.isMe ? `<button data-pf="duel" class="${btn}">⚔️ Дуель</button>` : "") + (u.canCard ? `<button data-pf="card" class="${btn}">🎁 Картка</button>` : "");
+        $("pf-body").innerHTML = (PF.hist.length ? `<button data-pf="back" class="${btn}">← Назад</button>` : "") +
+            card(u, (u.titles && u.titles.length ? " · 🏆 " + esc(u.titles.join(", ")) : "") + (u.className ? " · 🏫 " + esc(u.className) : "") + (u.isMe ? " · це ви" : "")) +
+            `<div class="flex gap-2">${stats}</div>` +
+            (acts ? `<div class="flex flex-wrap gap-2">${acts}</div>` : (!u.isMe ? "<div class='text-xs theme-text-secondary'>Користувач обмежив особисті повідомлення.</div>" : "")) +
+            (soc.length ? `<div class="flex flex-wrap gap-2">${soc.map(k => `<a class="${btn}" target="_blank" rel="noopener noreferrer" href="${esc(u.socials[k])}">${esc(k)}</a>`).join("")}</div>` : "") +
+            (u.achievements && u.achievements.length ? `<div>🎖 ${u.achievements.map(esc).join(" · ")}</div>` : "") +
+            (isT ? `<div class="font-bold">Стіна привітань</div>${u.cards && u.cards.length ? u.cards.map(c => `<div class="p-2 rounded-xl border theme-border"><b>${who(c.fromId, c.from)}</b> · ${c.gems} 💎<div class="break-words">${esc(c.text)}</div></div>`).join("") : "<div class='theme-text-secondary'>Поки порожньо.</div>"}` : "");
+    }
+    async function gotoHub(t, after) {
+        if (typeof requireLogin === "function" && !requireLogin()) return;
+        $("hb-modal").classList.remove("hidden"); tab = t; if (!me) await load(); if (!me) return;
+        if (!after) return render();
+        navSeq++; curThread = null; curClass = null; curPost = null; setTabs(); body().innerHTML = "<div class='theme-text-secondary'>Завантаження…</div>";
+        try { await after(); } catch (e) { toast(e.message); render(); }
+        walTxt();
+    }
+    document.addEventListener("click", e => { const t = e.target.closest && e.target.closest("[data-uid]"); if (!t) return; e.preventDefault(); e.stopPropagation(); openProfile(t.dataset.uid); }, true);
+    document.addEventListener("keydown", e => {
+        if (e.key === "Escape") { const m = $("pf-modal"); if (m && !m.classList.contains("hidden")) { pfClose(); return; } }
+        if (e.key === "Enter" || e.key === " ") { const t = e.target.closest && e.target.closest("[data-uid][role=link]"); if (t) { e.preventDefault(); openProfile(t.dataset.uid); } }
+    });
+    window.openProfile = openProfile; window.pfLink = who;
 
     async function load() { try { me = await call("globerSocMe"); walTxt(); } catch (e) { toast(e.message); } }
     function setTabs() {
@@ -4982,7 +5052,7 @@
         const r = await call("globerDmInbox");
         body().innerHTML = `<div class="flex gap-2"><input id="dm-to" class="${inp}" placeholder="Пошта користувача"><input id="dm-tx" class="${inp}" placeholder="Повідомлення"><button id="dm-go" class="${btn} theme-btn-primary">➤</button></div>
         <div class="flex gap-2 flex-wrap"><button id="dm-keys" class="${btn}">🔑 Передати ключі</button><button id="dm-card" class="${btn}">🎁 Вітальна картка</button><button id="dm-prof" class="${btn}">👤 Профіль за поштою</button></div>
-        <div>${r.threads.length ? r.threads.map(t => `<button data-th="${t.withId}" class="w-full text-left p-2 rounded-xl border theme-border mb-1"><b>${esc(t.name)}</b> ${t.unread ? `<span class="text-xs bg-red-500 text-white rounded-full px-1.5">${t.unread}</span>` : ""}<div class="text-xs theme-text-secondary truncate">${esc(t.last)}</div></button>`).join("") : "<div class='theme-text-secondary'>Листування порожнє.</div>"}</div>`;
+        <div>${r.threads.length ? r.threads.map(t => `<button data-th="${t.withId}" class="w-full text-left p-2 rounded-xl border theme-border mb-1"><b>${esc(t.name)}</b> <span data-uid="${esc(t.withId)}" role="link" tabindex="0" class="pf-link" title="Профіль">👤</span> ${t.unread ? `<span class="text-xs bg-red-500 text-white rounded-full px-1.5">${t.unread}</span>` : ""}<div class="text-xs theme-text-secondary truncate">${esc(t.last)}</div></button>`).join("") : "<div class='theme-text-secondary'>Листування порожнє.</div>"}</div>`;
         $("dm-go").onclick = async () => { try { await call("globerDmSend", { email: $("dm-to").value, text: $("dm-tx").value }); toast("Надіслано."); render(); } catch (e) { toast(e.message); } };
         $("dm-keys").onclick = async () => {
             const email = $("dm-to").value.trim() || prompt("Пошта одержувача:"); if (!email) return; const amount = Number(prompt("Скільки ключів (1–100)?")); if (!amount) return;
@@ -4990,13 +5060,13 @@
             try { await call("globerTransfer", { email, amount, kind: temp ? "temp" : "paid" }); toast("Ключі передано."); await load(); walTxt(); } catch (e) { toast(e.message); }
         };
         $("dm-card").onclick = () => { tab = "cards"; $("hb-tabs").dataset.pre = $("dm-to").value; render(); };
-        $("dm-prof").onclick = async () => { try { const u = (await call("globerSocUser", { email: $("dm-to").value })).user; showUser(u); } catch (e) { toast(e.message); } };
+        $("dm-prof").onclick = async () => { try { await openProfile({ email: $("dm-to").value }); } catch (e) { toast(e.message); } };
         body().onclick = e => { const t = e.target.closest("[data-th]"); if (t) thread(t.dataset.th); };
     }
     async function thread(id) {
         if (!soft) navSeq++; curThread = id;
         const r = await call("globerDmThread", { withId: id });
-        body().innerHTML = `<button id="th-back" class="${btn}">← Назад</button><div class="font-bold">${esc(r.with ? r.with.name : "")}</div><div class="space-y-1">${r.messages.map(m => `<div class="${m.mine ? "ml-10 bg-sky-500/20" : "mr-10 theme-accent-bg-light"} p-2 rounded-xl break-words">${esc(m.text)}${attHtml(m.attach)}${!m.mine ? ` <button data-mrep="${esc(m.msgId)}" class="text-xs opacity-50" title="Поскаржитися">🚩</button>` : ""}</div>`).join("")}</div>
+        body().innerHTML = `<button id="th-back" class="${btn}">← Назад</button><div class="font-bold">${r.with ? who(r.with.id, r.with.name) : ""}</div><div class="space-y-1">${r.messages.map(m => `<div class="${m.mine ? "ml-10 bg-sky-500/20" : "mr-10 theme-accent-bg-light"} p-2 rounded-xl break-words">${esc(m.text)}${attHtml(m.attach)}${!m.mine ? ` <button data-mrep="${esc(m.msgId)}" class="text-xs opacity-50" title="Поскаржитися">🚩</button>` : ""}</div>`).join("")}</div>
         <div class="flex gap-2"><input id="th-tx" class="${inp}" maxlength="1000"><button id="th-att" class="${btn}" title="Надіслати файл (до 10 МБ)">📎</button><input id="th-file" type="file" class="hidden"><button id="th-go" class="${btn} theme-btn-primary">➤</button></div><div id="th-prog" class="text-xs theme-text-secondary"></div>`;
         $("th-back").onclick = () => render();
         $("th-go").onclick = async () => { try { await call("globerDmSend", { email: r.with.email, text: $("th-tx").value }); thread(id); } catch (e) { toast(e.message); } };
@@ -5011,20 +5081,14 @@
             const m = e.target.closest("[data-mrep]"); if (m) { const msg = r.messages.find(x => x.msgId === m.dataset.mrep); ATX.report("message", m.dataset.mrep, "Повідомлення від " + (r.with ? r.with.name : ""), msg ? msg.text : ""); }
         };
     }
-    function showUser(u) {
-        body().innerHTML = `<button id="u-back" class="${btn}">← Назад</button>` + card(u, u.titles.length ? " · 🏆 " + u.titles.join(", ") : "") +
-            `<div class="flex flex-wrap gap-2">${Object.keys(u.socials || {}).map(k => `<a class="${btn}" target="_blank" rel="noopener noreferrer" href="${esc(u.socials[k])}">${esc(k)}</a>`).join("") || "<span class='theme-text-secondary'>Соцмереж немає.</span>"}</div>` +
-            (u.achievements.length ? `<div>🎖 ${u.achievements.map(esc).join(" · ")}</div>` : "") +
-            (u.role === "Учитель" ? `<div class="font-bold">Стіна привітань</div>${u.cards.length ? u.cards.map(c => `<div class="p-2 rounded-xl border theme-border"><b>${esc(c.from)}</b> · ${c.gems} 💎<div>${esc(c.text)}</div></div>`).join("") : "<div class='theme-text-secondary'>Поки порожньо.</div>"}` : "");
-        $("u-back").onclick = () => render();
-    }
+    function showUser(u) { openProfile(u.userId); }
 
     /* --- картки --- */
     async function cards() {
         body().innerHTML = `<div class="font-bold">Вітальна картка вчителю (5–5000 💎, залишається на його профілі назавжди)</div>
-        <input id="cd-to" class="${inp}" placeholder="Пошта вчителя" value="${esc($("hb-tabs").dataset.pre || "")}"><input id="cd-g" type="number" min="5" max="5000" class="${inp}" placeholder="Скільки 💎">
+        <input id="cd-to" class="${inp}" placeholder="Пошта вчителя" value="${esc(cardTo ? cardTo.name : ($("hb-tabs").dataset.pre || ""))}"><input id="cd-g" type="number" min="5" max="5000" class="${inp}" placeholder="Скільки 💎">
         <textarea id="cd-tx" maxlength="300" class="${inp}" rows="3" placeholder="Текст привітання"></textarea><button id="cd-go" class="${btn} theme-btn-primary">Подарувати</button>`;
-        $("cd-go").onclick = async () => { try { await call("globerCardSend", { email: $("cd-to").value, gems: Number($("cd-g").value), text: $("cd-tx").value }); toast("Картку подаровано 🎁"); await load(); render(); } catch (e) { toast(e.message); } };
+        $("cd-go").onclick = async () => { try { await call("globerCardSend", Object.assign(cardTo && $("cd-to").value === cardTo.name ? { userId: cardTo.id } : { email: $("cd-to").value }, { gems: Number($("cd-g").value), text: $("cd-tx").value })); cardTo = null; toast("Картку подаровано 🎁"); await load(); render(); } catch (e) { toast(e.message); } };
     }
 
     /* --- класи (стиль Google Classroom) --- */
@@ -5038,7 +5102,7 @@
         body().innerHTML = `<div class="flex flex-wrap gap-2"><input id="cl-code" class="${inp} flex-1" placeholder="Код класу"><button id="cl-join" class="${btn} theme-btn-primary">Приєднатися</button></div>
         ${r.canCreate ? `<div class="flex flex-wrap gap-2"><input id="cl-name" class="${inp} flex-1" placeholder="Назва класу (8-А)"><button id="cl-new" class="${btn}">＋ Створити клас</button></div>` : ""}
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${r.classes.map(c => `<div data-open="${esc(c.classId)}" class="rounded-2xl border theme-border overflow-hidden cursor-pointer hover:shadow-lg transition">
-          <div style="background:${clColor(c.name)};color:#fff" class="p-3 h-20 flex flex-col justify-between"><div class="font-extrabold text-base truncate">${esc(c.name)}</div><div class="text-xs opacity-90 truncate">${esc(c.owner)}${c.isOwner ? " · ви вчитель" : ""}</div></div>
+          <div style="background:${clColor(c.name)};color:#fff" class="p-3 h-20 flex flex-col justify-between"><div class="font-extrabold text-base truncate">${esc(c.name)}</div><div class="text-xs opacity-90 truncate">${who(c.ownerId, c.owner)}${c.isOwner ? " · ви вчитель" : ""}</div></div>
           <div class="p-2 text-xs theme-text-secondary flex justify-between"><span>👥 ${c.members} уч.</span>${c.isOwner ? `<span>Код: <code>${esc(c.code)}</code></span>` : "<span>Відкрити →</span>"}</div></div>`).join("") || "<div class='theme-text-secondary sm:col-span-2'>Ви ще не в жодному класі. Введіть код від вчителя" + (r.canCreate ? " або створіть власний клас." : ".") + "</div>"}</div>
         <details class="pt-1"><summary class="font-bold cursor-pointer">🏅 Рейтинг класів</summary><div class="space-y-1 pt-2">${bd.board.map((c, i) => `<div class="p-2 rounded-xl border theme-border">${i + 1}. <b>${esc(c.name)}</b> · ${c.members} уч. · скарбничка ${c.vault} 💎 · цього місяця ${c.month}</div>`).join("") || "<div class='theme-text-secondary'>Класів поки немає.</div>"}<div class="text-xs theme-text-secondary">Щомісяця переможний клас отримує бонус 💎 для кожного учасника.</div></div></details>`;
         $("cl-join").onclick = async () => { try { const j = await call("globerClassJoin", { code: $("cl-code").value }); toast("Ви у класі " + j.joined); curSub = "stream"; openClass(j.classId); } catch (e) { toast(e.message); } };
@@ -5070,7 +5134,7 @@
                 : p.my ? (p.my.grade !== null ? `<span class="text-xs font-bold text-emerald-600">✅ Оцінка: ${gradeTxt(p.my.grade, p.my.max)}</span>` : `<span class="text-xs font-bold text-sky-600">📤 Здано${p.my.late ? " (із запізненням)" : ""}</span>`) : `<span class="text-xs font-bold ${p.closed ? "text-red-500" : "text-amber-600"}">${p.closed ? "🔒 Не здано — закрито" : "❗ Не здано"}</span>`;
             return `<div data-post="${esc(p.postId)}" class="rounded-2xl border theme-border p-3 space-y-1.5 cursor-pointer hover:shadow-md transition ${p.hidden ? "opacity-60" : ""}">
               <div class="flex items-center gap-2">${circ(p.kind === "assignment" ? col : "#64748b", p.kind === "assignment" ? "📝" : ini(p.author))}
-                <div class="min-w-0 flex-1"><div class="font-bold truncate">${p.kind === "assignment" ? esc(p.title) : esc(p.author)}</div><div class="text-xs theme-text-secondary">${p.kind === "assignment" ? esc(p.author) + " · завдання · " : ""}${fmtDt(p.createdAt)}${p.dueAt ? " · ⏰ до " + fmtDt(p.dueAt) : ""}</div></div>
+                <div class="min-w-0 flex-1"><div class="font-bold truncate">${p.kind === "assignment" ? esc(p.title) : who(p.authorId, p.author)}</div><div class="text-xs theme-text-secondary">${p.kind === "assignment" ? who(p.authorId, p.author) + " · завдання · " : ""}${fmtDt(p.createdAt)}${p.dueAt ? " · ⏰ до " + fmtDt(p.dueAt) : ""}</div></div>
                 ${T ? `<button data-pin="${esc(p.postId)}" data-v="${p.pinned ? 0 : 1}" class="px-1 text-gray-400 hover:text-amber-500" title="${p.pinned ? "Відкріпити" : "Закріпити"}">📌</button><button data-del="${esc(p.postId)}" class="px-1 text-gray-400 hover:text-red-500" title="Видалити">🗑</button>` : ""}</div>
               <div>${postBadges(p)}</div>
               ${p.kind !== "assignment" && p.title ? `<div class="font-bold">${esc(p.title)}</div>` : ""}${p.text ? `<div class="whitespace-pre-wrap break-words line-clamp-4">${esc(p.text)}</div>` : ""}
@@ -5095,14 +5159,14 @@
         if (curSub === "work") main = works.length ? works.map(card).join("") : "<div class='theme-text-secondary'>Завдань поки немає.</div>";
         else if (curSub === "grades") main = `<div id="cl-grades" class="space-y-2"><div class="theme-text-secondary">Завантаження журналу…</div></div>`;
         else if (curSub === "people") main = `<div class="text-xl font-extrabold pb-1 border-b" style="color:${col};border-color:${col}">Вчителі</div>
-          <div class="flex items-center gap-2 py-2">${circ(col, ini(c.owner))}<b class="flex-1">${esc(c.owner)}</b><span class="text-xs theme-text-secondary">власник</span></div>
-          ${r.teachers.map(t => `<div class="flex items-center gap-2 py-1">${circ(col, ini(t.name))}<span class="flex-1">${esc(t.name)}</span><span class="text-xs theme-text-secondary">співвикладач</span>${c.isOwner ? `<button data-tdel="${esc(t.userId)}" class="px-2 text-red-500" title="Прибрати">✕</button>` : ""}</div>`).join("")}
+          <div class="flex items-center gap-2 py-2">${circ(col, ini(c.owner))}<b class="flex-1">${who(c.ownerId, c.owner)}</b><span class="text-xs theme-text-secondary">власник</span></div>
+          ${r.teachers.map(t => `<div class="flex items-center gap-2 py-1">${circ(col, ini(t.name))}<span class="flex-1">${who(t.userId, t.name)}</span><span class="text-xs theme-text-secondary">співвикладач</span>${c.isOwner ? `<button data-tdel="${esc(t.userId)}" class="px-2 text-red-500" title="Прибрати">✕</button>` : ""}</div>`).join("")}
           ${c.isOwner ? `<div class="flex gap-2 pt-1"><input id="cl-tmail" class="${inp}" placeholder="Пошта вчителя, щоб додати як співвикладача"><button id="cl-tadd" class="${btn}">＋ Додати</button></div>` : ""}
           <div class="text-xl font-extrabold pb-1 border-b flex justify-between mt-3" style="color:${col};border-color:${col}"><span>Учні</span><span class="text-sm">${r.students.length}</span></div>
-          ${r.students.map(st => `<div class="flex items-center gap-2 py-1.5">${circ("#64748b", ini(st.name))}<span class="flex-1">${esc(st.name)}</span><span class="text-xs theme-text-secondary">${st.gems} 💎</span>${T ? `<button data-sdel="${esc(st.userId)}" data-sname="${esc(st.name)}" class="px-2 text-red-500" title="Видалити з класу">✕</button>` : ""}</div>`).join("") || "<div class='theme-text-secondary'>Учнів поки немає.</div>"}`;
+          ${r.students.map(st => `<div class="flex items-center gap-2 py-1.5">${circ("#64748b", ini(st.name))}<span class="flex-1">${who(st.userId, st.name)}</span><span class="text-xs theme-text-secondary">${st.gems} 💎</span>${T ? `<button data-sdel="${esc(st.userId)}" data-sname="${esc(st.name)}" class="px-2 text-red-500" title="Видалити з класу">✕</button>` : ""}</div>`).join("") || "<div class='theme-text-secondary'>Учнів поки немає.</div>"}`;
         else main = composer + (r.posts.length ? r.posts.map(card).join("") : "<div class='theme-text-secondary'>У стрічці поки порожньо.</div>");
         body().innerHTML = `<div class="flex gap-2"><button id="cl-back" class="${btn}">← Усі класи</button>${!c.isOwner ? `<button id="cl-rep" class="${btn}" title="Поскаржитися на клас">🚩 Скарга</button>` : ""}</div>
-        <div class="rounded-2xl p-4 text-white" style="background:${col}"><div class="text-2xl font-extrabold break-words">${esc(c.name)}</div><div class="text-sm opacity-90">${esc(c.owner)}</div>${T ? `<div class="text-xs mt-2 opacity-90">Код класу: <code class="bg-white/20 px-1.5 py-0.5 rounded">${esc(c.code)}</code></div>` : ""}</div>
+        <div class="rounded-2xl p-4 text-white" style="background:${col}"><div class="text-2xl font-extrabold break-words">${esc(c.name)}</div><div class="text-sm opacity-90">${who(c.ownerId, c.owner)}</div>${T ? `<div class="text-xs mt-2 opacity-90">Код класу: <code class="bg-white/20 px-1.5 py-0.5 rounded">${esc(c.code)}</code></div>` : ""}</div>
         <div class="flex gap-1 border-b theme-border">${[["stream", "Стрічка"], ["work", "Завдання"], ["grades", "Оцінки"], ["people", "Учасники"]].map(t => `<button data-sub="${t[0]}" class="px-3 py-2 text-xs font-bold" style="${curSub === t[0] ? `color:${col};border-bottom:3px solid ${col}` : ""}">${t[1]}</button>`).join("")}</div>
         <div class="space-y-3">${main}</div>${c.isOwner ? `<button id="cl-delclass" class="${btn} text-red-500">🗑 Видалити клас</button>` : `<button id="cl-leave" class="${btn} text-red-500">Покинути клас</button>`}`;
         $("cl-back").onclick = () => render();
@@ -5149,7 +5213,7 @@
         const cell = x => x.status === "graded" ? `<b>${gradeTxt(x.grade, x.max)}</b>` : x.status === "submitted" ? "📤" : x.status === "late" ? "⚠📤" : x.status === "missing" ? "<span class='text-red-500'>✗</span>" : "·";
         if (!g.posts.length) return void (el.innerHTML = "<div class='theme-text-secondary'>Оцінюваних завдань поки немає.</div>");
         el.innerHTML = `<div class="overflow-x-auto"><table class="text-xs w-full border-collapse"><thead><tr><th class="text-left p-1.5 border-b theme-border">Учень</th>${g.posts.map(p => `<th class="p-1.5 border-b theme-border" title="${esc(p.title)}">${esc(p.title.slice(0, 14))}<div class="font-normal opacity-60">/${p.scaleMax}</div></th>`).join("")}</tr></thead>
-          <tbody>${g.students.map(s => `<tr><td class="p-1.5 border-b theme-border whitespace-nowrap">${esc(s.name)}</td>${s.cells.map(x => `<td class="p-1.5 border-b theme-border text-center" title="${esc(x.feedback)}">${cell(x)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+          <tbody>${g.students.map(s => `<tr><td class="p-1.5 border-b theme-border whitespace-nowrap">${who(s.userId, s.name)}</td>${s.cells.map(x => `<td class="p-1.5 border-b theme-border text-center" title="${esc(x.feedback)}">${cell(x)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
           <div class="text-[11px] theme-text-secondary">📤 здано, не оцінено · ⚠ із запізненням · ✗ не здано · Н/А = 0 у 12-бальній системі</div>
           ${c.isTeacher ? `<button id="gr-csv" class="${btn}">⬇ Завантажити журнал (CSV)</button>` : ""}`;
         if ($("gr-csv")) $("gr-csv").onclick = () => {
@@ -5190,13 +5254,13 @@
         }
         if (A && T) {
             work = `<div class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-bold">Роботи учнів · шкала 0–${p.scaleMax}${p.scaleMax === 12 ? " (0 = Н/А)" : ""} · здано ${p.stats.submitted}/${p.stats.total}</div>
-              ${(r.subs || []).map((x, i) => { const s = x.sub, sid = esc(x.studentId); return `<div class="rounded-xl border theme-border p-2 space-y-1.5"><div class="flex items-center gap-2 flex-wrap"><b class="flex-1">${esc(x.name)}</b>
+              ${(r.subs || []).map((x, i) => { const s = x.sub, sid = esc(x.studentId); return `<div class="rounded-xl border theme-border p-2 space-y-1.5"><div class="flex items-center gap-2 flex-wrap"><b class="flex-1">${who(x.studentId, x.name)}</b>
                 <span class="text-xs ${s && s.kind !== "none" ? (s.late ? "text-amber-600" : "text-emerald-600") : "text-red-500"}">${s && s.kind !== "none" ? (tl[s.kind] + " · " + fmtDt(s.submittedAt) + (s.late ? " · із запізненням" : "")) : "не здано"}</span></div>
                 ${s && s.kind !== "none" ? subBody(s) : ""}
                 <div class="flex flex-wrap gap-2 items-center"><input id="gr-${sid}" type="number" min="0" max="${p.scaleMax}" step="${p.scaleMax === 12 ? 1 : "any"}" class="${inp} !w-24" placeholder="0–${p.scaleMax}" value="${s && s.grade !== null ? s.grade : ""}"><input id="gf-${sid}" class="${inp} flex-1" maxlength="1000" placeholder="Коментар до оцінки" value="${esc(s ? s.feedback : "")}"><button data-grade="${sid}" class="${btn} theme-btn-primary">Оцінити</button></div></div>`; }).join("") || "<div class='theme-text-secondary'>У класі немає учнів.</div>"}</div>`;
         }
         const cm = r.comments, pub = cm.filter(m => !m.isPrivate), prv = cm.filter(m => m.isPrivate);
-        const one = m => `<div class="p-2 rounded-xl ${m.mine ? "bg-sky-500/15" : "theme-accent-bg-light"} text-sm"><div class="flex items-center gap-2 text-xs"><b>${esc(m.author)}</b>${m.teacher ? "<span class='px-1 rounded theme-badge'>вчитель</span>" : ""}<span class="theme-text-secondary flex-1">${fmtDt(m.createdAt)}</span>
+        const one = m => `<div class="p-2 rounded-xl ${m.mine ? "bg-sky-500/15" : "theme-accent-bg-light"} text-sm"><div class="flex items-center gap-2 text-xs"><b>${who(m.authorId, m.author)}</b>${m.teacher ? "<span class='px-1 rounded theme-badge'>вчитель</span>" : ""}<span class="theme-text-secondary flex-1">${fmtDt(m.createdAt)}</span>
           ${m.mine || T ? `<button data-cdel="${esc(m.commentId)}" class="text-gray-400 hover:text-red-500">🗑</button>` : ""}${!m.mine ? `<button data-crep="${esc(m.commentId)}" class="text-gray-400 hover:text-red-500" title="Поскаржитися">🚩</button>` : ""}</div><div class="whitespace-pre-wrap break-words">${esc(m.text)}</div></div>`;
         let priv;
         if (!T) priv = `<div class="space-y-2"><div class="font-bold">🔒 Особисті коментарі вчителю <span class="text-xs font-normal theme-text-secondary">(бачите лише ви та вчителі)</span></div>${prv.map(one).join("")}<div class="flex gap-2"><input id="pc-tx" class="${inp}" maxlength="1000" placeholder="Особисте повідомлення вчителю"><button id="pc-go" class="${btn}">➤</button></div></div>`;
@@ -5205,7 +5269,7 @@
             priv = `<div class="space-y-2"><div class="font-bold">🔒 Особисті коментарі</div>${Object.keys(by).map(k => `<div class="space-y-1"><div class="text-xs font-bold">${esc(nm(k))}</div>${by[k].map(one).join("")}</div>`).join("") || "<div class='text-xs theme-text-secondary'>Особистих повідомлень немає.</div>"}
               <div class="flex gap-2"><select id="pc-who" class="${inp} !w-40">${r.students.map(s => `<option value="${esc(s.userId)}">${esc(s.name)}</option>`).join("")}</select><input id="pc-tx" class="${inp}" maxlength="1000" placeholder="Особисте повідомлення учню"><button id="pc-go" class="${btn}">➤</button></div></div>`; }
         body().innerHTML = `<div class="flex gap-2"><button id="po-back" class="${btn}">← До класу</button><button id="po-rep" class="${btn}" title="Поскаржитися на публікацію">🚩</button></div>
-          <div class="rounded-2xl p-4 text-white" style="background:${col}"><div class="text-xl font-extrabold break-words">${esc(p.title || p.author)}</div><div class="text-xs opacity-90">${esc(p.author)} · ${fmtDt(p.createdAt)}${p.dueAt ? " · ⏰ дедлайн " + fmtDt(p.dueAt) : ""}</div></div>
+          <div class="rounded-2xl p-4 text-white" style="background:${col}"><div class="text-xl font-extrabold break-words">${esc(p.title || p.author)}</div><div class="text-xs opacity-90">${who(p.authorId, p.author)} · ${fmtDt(p.createdAt)}${p.dueAt ? " · ⏰ дедлайн " + fmtDt(p.dueAt) : ""}</div></div>
           <div>${postBadges(p)}</div>${p.text ? `<div class="whitespace-pre-wrap break-words">${esc(p.text)}</div>` : ""}${attHtml(p.attach)}
           ${p.test ? `<button data-run="${esc(p.test.id)}" class="${btn} theme-btn-primary">▶ Відкрити тест: ${esc(p.test.title)}</button>` : ""}${work}
           <div class="space-y-2"><div class="font-bold">💬 Коментарі класу</div>${pub.map(one).join("") || "<div class='text-xs theme-text-secondary'>Коментарів поки немає.</div>"}<div class="flex gap-2"><input id="pb-tx" class="${inp}" maxlength="1000" placeholder="Публічний коментар для класу"><button id="pb-go" class="${btn}">➤</button></div></div>${priv}`;
@@ -5252,14 +5316,14 @@
         $("fb-go").onclick = () => { const t = $("fb-ty").value; ATX.report(t, $("fb-id").value.trim() || "—", $("fb-id").value); };
         if (me.isAdmin) {
             const rp = await call("globerCxReports", { status: "new" }), RN = { inappropriate: "недоречне", abuse: "образи", spam: "спам", cheating: "списування", wrong: "помилка", other: "інше" };
-            $("fb-admin").innerHTML = `<div class="font-bold pt-2">🛡 Нові скарги (${rp.reports.length})</div>` + (rp.reports.map(x => `<div class="p-2 rounded-xl border theme-border text-xs space-y-1"><div><b>${esc(x.targetType)}</b> · ${esc(RN[x.reason] || x.reason)} · від ${esc(x.reporter)} · ${fmtDt(x.createdAt)}</div>${x.quote ? `<div class="p-1.5 rounded theme-accent-bg-light break-words">${esc(x.quote)}</div>` : ""}${x.text ? `<div class="break-words">${esc(x.text)}</div>` : ""}<div class="text-[10px] opacity-60 break-all">${esc(x.targetId)}</div><div class="flex gap-1"><button data-rh="${esc(x.reportId)}" data-st="done" class="${btn}">✅ Розглянуто</button><button data-rh="${esc(x.reportId)}" data-st="rejected" class="${btn}">Відхилити</button></div></div>`).join("") || "<div class='theme-text-secondary text-xs'>Нових скарг немає.</div>");
+            $("fb-admin").innerHTML = `<div class="font-bold pt-2">🛡 Нові скарги (${rp.reports.length})</div>` + (rp.reports.map(x => `<div class="p-2 rounded-xl border theme-border text-xs space-y-1"><div><b>${esc(x.targetType)}</b> · ${esc(RN[x.reason] || x.reason)} · від ${who(x.reporterId, x.reporter)} · ${fmtDt(x.createdAt)}</div>${x.quote ? `<div class="p-1.5 rounded theme-accent-bg-light break-words">${esc(x.quote)}</div>` : ""}${x.text ? `<div class="break-words">${esc(x.text)}</div>` : ""}<div class="text-[10px] opacity-60 break-all">${esc(x.targetId)}</div><div class="flex gap-1"><button data-rh="${esc(x.reportId)}" data-st="done" class="${btn}">✅ Розглянуто</button><button data-rh="${esc(x.reportId)}" data-st="rejected" class="${btn}">Відхилити</button></div></div>`).join("") || "<div class='theme-text-secondary text-xs'>Нових скарг немає.</div>");
             $("fb-admin").onclick = async e => { const k = e.target.closest("[data-rh]"); if (!k) return; try { await call("globerCxReportHandle", { reportId: k.dataset.rh, status: k.dataset.st }); render(); } catch (er) { toast(er.message); } };
         }
     }
 
     /* --- ліга --- */
     async function league() {
-        const r = await call("globerLeague"), list = a => a.length ? a.map((x, i) => `<div>${["🥇", "🥈", "🥉"][i] || i + 1 + "."} ${esc(x.name)} — ${x.score}</div>`).join("") : "<div class='theme-text-secondary'>Поки порожньо.</div>";
+        const r = await call("globerLeague"), list = a => a.length ? a.map((x, i) => `<div>${["🥇", "🥈", "🥉"][i] || i + 1 + "."} ${who(x.userId, x.name)} — ${x.score}</div>`).join("") : "<div class='theme-text-secondary'>Поки порожньо.</div>";
         body().innerHTML = `<div class="font-bold">Ліга ${esc(r.month)} · учні (гемі)</div>${list(r.now.students)}<div class="font-bold">Ліга ${esc(r.month)} · вчителі (здані роботи на олімпіадах)</div>${list(r.now.teachers)}
         <div class="pt-2 border-t theme-border font-bold">Чемпіони ${esc(r.prevMonth)} — «Чемпіон місяця»</div>${list(r.prev.students.slice(0, 1))}${list(r.prev.teachers.slice(0, 1))}`;
     }
@@ -5269,10 +5333,10 @@
     async function duel() {
         const r = await call("globerDuelList");
         body().innerHTML = `<div class="font-bold">Викликати друга (без ставок 💎; тест генерують Екзаменатор #17 + Анонімайзер #22; −1 🔑)</div>
-        <div class="grid grid-cols-3 gap-2"><input id="du-to" class="${inp}" placeholder="Пошта друга"><input id="du-s" class="${inp}" placeholder="Предмет"><input id="du-t" class="${inp}" placeholder="Тема"></div><button id="du-go" class="${btn} theme-btn-primary">Кинути виклик ⚔️</button>
-        <div class="font-bold pt-2">Мої дуелі</div>${r.duels.map(d => `<div class="p-2 rounded-xl border theme-border flex items-center justify-between gap-2"><div><b>${esc(d.subject)}: ${esc(d.topic)}</b><div class="text-xs">${d.mine ? "Ви → " : "Від "}${esc(d.opponent)} · ${stTxt[d.status] || d.status}${d.oppScore !== null ? ` · ${d.myScore}:${d.oppScore} ${d.winner === "me" ? "🏆 перемога" : d.winner === "opp" ? "поразка" : d.winner === "draw" ? "нічия" : ""}` : ""}.</div></div>
+        <div class="grid grid-cols-3 gap-2"><input id="du-to" class="${inp}" placeholder="Пошта друга" value="${esc(duelTo ? duelTo.name : "")}"><input id="du-s" class="${inp}" placeholder="Предмет"><input id="du-t" class="${inp}" placeholder="Тема"></div><button id="du-go" class="${btn} theme-btn-primary">Кинути виклик ⚔️</button>
+        <div class="font-bold pt-2">Мої дуелі</div>${r.duels.map(d => `<div class="p-2 rounded-xl border theme-border flex items-center justify-between gap-2"><div><b>${esc(d.subject)}: ${esc(d.topic)}</b><div class="text-xs">${d.mine ? "Ви → " : "Від "}${who(d.oppId, d.opponent)} · ${stTxt[d.status] || d.status}${d.oppScore !== null ? ` · ${d.myScore}:${d.oppScore} ${d.winner === "me" ? "🏆 перемога" : d.winner === "opp" ? "поразка" : d.winner === "draw" ? "нічия" : ""}` : ""}.</div></div>
           <div class="flex gap-1">${d.status === "pending" && !d.mine ? `<button data-ac="${d.duelId}" class="${btn} theme-btn-primary">Прийняти</button><button data-no="${d.duelId}" class="${btn}">Ні</button>` : ""}${d.status === "active" && !d.iSubmitted ? `<button data-play="${d.duelId}" class="${btn} theme-btn-primary">Грати</button>` : ""}</div></div>`).join("") || "<div class='theme-text-secondary'>Дуелей ще немає.</div>"}`;
-        $("du-go").onclick = async () => { $("du-go").disabled = true; toast("Агенти складають унікальний тест…"); try { await call("globerDuelCreate", { email: $("du-to").value, subject: $("du-s").value, topic: $("du-t").value }); toast("Виклик надіслано."); await load(); } catch (e) { toast(e.message); } render(); };
+        $("du-go").onclick = async () => { $("du-go").disabled = true; toast("Агенти складають унікальний тест…"); try { await call("globerDuelCreate", Object.assign(duelTo && $("du-to").value === duelTo.name ? { userId: duelTo.id } : { email: $("du-to").value }, { subject: $("du-s").value, topic: $("du-t").value })); duelTo = null; toast("Виклик надіслано."); await load(); } catch (e) { toast(e.message); } render(); };
         body().onclick = async e => {
             const d = e.target.dataset;
             try {
@@ -5474,7 +5538,7 @@
           <div id="rv-st" class="text-3xl cursor-pointer select-none text-amber-400"></div>
           <textarea id="rv-t" rows="3" maxlength="500" class="${IN}" placeholder="Ваш відгук (необов'язково)">${esc(s.mine ? s.mine.text : "")}</textarea>
           <div class="flex gap-2 justify-end"><button id="rv-x" class="${BT}">Закрити</button><button id="rv-go" class="${BT} theme-btn-primary">Зберегти відгук</button></div>
-          ${s.recent.length ? `<div class="pt-2 border-t theme-border space-y-1 text-xs">${s.recent.map(r => `<div><b>${esc(r.name)}</b> <span class="text-amber-400">${stars(r.rating)}</span><div class="break-words">${esc(r.text)}</div></div>`).join("")}</div>` : ""}`);
+          ${s.recent.length ? `<div class="pt-2 border-t theme-border space-y-1 text-xs">${s.recent.map(r => `<div><b>${window.pfLink ? window.pfLink(r.userId, r.name) : esc(r.name)}</b> <span class="text-amber-400">${stars(r.rating)}</span><div class="break-words">${esc(r.text)}</div></div>`).join("")}</div>` : ""}`);
         const paint = () => { m.querySelector("#rv-st").innerHTML = [1, 2, 3, 4, 5].map(i => `<span data-s="${i}">${i <= rating ? "★" : "☆"}</span>`).join(""); };
         paint(); m.querySelector("#rv-st").onclick = e => { const v = e.target.dataset && e.target.dataset.s; if (v) { rating = +v; paint(); } };
         m.querySelector("#rv-x").onclick = () => m.remove();
@@ -5521,7 +5585,7 @@
             if (k.dataset.cx === "rate") review("ai", "glober"); else report("ai", "glober", "Відповідь Glober AI", host && host._raw ? host._raw.slice(0, 500) : "");
         });
     }
-    setTimeout(decorate, 1500); setInterval(decorate, 4000);
+    setTimeout(decorate, 1500); setInterval(() => { if (!document.hidden) decorate(); }, 4000);
     window.ATX = { upload, download, report, review, fmtSize, esc, modal };
 })();
 </script>
