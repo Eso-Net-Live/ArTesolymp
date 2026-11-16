@@ -234,7 +234,7 @@
                 </button>
 
                 <button onclick="showSection('profile'); loadProfile();" id="profile-nav-btn" class="hidden px-3.5 py-2 rounded-xl text-sm font-semibold border theme-border theme-bg-card hover:border-sky-400 shadow-sm">
-                    <i class="fa-solid fa-id-card theme-accent-color"></i> <span class="hidden sm:inline">Профіль</span>
+                    <i class="fa-solid fa-id-card theme-accent-color"></i> <span id="profile-nav-text" class="hidden sm:inline-block max-w-[140px] truncate align-bottom">Профіль</span>
                 </button>
 
                 <!-- Desktop Client Button -->
@@ -1094,7 +1094,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbxdPOqAjZT4YVAqyzYsdxGRUjmCrjt9P23SFzQrC7Gl6hwD_voctGD4K-9-kUCaGvkI/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbz783dS-dZTQQoATitPAlvDB1ccgMvMXJZFfLxq46yZj7LpC9Vbn8BqO6QCC2YQgrCB/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -1488,8 +1488,12 @@
         }
         function applyCurrentUserUI() {
             const loggedIn = Boolean(authToken && currentUser && currentUser.email);
-            document.getElementById('auth-nav-text').innerText = loggedIn ? (currentUser.name || currentUser.email).split(" ")[0] : "Вхід / Реєстрація";
-            document.getElementById('profile-nav-btn').classList.toggle('hidden', !loggedIn);
+            const nm = loggedIn ? String(currentUser.name || currentUser.email).trim() : "";
+            document.getElementById('auth-nav-btn').classList.toggle('hidden', loggedIn);
+            const pb = document.getElementById('profile-nav-btn'), pt = document.getElementById('profile-nav-text');
+            pb.classList.toggle('hidden', !loggedIn);
+            if (pt) pt.textContent = nm || "Профіль";
+            pb.title = loggedIn ? "Профіль: " + nm : "Профіль"; pb.setAttribute('aria-label', pb.title);
         }
 
         async function refreshFromServer() {
@@ -4881,10 +4885,25 @@
         return `<div style="box-shadow:${ring};border-radius:50%;display:inline-block">${inner}</div>`;
     }
     function nameHtml(p) { return `<span style="color:${NC[p.nameColor] || "inherit"};font-weight:800">${esc(p.title ? "[" + p.title + "] " : "")}${esc(p.name)}</span>`; }
-    function card(p, extra) { return `<div class="rounded-2xl p-3 flex items-center gap-3" style="background:${BG[p.bg] || "transparent"};${BG[p.bg] ? "color:#fff" : ""}">${avatar(p)}<div class="min-w-0">${nameHtml(p)}<div class="text-xs opacity-80">${esc(p.role || "")}${extra || ""}</div></div></div>`; }
+    const BADGE_INFO = {
+        guest: ["Особливий гість", "Представник партнерської організації або запрошена особа."],
+        admin: ["Адміністратор", "Керує платформою ArTesolymp і стежить за порядком."],
+        teacher: ["Офіційний вчитель / журі", "Підтверджений вчитель, викладач або член журі олімпіад."],
+        banned: ["Заблоковано", "Акаунт заблоковано: вхід недоступний."],
+        warn: ["Попередження", "Є порушення правил. Наступне може призвести до блокування акаунта."],
+        active: ["Активний учасник", "Регулярно бере участь в олімпіадах і житті спільноти."],
+        winner: ["Переможець", "Переможець або призер олімпіад на платформі."],
+        tester: ["Тестувач", "Допомагає перевіряти нові функції платформи."]
+    };
+    function badgeHtml(b) {
+        if (!b || !BADGE_INFO[b.key]) return "";
+        const i = BADGE_INFO[b.key], title = b.note ? i[0] + ": " + b.note : i[0], tip = title + ". " + i[1];
+        return `<span class="bdg bdg-${esc(b.key)}" tabindex="0" role="note" aria-label="${esc(tip)}" data-tip="${esc(tip)}"><span class="bi">${esc(b.icon)}</span>${esc(b.note || i[0])}</span>`;
+    }
+    function card(p, extra) { return `<div class="rounded-2xl p-3 flex items-center gap-3" style="background:${BG[p.bg] || "transparent"};${BG[p.bg] ? "color:#fff" : ""}">${avatar(p)}<div class="min-w-0">${nameHtml(p)}${badgeHtml(p.badge)}<div class="text-xs opacity-80">${esc(p.role || "")}${extra || ""}</div></div></div>`; }
 
     /* ===== перегляд профілю будь-якого користувача (дуелі, ЛС, класи, ліга, автор олімпіади, результати…) ===== */
-    (function () { const st = document.createElement("style"); st.textContent = ".pf-link{cursor:pointer}.pf-link:hover{text-decoration:underline;color:#0ea5e9}.pf-link:focus-visible{outline:2px solid #0ea5e9;border-radius:4px}#tests-grid>div{content-visibility:auto;contain-intrinsic-size:auto 280px}"; document.head.appendChild(st); })();
+    (function () { const st = document.createElement("style"); st.textContent = ".pf-link{cursor:pointer}.pf-link:hover{text-decoration:underline;color:#0ea5e9}.pf-link:focus-visible{outline:2px solid #0ea5e9;border-radius:4px}#tests-grid>div{content-visibility:auto;contain-intrinsic-size:auto 280px}"+'.bdg{--c:#64748b;display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:1px 8px;border-radius:999px;border:2px solid var(--c);color:var(--c);background:color-mix(in srgb,var(--c) 13%,transparent);font-size:11px;font-weight:800;line-height:1.5;position:relative;cursor:help;vertical-align:middle;transition:transform .2s,box-shadow .25s;outline:none}\n.bdg .bi{display:inline-block}\n.bdg:hover,.bdg:focus{transform:translateY(-1px);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 28%,transparent),0 0 14px color-mix(in srgb,var(--c) 55%,transparent)}\n.bdg::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 8px);width:max-content;max-width:230px;padding:8px 10px;border-radius:12px;background:#0f172a;color:#f8fafc;border:1px solid var(--c);font-size:11px;font-weight:600;line-height:1.35;white-space:normal;text-align:left;text-transform:none;opacity:0;pointer-events:none;transform:translateY(-4px);transition:opacity .15s,transform .15s;z-index:140;box-shadow:0 8px 24px rgba(0,0,0,.35)}\n.bdg:hover::after,.bdg:focus::after{opacity:1;transform:none;transition:opacity .25s ease 1.2s,transform .25s ease 1.2s}\n.bdg-guest{--c:#06b6d4}.bdg-admin{--c:#ef4444}.bdg-teacher{--c:#3b82f6}.bdg-banned{--c:#6b7280}.bdg-warn{--c:#eab308}.bdg-active{--c:#22c55e}.bdg-winner{--c:#f97316}.bdg-tester{--c:#a855f7}\n.bdg-guest:hover .bi{animation:bdgFlip 1s linear infinite}.bdg-admin:hover{animation:bdgPulse 1s ease-in-out infinite}.bdg-teacher:hover .bi{animation:bdgBounce .6s ease-in-out infinite}\n.bdg-banned:hover{animation:bdgShake .4s linear infinite}.bdg-warn:hover .bi{animation:bdgBlink .6s steps(2) infinite}.bdg-active:hover .bi{animation:bdgZap .5s ease-in-out infinite}\n.bdg-winner:hover .bi{animation:bdgWobble .8s ease-in-out infinite}.bdg-tester:hover .bi{animation:bdgBubble .7s ease-in-out infinite}\n@keyframes bdgFlip{to{transform:rotateY(360deg)}}@keyframes bdgPulse{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--c) 25%,transparent),0 0 20px var(--c)}}\n@keyframes bdgBounce{50%{transform:translateY(-4px)}}@keyframes bdgShake{25%{transform:translateX(-2px)}75%{transform:translateX(2px)}}\n@keyframes bdgBlink{50%{opacity:.2}}@keyframes bdgZap{50%{transform:scale(1.5) rotate(-12deg)}}@keyframes bdgWobble{25%{transform:rotate(-18deg)}75%{transform:rotate(18deg)}}@keyframes bdgBubble{50%{transform:translateY(-3px) scale(1.25)}}\n@media (prefers-reduced-motion:reduce){.bdg,.bdg *{animation:none!important}}'; document.head.appendChild(st); })();
     const who = (id, name) => id ? `<span data-uid="${esc(id)}" role="link" tabindex="0" class="pf-link">${esc(name)}</span>` : esc(name);
     let duelTo = null, cardTo = null;
     const PF = { cache: {}, busy: {}, hist: [], cur: null, seq: 0 };
