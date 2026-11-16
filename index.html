@@ -228,13 +228,13 @@
                 </button>
 
                 <!-- User Profile / Auth Button -->
-                <button onclick="showAuthModal()" id="auth-nav-btn" aria-label="Вхід або реєстрація" title="Вхід або реєстрація" class="flex items-center gap-2 px-2.5 sm:px-3.5 py-2 rounded-xl text-sm font-semibold border theme-border theme-bg-card hover:border-sky-400 transition-all shadow-sm">
+                <button onclick="showAuthModal()" id="auth-nav-btn" aria-label="Вхід або реєстрація" title="Вхід або реєстрація" class="hidden flex items-center gap-2 px-2.5 sm:px-3.5 py-2 rounded-xl text-sm font-semibold border theme-border theme-bg-card hover:border-sky-400 transition-all shadow-sm">
                     <i class="fa-solid fa-user-circle theme-accent-color text-base"></i>
                     <span id="auth-nav-text" class="hidden sm:inline">Вхід / Реєстрація</span>
                 </button>
 
                 <button onclick="showSection('profile'); loadProfile();" id="profile-nav-btn" class="hidden px-3.5 py-2 rounded-xl text-sm font-semibold border theme-border theme-bg-card hover:border-sky-400 shadow-sm">
-                    <i class="fa-solid fa-id-card theme-accent-color"></i> <span id="profile-nav-text" class="hidden sm:inline-block max-w-[140px] truncate align-bottom">Профіль</span>
+                    <i class="fa-solid fa-id-card theme-accent-color"></i> <span id="profile-nav-text" class="inline-block max-w-[90px] sm:max-w-[140px] truncate align-bottom">Профіль</span>
                 </button>
 
                 <!-- Desktop Client Button -->
@@ -1098,7 +1098,47 @@
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
-        let currentUser = { name: "Гість", email: "", role: "Учень" };
+        function readCachedUser() {
+            try {
+                const raw = localStorage.getItem("artesolymp_user") || sessionStorage.getItem("artesolymp_user");
+                const cached = raw ? JSON.parse(raw) : null;
+                if (cached && typeof cached.email === "string" && cached.email) {
+                    return {
+                        id: String(cached.id || ""),
+                        name: String(cached.name || cached.email),
+                        email: String(cached.email),
+                        role: String(cached.role || "Учень"),
+                        description: String(cached.description || ""),
+                        requestedRole: String(cached.requestedRole || "")
+                    };
+                }
+            } catch (_) { /* ignore an invalid local profile cache */ }
+            return { name: "Гість", email: "", role: "Учень", description: "" };
+        }
+        function cacheCurrentUser() {
+            if (!currentUser || !currentUser.email) return;
+            const safeUser = {
+                id: String(currentUser.id || ""),
+                name: String(currentUser.name || currentUser.email),
+                email: String(currentUser.email),
+                role: String(currentUser.role || "Учень"),
+                description: String(currentUser.description || ""),
+                requestedRole: String(currentUser.requestedRole || "")
+            };
+            const target = localStorage.getItem("artesolymp_remember_token") ? localStorage : sessionStorage;
+            const other = target === localStorage ? sessionStorage : localStorage;
+            try {
+                other.removeItem("artesolymp_user");
+                target.setItem("artesolymp_user", JSON.stringify(safeUser));
+            } catch (_) { /* storage may be disabled or full */ }
+        }
+        function clearCachedUser() {
+            try {
+                localStorage.removeItem("artesolymp_user");
+                sessionStorage.removeItem("artesolymp_user");
+            } catch (_) {}
+        }
+        let currentUser = readCachedUser();
 
         /* Database */
         let testsDatabase = [
@@ -1467,6 +1507,7 @@
                 if (rememberMe) localStorage.setItem("artesolymp_remember_token", authToken);
                 else sessionStorage.setItem("artesolymp_token", authToken);
                 currentUser = data.user;
+                cacheCurrentUser();
                 applyCurrentUserUI();
                 hideAuthModal();
                 if (data.teacherPending) {
@@ -1487,13 +1528,18 @@
             }
         }
         function applyCurrentUserUI() {
-            const loggedIn = Boolean(authToken && currentUser && currentUser.email);
+            const hasSessionToken = Boolean(authToken);
+            const loggedIn = Boolean(hasSessionToken && currentUser && currentUser.email);
             const nm = loggedIn ? String(currentUser.name || currentUser.email).trim() : "";
-            document.getElementById('auth-nav-btn').classList.toggle('hidden', loggedIn);
+            // Якщо токен є, не показуємо «Вхід / Реєстрація», поки триває перевірка сесії.
+            document.getElementById('auth-nav-btn').classList.toggle('hidden', hasSessionToken);
             const pb = document.getElementById('profile-nav-btn'), pt = document.getElementById('profile-nav-text');
-            pb.classList.toggle('hidden', !loggedIn);
+            pb.classList.toggle('hidden', !hasSessionToken);
+            pb.disabled = hasSessionToken && !loggedIn;
+            pb.classList.toggle('opacity-60', hasSessionToken && !loggedIn);
             if (pt) pt.textContent = nm || "Профіль";
-            pb.title = loggedIn ? "Профіль: " + nm : "Профіль"; pb.setAttribute('aria-label', pb.title);
+            pb.title = loggedIn ? "Профіль: " + nm : (hasSessionToken ? "Завантаження профілю…" : "Профіль");
+            pb.setAttribute('aria-label', pb.title);
         }
 
         async function refreshFromServer() {
@@ -1501,7 +1547,7 @@
             const hadToken = Boolean(authToken);
             try {
                 const data = await apiRequest(hadToken ? "bootstrap" : "catalog");
-                if (hadToken && data.user) currentUser = data.user;
+                if (hadToken && data.user) { currentUser = data.user; cacheCurrentUser(); }
                 const demo = testsDatabase.find(t => t.id === DEMO_TEST_ID);
                 testsDatabase = [ ...(demo ? [demo] : []), ...(data.tests || []).filter(t => t.id !== DEMO_TEST_ID) ];
                 applyCurrentUserUI();
@@ -1515,6 +1561,7 @@
                     sessionStorage.removeItem("artesolymp_token");
                     localStorage.removeItem("artesolymp_remember_token");
                     currentUser = {name:"Гість",email:"",role:"Учень",description:""};
+                    clearCachedUser();
                     applyCurrentUserUI();
                     if (hadToken) return refreshFromServer();
                 }
@@ -1529,6 +1576,7 @@
             sessionStorage.removeItem("artesolymp_token");
             localStorage.removeItem("artesolymp_remember_token");
             currentUser = {name:"Гість",email:"",role:"Учень",description:""};
+            clearCachedUser();
             applyCurrentUserUI();
             toggleAuthFields();
             renderTestsList();
@@ -1545,6 +1593,7 @@
             try {
                 const data = await apiRequest("updateProfile", {profile});
                 currentUser = data.user;
+                cacheCurrentUser();
                 applyCurrentUserUI();
                 await loadProfile();
                 showNotification("Профіль збережено.");
@@ -1687,6 +1736,7 @@
             try {
                 const data = await apiRequest("profile");
                 currentUser = data.user || currentUser;
+                cacheCurrentUser();
                 applyCurrentUserUI();
                 window.__teacherResults = data.teacherResults || [];
                 window.__createdTests = data.created || [];
