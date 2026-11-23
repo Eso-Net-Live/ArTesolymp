@@ -1094,7 +1094,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbwfwIf_Z8NiYckqju3430f_oCLIiq4aHR-IqvA7UoaO7u5SZQViRKyn9dMExZnq4SPZ/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbzFqQA9I_AIlciHsrO8n4bRSf1vpe_4CldBWFQorH7LnWFy_xRKzuhvSysszep1nePS/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -1415,7 +1415,7 @@
             document.getElementById('auth-role-field').classList.toggle('hidden', isLogin);
         }
         const _inflight = new Map();
-        const _readActions = new Set(["catalog", "bootstrap", "getTestForEdit", "pendingAttempts", "trackingResults", "globerSocMe", "globerDmInbox", "globerDuelList", "globerClassList", "globerClassBoard", "globerLeague", "globerCxClassView", "globerCxPostView", "globerCxGradebook", "globerCxReviews", "globerCxRatings"]);
+        const _readActions = new Set(["catalog", "bootstrap", "getTestForEdit", "pendingAttempts", "trackingResults", "globerSocMe", "globerDmInbox", "globerDuelList", "globerClassList", "globerClassBoard", "globerLeague", "globerCxClassView", "globerCxChat", "globerCommunityList", "globerCommunityView", "globerCxPostView", "globerCxGradebook", "globerCxReviews", "globerCxRatings"]);
         let _apiBusy = 0;
         function _apiBusyUI(start, action) {
             const label = /submit|finish|send|post|comment|avatar|upload|create|save|grade/i.test(action || "") ? "Надсилання / збереження…" : "Завантаження…";
@@ -4945,7 +4945,7 @@
     const NC = { red: "#ef4444", gold: "#eab308", cyan: "#06b6d4", pink: "#ec4899", lime: "#84cc16" };
     const NAMES = { frame: "Рамки", bg: "Фони профілю", nameColor: "Кольори імені" };
     const LBL = { frame_gold: "Золота", frame_neon: "Неон", frame_olympian: "Олімпієць", frame_sysadmin: "Сисадмін", bg_sunset: "Захід", bg_ocean: "Океан", bg_forest: "Ліс", bg_space: "Космос", nc_red: "Червоний", nc_gold: "Золотий", nc_cyan: "Блакитний", nc_pink: "Рожевий", nc_lime: "Лаймовий" };
-    let me = null, tab = "dm", duelTimer = null, curThread = null, curClass = null, curPost = null, curSub = "stream", navSeq = 0, soft = null, clTick = 0, cxPend = [];
+    let me = null, tab = "dm", duelTimer = null, curThread = null, curClass = null, curPost = null, curCommunity = null, curSub = "stream", navSeq = 0, soft = null, clTick = 0, cxPend = [];
     const cxc = {};   // кеш «показати зразу — оновити тихо»
     const call = async (a, p) => apiRequest(a, p || {});
     const toast = m => showNotification(m);
@@ -4959,7 +4959,7 @@
         <div id="hb-body" class="flex-1 overflow-y-auto p-3 text-sm space-y-3"></div>
       </div>
     </div>`);
-    const TABS = [["dm", "💬 ЛС"], ["cards", "🎁 Картки"], ["class", "🏫 Класи"], ["league", "🏅 Ліга"], ["duel", "⚔️ Дуелі"], ["build", "🧠 Конструктор"], ["fb", "⭐ Відгуки / 🚩 Скарги"]];
+    const TABS = [["dm", "💬 ЛС"], ["communities", "👥 Групи / канали"], ["cards", "🎁 Картки"], ["class", "🏫 Класи"], ["league", "🏅 Ліга"], ["duel", "⚔️ Дуелі"], ["build", "🧠 Конструктор"], ["fb", "⭐ Відгуки / 🚩 Скарги"]];
     const visibleTabs = () => me && me.isAdmin ? TABS.concat([["admin", "🛡 Адмін-панель"]]) : TABS;
     const btn = "px-3 py-2 rounded-xl border theme-border font-bold text-xs hover:border-sky-400";
     const inp = "w-full p-2 rounded-xl border theme-border theme-bg-card text-sm";
@@ -5071,6 +5071,7 @@
             `<div class="flex gap-2">${stats}</div>` +
             (acts ? `<div class="flex flex-wrap gap-2">${acts}</div>` : (!u.isMe ? "<div class='text-xs theme-text-secondary'>Користувач обмежив особисті повідомлення.</div>" : "")) +
             (soc.length ? `<div class="flex flex-wrap gap-2">${soc.map(k => `<a class="${btn}" target="_blank" rel="noopener noreferrer" href="${esc(u.socials[k])}">${esc(k)}</a>`).join("")}</div>` : "") +
+            (u.contactText ? `<div class="rounded-xl border theme-border p-3"><b>Контакт для зв’язку</b><div class="whitespace-pre-wrap break-words mt-1">${fmtAnchors(u.contactText)}</div></div>` : "") +
             (u.achievements && u.achievements.length ? `<div>🎖 ${u.achievements.map(esc).join(" · ")}</div>` : "") +
             (isT ? `<div class="font-bold">Стіна привітань</div>${u.cards && u.cards.length ? u.cards.map(c => `<div class="p-2 rounded-xl border theme-border"><b>${who(c.fromId, c.from)}</b> · ${c.gems} 💎<div class="break-words">${fmtAnchors(c.text)}</div></div>`).join("") : "<div class='theme-text-secondary'>Поки порожньо.</div>"}` : "");
     }
@@ -5095,18 +5096,44 @@
     }
     async function admin() {
         if (!me || !me.isAdmin) throw new Error("Адмін-панель доступна лише користувачам зі статусом admin.");
-        const r = await call("globerAdminOverview");
-        const stats = r.stats || {};
-        body().innerHTML = `<div class="font-black text-lg">🛡 Адмін-панель ArTesolymp</div>
-          <div class="grid grid-cols-2 md:grid-cols-5 gap-2">${[["Користувачі",stats.users],["Активні",stats.enabledUsers],["Опубліковані роботи",stats.tests],["Усі проходження",stats.attempts],["У процесі",stats.activeAttempts]].map(x => `<div class="p-3 rounded-xl border theme-border"><div class="text-xl font-black">${Number(x[1])||0}</div><div class="text-xs theme-text-secondary">${x[0]}</div></div>`).join("")}</div>
-          <div class="font-bold pt-2">Користувачі (останні ${r.users.length})</div>
-          <div class="space-y-2">${r.users.map(x => `<div class="p-3 rounded-xl border theme-border space-y-2"><div class="font-bold break-words">${esc(x.name)} <span class="text-xs theme-text-secondary">${esc(x.role)}</span></div><div class="text-xs theme-text-secondary break-all">${esc(x.email)}</div>${x.userId === me.profile.userId ? `<div class="text-xs theme-text-secondary">Це ваш обліковий запис — захищений від зміни.</div>` : `<div class="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2"><select data-adm-badge="${esc(x.userId)}" class="${inp}"><option value="" ${!x.badge ? "selected" : ""}>Без статусу</option>${[["admin","admin — адміністратор"],["teacher","teacher — вчитель"],["guest","guest — гість"],["active","active — активний"],["warn","warn — попередження"],["winner","winner — переможець"],["tester","tester — тестувальник"],["banned","banned — заблокований"]].map(v => `<option value="${v[0]}" ${x.badge === v[0] ? "selected" : ""}>${v[1]}</option>`).join("")}</select><label class="text-xs flex items-center gap-1"><input data-adm-disabled="${esc(x.userId)}" type="checkbox" ${x.disabled ? "checked" : ""}> Вимкнено</label><button data-adm-save="${esc(x.userId)}" class="${btn} theme-btn-primary">Зберегти</button></div>`}</div>`).join("") || "<div class='theme-text-secondary'>Користувачів немає.</div>"}</div>`;
+        const [r, reportData] = await Promise.all([
+            call("globerAdminOverview"),
+            call("globerCxReports", { status:"new" }).catch(() => ({ reports:[] }))
+        ]);
+        const stats = r.stats || {}, reports = reportData.reports || [];
+        const statCards = [["Користувачі",stats.users], ["Активні акаунти",stats.enabledUsers], ["Опубліковані тести",stats.tests], ["Проходження",stats.attempts], ["Активні проходження",stats.activeAttempts], ["Класи",stats.classes], ["Групи",stats.groups], ["Канали",stats.channels], ["Запрошення",stats.pendingInvites], ["Запити вчителя",stats.teacherRequests]];
+        const badgeOptions = [["","Без статусу"],["admin","Адміністратор"],["teacher","Вчитель"],["guest","Гість"],["active","Активний"],["warn","Попередження"],["winner","Переможець"],["tester","Тестувальник"],["banned","Заблокований"]];
+        body().innerHTML = `<div class="space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2"><div><div class="font-black text-xl">🛡 Центр адміністрування ArTesolymp</div><div class="text-xs theme-text-secondary">Керування акаунтами, класами, приватними спільнотами та скаргами.</div></div><button id="adm-refresh" class="${btn}">↻ Оновити дані</button></div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">${statCards.map(x => `<div class="p-3 rounded-xl border theme-border"><div class="text-xl font-black tabular-nums">${Number(x[1])||0}</div><div class="text-[11px] theme-text-secondary">${esc(x[0])}</div></div>`).join("")}</div>
+          <section class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-extrabold">👤 Облікові записи (${r.users.length} останніх, до 250)</div><input id="adm-search" class="${inp}" placeholder="Пошук за ім’ям, поштою або ID…"><div id="adm-users" class="space-y-2">${r.users.map(x => `<div class="adm-user p-3 rounded-xl border theme-border space-y-2" data-search="${esc((x.name+" "+x.email+" "+x.userId).toLowerCase())}"><div class="flex flex-wrap justify-between gap-1"><b class="break-words">${esc(x.name)}</b><span class="text-[11px] theme-text-secondary break-all">${esc(x.userId)}</span></div><div class="text-xs theme-text-secondary break-all">${esc(x.email)}</div>${x.requestedRole === "Учитель" ? `<div class="text-xs text-amber-600 font-bold">⏳ Очікує підтвердження ролі вчителя</div>` : ""}${x.userId === me.profile.userId ? `<div class="text-xs theme-text-secondary">Поточний адміністратор — захищений від зміни через цю панель.</div>` : `<div class="grid sm:grid-cols-4 gap-2"><label class="text-[11px]">Статус<select data-adm-badge="${esc(x.userId)}" class="${inp}">${badgeOptions.map(v => `<option value="${v[0]}" ${x.badge===v[0]?"selected":""}>${v[1]}</option>`).join("")}</select></label><label class="text-[11px]">Роль<select data-adm-role="${esc(x.userId)}" class="${inp}"><option value="Учень" ${x.role==="Учень"?"selected":""}>Учень</option><option value="Учитель" ${x.role==="Учитель"?"selected":""}>Учитель</option><option value="Олімпієць" ${x.role==="Олімпієць"?"selected":""}>Олімпієць</option></select></label><label class="text-[11px] flex items-center gap-2"><input data-adm-disabled="${esc(x.userId)}" type="checkbox" ${x.disabled?"checked":""}> Вимкнено</label><button data-adm-save="${esc(x.userId)}" class="${btn} theme-btn-primary self-end">Зберегти</button></div>`}</div>`).join("") || "<div class='theme-text-secondary'>Користувачів немає.</div>"}</div><div class="text-[11px] theme-text-secondary">Зміна ролі не робить користувача адміністратором. Адмін-статус задається окремо через badge або ADMIN_EMAILS.</div></section>
+          <section class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-extrabold">👥 Приватні групи та канали (${r.communities.length})</div>${r.communities.map(x => `<div class="p-2 rounded-xl border theme-border flex flex-wrap items-center gap-2"><div class="flex-1 min-w-0"><b>${x.kind==="channel"?"📣":"👥"} ${esc(x.name)}</b><div class="text-[11px] theme-text-secondary">Власник: ${esc(x.owner)} · ${x.members} учасн. · ${x.hasPassword?"🔐 пароль":"без пароля"}</div><div class="text-[10px] opacity-60 break-all">${esc(x.communityId)}</div></div><button data-adm-community-delete="${esc(x.communityId)}" class="${btn} text-red-500">Видалити</button></div>`).join("") || "<div class='text-xs theme-text-secondary'>Спільнот ще немає.</div>"}</section>
+          <section class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-extrabold">🏫 Класи (${r.classes.length})</div>${r.classes.map(x => `<div class="p-2 rounded-xl border theme-border flex flex-wrap items-center gap-2"><div class="flex-1 min-w-0"><b>${esc(x.name)}</b><div class="text-[11px] theme-text-secondary">Власник: ${esc(x.owner)} · ${x.members} учасн. · код ${esc(x.code)}</div><div class="text-[10px] opacity-60 break-all">${esc(x.classId)}</div></div><button data-adm-class-delete="${esc(x.classId)}" class="${btn} text-red-500">Видалити</button></div>`).join("") || "<div class='text-xs theme-text-secondary'>Класів ще немає.</div>"}</section>
+          <section class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-extrabold">🚩 Черга скарг (${reports.length})</div>${reports.map(x => `<div class="p-2 rounded-xl border theme-border text-xs space-y-1"><div><b>${esc(x.targetType)}</b> · ${esc(x.reason)} · від ${esc(x.reporter || "користувач")}</div>${x.quote?`<div class="p-1.5 rounded theme-accent-bg-light">${esc(x.quote)}</div>`:""}${x.text?`<div>${esc(x.text)}</div>`:""}<div class="flex gap-2"><button data-adm-report="${esc(x.reportId)}" data-status="done" class="${btn}">✅ Розглянуто</button><button data-adm-report="${esc(x.reportId)}" data-status="rejected" class="${btn}">Відхилити</button></div></div>`).join("") || "<div class='text-xs theme-text-secondary'>Нових скарг немає.</div>"}</section>
+        </div>`;
+        const search = $("adm-search");
+        search.oninput = () => { const q = search.value.trim().toLowerCase(); body().querySelectorAll(".adm-user").forEach(x => x.classList.toggle("hidden", !!q && !x.dataset.search.includes(q))); };
+        $("adm-refresh").onclick = () => admin().catch(e => toast(e.message));
         body().onclick = async e => {
-            const b = e.target.closest("[data-adm-save]"); if (!b) return;
-            const id = b.dataset.admSave, badgeEl = body().querySelector(`[data-adm-badge="${CSS.escape(id)}"]`), disEl = body().querySelector(`[data-adm-disabled="${CSS.escape(id)}"]`);
-            b.disabled = true; b.textContent = "Збереження…";
-            try { await call("globerAdminSetUser", { userId:id, badge:badgeEl ? badgeEl.value : "", disabled:!!(disEl && disEl.checked) }); toast("Статус користувача оновлено."); await admin(); }
-            catch (err) { toast(err.message); b.disabled = false; b.textContent = "Зберегти"; }
+            const q = sel => e.target.closest(sel);
+            try {
+                let b;
+                if ((b=q("[data-adm-save]"))) {
+                    const id=b.dataset.admSave, root=b.closest(".adm-user");
+                    const badge=root.querySelector(`[data-adm-badge="${CSS.escape(id)}"]`), role=root.querySelector(`[data-adm-role="${CSS.escape(id)}"]`), disabled=root.querySelector(`[data-adm-disabled="${CSS.escape(id)}"]`);
+                    b.disabled=true; b.textContent="Збереження…";
+                    await call("globerAdminSetUser", { userId:id, badge:badge.value, role:role.value, disabled:disabled.checked }); toast("Акаунт оновлено."); return admin();
+                }
+                if ((b=q("[data-adm-community-delete]"))) {
+                    if (!confirm("Видалити цю групу/канал разом з учасниками, повідомленнями й запрошеннями?")) return;
+                    await call("globerAdminDeleteCommunity", { communityId:b.dataset.admCommunityDelete }); toast("Спільноту видалено."); return admin();
+                }
+                if ((b=q("[data-adm-class-delete]"))) {
+                    if (!confirm("Видалити цей клас разом із публікаціями та роботами?")) return;
+                    await call("globerCxClassDelete", { classId:b.dataset.admClassDelete }); toast("Клас видалено."); return admin();
+                }
+                if ((b=q("[data-adm-report]"))) { await call("globerCxReportHandle", { reportId:b.dataset.admReport, status:b.dataset.status }); toast("Скаргу оброблено."); return admin(); }
+            } catch (err) { toast(err.message); if (e.target) { e.target.disabled=false; } }
         };
     }
     async function render() {
@@ -5114,7 +5141,7 @@
         if (!me) await load(); if (!me) return;
         if (tab === "admin" && !me.isAdmin) tab = "dm";
         setTabs();
-        const f = { dm, cards, class:cls, league, duel, build, fb, admin }[tab];
+        const f = { dm, communities, cards, class:cls, league, duel, build, fb, admin }[tab];
         body().innerHTML = "<div class='theme-text-secondary'>Завантаження…</div>";
         try { await f(); } catch (e) { body().innerHTML = `<div class="text-red-500">${esc(e.message)}</div>`; }
         walTxt();
@@ -5127,7 +5154,7 @@
     async function softRender() {
         if (softBusy) return; softBusy = true; soft = { seq: navSeq, done: false, snap: null };
         try {
-            const f = tab === "dm" ? (curThread ? () => thread(curThread) : () => dm()) : tab === "class" ? (curClass ? (curPost ? () => openPost(curClass, curPost) : () => openClass(curClass)) : cls) : tab === "duel" ? duel : tab === "league" ? league : null;
+            const f = tab === "dm" ? (curThread ? () => thread(curThread) : () => dm()) : tab === "communities" ? (curCommunity ? () => openCommunity(curCommunity) : communities) : tab === "class" ? (curClass ? (curPost ? () => openPost(curClass, curPost) : (curSub === "chat" ? () => loadClassChat(curClass) : () => openClass(curClass))) : cls) : tab === "duel" ? duel : tab === "league" ? league : null;
             if (f) { await f(); const snap = soft && soft.snap; soft = null; try { restoreEl(body(), snap); } catch (_) {} }
         } catch (_) { /* тиха помилка мережі — повторимо через 5 с */ }
         finally { soft = null; softBusy = false; }
@@ -5166,6 +5193,8 @@
           <div class="font-bold">Звання</div><select id="pf-title" class="${inp}"><option value="">— без звання —</option>${me.titles.map(t => `<option ${p.title === t ? "selected" : ""}>${esc(t)}</option>`).join("")}</select>
           <div class="font-bold">Соцмережі (лише з білого списку)</div>${Object.keys(src).map(k => `<input data-soc="${k}" class="${inp}" placeholder="${src[k]}" value="${esc(s[k] || "")}">`).join("")}
           <div class="font-bold">Хто може писати мені в ЛС</div><select id="pf-dm" class="${inp}"><option value="all">Усі</option><option value="teachers">Лише вчителі</option><option value="none">Ніхто</option></select>
+          <div class="font-bold">Контакт для зв’язку (необов’язково)</div><input id="pf-contact" maxlength="300" class="${inp}" value="${esc(p.contactText || "")}" placeholder="Наприклад: пошта, Telegram або інший спосіб зв’язку"><p class="text-[11px] theme-text-secondary">Цей контакт буде видно у вашому публічному профілі. Не додавайте приватні дані.</p>
+          <label class="flex items-start gap-2 p-2 rounded-xl border theme-border"><input id="pf-allow-add" type="checkbox" class="mt-1" ${p.allowGroupAdd ? "checked" : ""}><span><b>Дозволяти додавати мене до груп і каналів без підтвердження</b><span class="block text-[11px] theme-text-secondary">Якщо вимкнено, власнику доведеться надіслати запрошення, яке ви зможете прийняти або відхилити.</span></span></label>
           ${p.role === "Учитель" ? `<div class="font-bold">Дата народження (для привітання о 00:00)</div><input id="pf-bd" type="date" class="${inp}" value="${esc(p.birthDate)}">` : ""}
           <button id="pf-save" class="${btn} theme-btn-primary">Зберегти</button>
           ${p.role !== "Учитель" ? `<div class="pt-2 border-t theme-border"><div class="font-bold">Режим «тимчасовий учитель»</div><div class="text-xs theme-text-secondary">12 годин створення олімпіад — 200 💎. ${me.tempUntil ? "Активний до " + new Date(me.tempUntil).toLocaleString() : ""}</div><button id="pf-temp" class="${btn} mt-1">Активувати (200 💎)</button></div>` : ""}
@@ -5173,7 +5202,7 @@
         $("pf-dm").value = p.dmPrivacy;
         $("pf-save").onclick = async () => {
             const socials = {}; root.querySelectorAll("[data-soc]").forEach(i => socials[i.dataset.soc] = i.value.trim());
-            const pl = { avatarUrl: $("pf-av").value.trim(), title: $("pf-title").value, socials, dmPrivacy: $("pf-dm").value }; if ($("pf-bd")) pl.birthDate = $("pf-bd").value;
+            const pl = { avatarUrl: $("pf-av").value.trim(), title: $("pf-title").value, socials, dmPrivacy: $("pf-dm").value, contactText: $("pf-contact").value.trim(), allowGroupAdd: $("pf-allow-add").checked }; if ($("pf-bd")) pl.birthDate = $("pf-bd").value;
             try { await call("globerSocSave", pl); toast("Профіль збережено."); await mountProfile(); } catch (e) { toast(e.message); }
         };
         $("pf-up").onclick = () => $("pf-file").click();
@@ -5263,6 +5292,64 @@
     }
     function showUser(u) { openProfile(u.userId); }
 
+    /* --- приватні групи та канали --- */
+    async function communities() {
+        curCommunity = null;
+        const r = await call("globerCommunityList");
+        body().innerHTML = `<div class="space-y-4">
+          <div class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-extrabold">＋ Створити приватну спільноту</div>
+            <div class="grid sm:grid-cols-2 gap-2"><label class="text-xs font-bold">Тип<select id="co-kind" class="${inp}"><option value="group">👥 Група — спільне листування</option><option value="channel">📣 Канал — публікації власника й адмінів</option></select></label><label class="text-xs font-bold">Назва<input id="co-name" maxlength="60" class="${inp}" placeholder="Назва групи або каналу"></label></div>
+            <textarea id="co-desc" maxlength="500" rows="2" class="${inp}" placeholder="Опис (необов’язково)"></textarea>
+            <label class="text-xs font-bold">Пароль (необов’язково; від 4 символів)<input id="co-password" type="password" maxlength="64" class="${inp}" placeholder="Залиште порожнім без пароля"></label>
+            <button id="co-create" class="${btn} theme-btn-primary">Створити та стати власником</button><p class="text-[11px] theme-text-secondary">Спільноти не публікуються у відкритому каталозі. Доступ — за персональним запрошенням або кодом; пароль можна додати окремо.</p>
+          </div>
+          <div class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-extrabold">🔑 Приєднатися за кодом</div><div class="grid sm:grid-cols-3 gap-2"><input id="co-join-code" class="${inp}" placeholder="Код запрошення"><input id="co-join-password" type="password" class="${inp}" placeholder="Пароль (якщо є)"><button id="co-join" class="${btn} theme-btn-primary">Приєднатися</button></div></div>
+          ${r.invites.length ? `<section class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-extrabold">📨 Запрошення для вас (${r.invites.length})</div>${r.invites.map(x => `<div class="p-2 rounded-xl border theme-border flex flex-wrap gap-2 items-center"><div class="flex-1 min-w-0"><b>${x.kind==="channel"?"📣":"👥"} ${esc(x.name)}</b><div class="text-xs theme-text-secondary">Від ${esc(x.from)} · роль: ${x.role==="admin"?"адміністратор":"учасник"}</div></div><button data-co-accept="${esc(x.inviteId)}" class="${btn} theme-btn-primary">Прийняти</button><button data-co-decline="${esc(x.inviteId)}" class="${btn}">Відхилити</button></div>`).join("")}</section>` : ""}
+          <section class="space-y-2"><div class="font-extrabold">Мої групи та канали (${r.communities.length})</div>${r.communities.map(x => `<button data-co-open="${esc(x.communityId)}" class="w-full text-left p-3 rounded-2xl border theme-border hover:border-sky-400"><div class="flex items-center gap-2"><b class="flex-1">${x.kind==="channel"?"📣":"👥"} ${esc(x.name)}</b><span class="text-[10px] rounded-full theme-badge px-2 py-1">${x.role==="owner"?"власник":x.role==="admin"?"адмін":"учасник"}</span></div><div class="text-xs theme-text-secondary mt-1">${esc(x.description)} · ${x.members} учасн. · ${x.hasPassword?"🔐 пароль":"без пароля"}</div>${x.inviteCode?`<div class="text-[11px] mt-1">Код: <code>${esc(x.inviteCode)}</code></div>`:""}</button>`).join("") || "<div class='text-xs theme-text-secondary'>Поки немає спільнот. Створіть власну або приєднайтеся за кодом.</div>"}</section>
+        </div>`;
+        $("co-create").onclick = async () => {
+            const b=$("co-create"); if(b.disabled)return; b.disabled=true; b.textContent="Створення…";
+            try { const j=await call("globerCommunityCreate", { kind:$("co-kind").value, name:$("co-name").value, description:$("co-desc").value, password:$("co-password").value }); toast("Створено! Код запрошення: "+j.inviteCode); await openCommunity(j.communityId); }
+            catch(e){ toast(e.message); b.disabled=false; b.textContent="Створити та стати власником"; }
+        };
+        $("co-join").onclick = async () => { try { const j=await call("globerCommunityJoin", { inviteCode:$("co-join-code").value, password:$("co-join-password").value }); toast("Ви приєдналися до «"+j.name+"»."); await openCommunity(j.communityId); } catch(e){ toast(e.message); } };
+        body().onclick = async e => {
+            const a=e.target.closest("[data-co-open],[data-co-accept],[data-co-decline]"); if(!a)return;
+            try {
+                if(a.dataset.coOpen) return openCommunity(a.dataset.coOpen);
+                if(a.dataset.coAccept || a.dataset.coDecline){ const id=a.dataset.coAccept || a.dataset.coDecline; const j=await call("globerCommunityInviteRespond", { inviteId:id, accept:!!a.dataset.coAccept }); toast(j.accepted?"Запрошення прийнято.":"Запрошення відхилено."); return communities(); }
+            } catch(er){ toast(er.message); }
+        };
+    }
+    async function openCommunity(id) {
+        curCommunity=id; curThread=null; curClass=null; curPost=null;
+        const my=navSeq; const r=await call("globerCommunityView", { communityId:id });
+        if (tab!=="communities" || (my!==navSeq && !soft)) return;
+        const c=r.community, managers=c.canManage, owner=c.isOwner, channel=c.kind==="channel";
+        const msgHtml = r.messages.map(m => `<div class="p-2 rounded-xl border theme-border ${m.mine?"ml-5 theme-accent-bg-light":"mr-5"}"><div class="flex items-center gap-2 text-[11px] theme-text-secondary"><b class="flex-1">${esc(m.name)}</b>${m.edited?"(ред.)":""} · ${fmtDt(m.createdAt)}${m.mine?`<button data-cm-edit="${esc(m.messageId)}" class="px-1">✎</button>`:""}${m.canDelete?`<button data-cm-del="${esc(m.messageId)}" class="px-1 text-red-500">✕</button>`:""}</div><div class="whitespace-pre-wrap break-words mt-1">${fmtAnchors(m.text)}</div></div>`).join("");
+        body().innerHTML = `<div class="space-y-3">
+          <div class="flex flex-wrap gap-2"><button id="co-back" class="${btn}">← Спільноти</button><button id="co-leave" class="${btn} text-red-500">Покинути</button></div>
+          <div class="rounded-2xl p-4 text-white" style="background:${clColor(c.name)}"><div class="text-xl font-black">${channel?"📣":"👥"} ${esc(c.name)}</div><div class="text-sm opacity-90">${esc(c.description)}</div><div class="text-xs opacity-80 mt-1">Власник: ${esc(c.owner)} · ${c.role==="owner"?"ви власник":c.role==="admin"?"ви адміністратор":"учасник"}</div>${c.inviteCode?`<div class="text-xs mt-2">Код для запрошення: <code class="bg-white/20 rounded px-1.5 py-1 select-all">${esc(c.inviteCode)}</code>${c.hasPassword?" · 🔐 пароль увімкнено":" · без пароля"}</div>`:""}</div>
+          ${managers?`<section class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-bold">Додати учасника</div><div class="grid sm:grid-cols-[1fr_150px_auto] gap-2"><input id="co-invite-email" class="${inp}" placeholder="Пошта користувача"><select id="co-invite-role" class="${inp}">${owner?'<option value="member">👤 Учасник</option><option value="admin">🛡 Адміністратор</option>':'<option value="member">👤 Учасник</option>'}</select><button id="co-invite" class="${btn} theme-btn-primary">Запросити</button></div><div class="text-[11px] theme-text-secondary">Якщо користувач дозволив додавання без підтвердження — він приєднається одразу. Інакше йому прийде запрошення, яке треба прийняти.</div></section>`:""}
+          ${owner?`<details class="rounded-2xl border theme-border p-3"><summary class="font-bold cursor-pointer">⚙ Налаштування спільноти (лише власник)</summary><div class="space-y-2 pt-2"><input id="co-edit-name" maxlength="60" class="${inp}" value="${esc(c.name)}" placeholder="Назва"><textarea id="co-edit-desc" maxlength="500" rows="2" class="${inp}" placeholder="Опис">${esc(c.description)}</textarea><label class="flex items-center gap-2 text-xs"><input id="co-edit-pass-enable" type="checkbox" ${c.hasPassword?"checked":""}> Захистити паролем</label><input id="co-edit-pass" type="password" maxlength="64" class="${inp}" placeholder="Новий пароль (4–64 символи)"><div class="text-[11px] theme-text-secondary">Увімкніть пароль і введіть новий, або зніміть позначку, щоб прибрати пароль.</div><label class="flex items-center gap-2 text-xs"><input id="co-edit-code" type="checkbox"> Оновити код запрошення (старий код стане недійсним)</label><button id="co-edit-save" class="${btn} theme-btn-primary">Зберегти зміни</button><button id="co-delete" class="${btn} text-red-500">Видалити спільноту</button></div></details>`:""}
+          <section class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-bold">Учасники (${r.members.length})</div>${r.members.map(m=>`<div class="flex items-center gap-2 text-xs"><span class="flex-1">${esc(m.name)} ${m.isMe?"(ви)":""}</span><b>${m.role==="owner"?"власник":m.role==="admin"?"адмін":"учасник"}</b>${owner&&!m.isMe?`<select data-cm-role="${esc(m.userId)}" class="p-1 rounded-lg border theme-border theme-bg-card"><option value="${m.role}" selected>${m.role==="admin"?"Адмін":"Учасник"}</option><option value="${m.role==="admin"?"member":"admin"}">${m.role==="admin"?"Зробити учасником":"Зробити адміном"}</option></select><button data-cm-remove="${esc(m.userId)}" class="text-red-500 px-1">Видалити</button>`:""}</div>`).join("")}</section>
+          <section class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-bold">${channel?"Стрічка каналу":"Загальний чат"}</div><div id="co-messages" class="space-y-2 max-h-[42vh] overflow-y-auto">${msgHtml||"<div class='text-xs theme-text-secondary'>Поки немає повідомлень.</div>"}</div>${c.canPost?`<div class="flex gap-2"><textarea id="co-message" maxlength="2000" rows="2" class="${inp}" placeholder="${channel?"Нова публікація…":"Ваше повідомлення…"}"></textarea><button id="co-send" class="${btn} theme-btn-primary">➤</button></div>`:`<div class="text-xs theme-text-secondary">У цьому каналі публікують лише власник та адміністратори.</div>`}</section>
+        </div>`;
+        $("co-back").onclick=()=>{curCommunity=null;render();};
+        $("co-leave").onclick=async()=>{if(!confirm("Покинути цю спільноту?"))return;try{await call("globerCommunityLeave",{communityId:id});curCommunity=null;toast("Ви покинули спільноту.");render();}catch(e){toast(e.message);}};
+        if($("co-invite")) $("co-invite").onclick=async()=>{try{const j=await call("globerCommunityInvite",{communityId:id,email:$("co-invite-email").value,role:$("co-invite-role").value});toast(j.added?"Користувача додано.":"Запрошення надіслано — очікує підтвердження.");await openCommunity(id);}catch(e){toast(e.message);}};
+        if($("co-edit-save")) $("co-edit-save").onclick=async()=>{try{await call("globerCommunityUpdate",{communityId:id,name:$("co-edit-name").value,description:$("co-edit-desc").value,passwordEnabled:$("co-edit-pass-enable").checked,password:$("co-edit-pass").value,regenerateInviteCode:$("co-edit-code").checked});toast("Спільноту оновлено.");await openCommunity(id);}catch(e){toast(e.message);}};
+        if($("co-delete")) $("co-delete").onclick=async()=>{if(!confirm("Видалити спільноту разом із повідомленнями, запрошеннями та учасниками?"))return;try{await call("globerCommunityDelete",{communityId:id});curCommunity=null;toast("Спільноту видалено.");render();}catch(e){toast(e.message);}};
+        if($("co-send")) $("co-send").onclick=async()=>{const b=$("co-send"),v=$("co-message").value;if(!v.trim())return;b.disabled=true;try{await call("globerCommunitySend",{communityId:id,text:v});await openCommunity(id);}catch(e){toast(e.message);b.disabled=false;}};
+        body().onclick=async e=>{const x=e.target.closest("[data-cm-edit],[data-cm-del],[data-cm-role],[data-cm-remove]");if(!x)return;try{
+            if(x.dataset.cmEdit){const old=r.messages.find(m=>m.messageId===x.dataset.cmEdit);const val=prompt("Редагувати повідомлення:",old?old.text:"");if(val===null)return;await call("globerCommunityEditMessage",{messageId:x.dataset.cmEdit,text:val});return openCommunity(id);}
+            if(x.dataset.cmDel){if(!confirm("Видалити повідомлення?"))return;await call("globerCommunityDeleteMessage",{messageId:x.dataset.cmDel});return openCommunity(id);}
+            if(x.dataset.cmRole){await call("globerCommunityMemberRole",{communityId:id,userId:x.dataset.cmRole,role:x.value});toast("Роль учасника змінено.");return openCommunity(id);}
+            if(x.dataset.cmRemove){if(!confirm("Видалити учасника зі спільноти?"))return;await call("globerCommunityRemoveMember",{communityId:id,userId:x.dataset.cmRemove});return openCommunity(id);}
+        }catch(er){toast(er.message);}};
+        const box=$("co-messages"); if(box) box.scrollTop=box.scrollHeight;
+    }
+
     /* --- картки --- */
     async function cards() {
         body().innerHTML = `<div class="font-bold">Вітальна картка вчителю (5–5000 💎, залишається на його профілі назавжди)</div>
@@ -5351,6 +5438,8 @@
         let main;
         if (curSub === "work") main = works.length ? works.map(card).join("") : "<div class='theme-text-secondary'>Завдань поки немає.</div>";
         else if (curSub === "grades") main = `<div id="cl-grades" class="space-y-2"><div class="theme-text-secondary">Завантаження журналу…</div></div>`;
+        else if (curSub === "chat") main = `<div id="cl-chat-root" class="space-y-2"><div class="theme-text-secondary">Завантаження чату…</div></div>`;
+        else if (curSub === "settings" && c.isOwner) main = `<div class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-bold">⚙ Налаштування класу</div><label class="block text-xs font-bold">Назва класу<input id="cl-edit-name" maxlength="50" class="${inp} mt-1" value="${esc(c.name)}"></label><label class="flex items-center gap-2 text-xs"><input id="cl-regen-code" type="checkbox"> Створити новий код приєднання (старий перестане працювати)</label><button id="cl-save-class" class="${btn} theme-btn-primary">Зберегти зміни</button><p class="text-[11px] theme-text-secondary">Редагувати клас може лише його творець.</p></div>`;
         else if (curSub === "people") main = `<div class="text-xl font-extrabold pb-1 border-b" style="color:${col};border-color:${col}">Вчителі</div>
           <div class="flex items-center gap-2 py-2">${circ(col, ini(c.owner))}<b class="flex-1">${who(c.ownerId, c.owner)}</b><span class="text-xs theme-text-secondary">власник</span></div>
           ${r.teachers.map(t => `<div class="flex items-center gap-2 py-1">${circ(col, ini(t.name))}<span class="flex-1">${who(t.userId, t.name)}</span><span class="text-xs theme-text-secondary">співвикладач</span>${c.isOwner ? `<button data-tdel="${esc(t.userId)}" class="px-2 text-red-500" title="Прибрати">✕</button>` : ""}</div>`).join("")}
@@ -5360,9 +5449,11 @@
         else main = composer + (r.posts.length ? r.posts.map(card).join("") : "<div class='theme-text-secondary'>У стрічці поки порожньо.</div>");
         body().innerHTML = `<div class="flex gap-2"><button id="cl-back" class="${btn}">← Усі класи</button>${!c.isOwner ? `<button id="cl-rep" class="${btn}" title="Поскаржитися на клас">🚩 Скарга</button>` : ""}</div>
         <div class="rounded-2xl p-4 text-white" style="background:${col}"><div class="text-2xl font-extrabold break-words">${esc(c.name)}</div><div class="text-sm opacity-90">${who(c.ownerId, c.owner)}</div>${T ? `<div class="text-xs mt-2 opacity-90">Код класу: <code class="bg-white/20 px-1.5 py-0.5 rounded">${esc(c.code)}</code></div>` : ""}</div>
-        <div class="flex gap-1 border-b theme-border">${[["stream", "Стрічка"], ["work", "Завдання"], ["grades", "Оцінки"], ["people", "Учасники"]].map(t => `<button data-sub="${t[0]}" class="px-3 py-2 text-xs font-bold" style="${curSub === t[0] ? `color:${col};border-bottom:3px solid ${col}` : ""}">${t[1]}</button>`).join("")}</div>
+        <div class="flex flex-wrap gap-1 border-b theme-border">${[["stream", "Стрічка"], ["chat", "💬 Загальний чат"], ["work", "Завдання"], ["grades", "Оцінки"], ["people", "Учасники"], ...(c.isOwner ? [["settings", "⚙ Налаштування"]] : [])].map(t => `<button data-sub="${t[0]}" class="px-3 py-2 text-xs font-bold" style="${curSub === t[0] ? `color:${col};border-bottom:3px solid ${col}` : ""}">${t[1]}</button>`).join("")}</div>
         <div class="space-y-3">${main}</div>${c.isOwner ? `<button id="cl-delclass" class="${btn} text-red-500">🗑 Видалити клас</button>` : `<button id="cl-leave" class="${btn} text-red-500">Покинути клас</button>`}`;
         $("cl-back").onclick = () => render();
+        if ($("cl-save-class")) $("cl-save-class").onclick = async () => { try { await call("globerCxClassUpdate", { classId:id, name:$ ("cl-edit-name").value, regenerateCode:$ ("cl-regen-code").checked }); delete cxc["c:" + id]; toast("Клас оновлено."); curSub="settings"; openClass(id); } catch(e) { toast(e.message); } };
+        if (curSub === "chat") loadClassChat(id);
         if ($("cl-rep")) $("cl-rep").onclick = () => ATX.report("class", id, c.name);
         if ($("cl-leave")) $("cl-leave").onclick = async () => { if (!confirm("Покинути клас " + c.name + "?")) return; try { await call("globerClassLeave", { classId: id }); toast("Ви покинули клас."); } catch (e) { toast(e.message); } render(); };
         if ($("cl-delclass")) $("cl-delclass").onclick = async () => {
@@ -5404,6 +5495,23 @@
             } catch (er) { toast(er.message); }
         };
     }
+    async function loadClassChat(id) {
+        const root = $("cl-chat-root"); if (!root) return;
+        try {
+            const r = await call("globerCxChat", { classId:id });
+            if (curClass !== id || curSub !== "chat") return;
+            root.innerHTML = `<div class="space-y-2 max-h-[48vh] overflow-y-auto" id="cl-chat-list">${r.messages.map(m => `<div class="rounded-xl border theme-border p-2 ${m.mine?"ml-5 theme-accent-bg-light":"mr-5"}"><div class="flex items-center gap-2 text-[11px] theme-text-secondary"><b class="flex-1">${who(m.userId,m.name)}</b>${m.edited?"(ред.)":""} · ${fmtDt(m.createdAt)}${m.mine?`<button data-cl-chat-edit="${esc(m.messageId)}" class="px-1">✎</button>`:""}${m.canDelete?`<button data-cl-chat-del="${esc(m.messageId)}" class="px-1 text-red-500">✕</button>`:""}</div><div class="whitespace-pre-wrap break-words mt-1">${fmtAnchors(m.text)}</div></div>`).join("") || "<div class='text-xs theme-text-secondary'>Чат класу ще порожній. Напишіть перше повідомлення!</div>"}</div><div class="flex gap-2"><textarea id="cl-chat-text" maxlength="2000" rows="2" class="${inp}" placeholder="Повідомлення для всього класу…"></textarea><button id="cl-chat-send" class="${btn} theme-btn-primary">➤</button></div><div class="text-[10px] theme-text-secondary">Повідомлення бачать лише учасники цього класу.</div>`;
+            const list=$("cl-chat-list"); if(list) list.scrollTop=list.scrollHeight;
+            $("cl-chat-send").onclick=async()=>{const b=$("cl-chat-send"),v=$("cl-chat-text").value.trim();if(!v)return;b.disabled=true;try{await call("globerCxChatSend",{classId:id,text:v});await loadClassChat(id);}catch(e){toast(e.message);b.disabled=false;}};
+            $("cl-chat-text").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("cl-chat-send").click();}});
+            root.onclick=async e=>{const x=e.target.closest("[data-cl-chat-edit],[data-cl-chat-del]");if(!x)return;try{
+                if(x.dataset.clChatEdit){const m=r.messages.find(z=>z.messageId===x.dataset.clChatEdit),v=prompt("Редагувати повідомлення:",m?m.text:"");if(v===null)return;await call("globerCxChatEdit",{messageId:x.dataset.clChatEdit,text:v});}
+                else if(x.dataset.clChatDel){if(!confirm("Видалити повідомлення з чату класу?"))return;await call("globerCxChatDelete",{messageId:x.dataset.clChatDel});}
+                await loadClassChat(id);
+            }catch(e2){toast(e2.message);}};
+        } catch(e) { root.textContent = e.message; }
+    }
+
     async function loadGrades(cid, c) {
         let g; try { g = await call("globerCxGradebook", { classId: cid }); } catch (e) { const el = $("cl-grades"); if (el) el.textContent = e.message; return; }
         const el = $("cl-grades"); if (!el) return;
