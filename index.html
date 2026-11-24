@@ -1115,7 +1115,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbyDhJh_N0fRCaAuCp_SzrKRwRc3ZBAVy-_jXd2eL_5CG6YoLsEyhjr1_lY74MiZTZHE/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbzK1vFVPCI30VzZKd8nfCMdAy3260-fIVAdNm8Abr7kH04HgULJ_xS6kOak85biI8FI/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -1436,7 +1436,7 @@
             document.getElementById('auth-role-field').classList.toggle('hidden', isLogin);
         }
         const _inflight = new Map();
-        const _readActions = new Set(["catalog", "bootstrap", "getTestForEdit", "pendingAttempts", "trackingResults", "globerSocMe", "globerDmInbox", "globerDuelList", "globerClassList", "globerClassBoard", "globerLeague", "globerCxClassView", "globerCxChat", "globerCommunityList", "globerCommunityView", "globerCxPostView", "globerCxGradebook", "globerCxReviews", "globerCxRatings"]);
+        const _readActions = new Set(["catalog", "bootstrap", "getTestForEdit", "pendingAttempts", "trackingResults", "globerSocMe", "globerDmInbox", "globerMessageForwardTargets", "globerDuelList", "globerClassList", "globerClassBoard", "globerLeague", "globerCxClassView", "globerCxChat", "globerCommunityList", "globerCommunityView", "globerCxPostView", "globerCxGradebook", "globerCxReviews", "globerCxRatings"]);
         let _apiBusy = 0;
         function _apiBusyUI(start, action) {
             const label = /submit|finish|send|post|comment|avatar|upload|create|save|grade/i.test(action || "") ? "Надсилання / збереження…" : "Завантаження…";
@@ -5223,7 +5223,7 @@
             <label class="block text-xs font-bold">Де створити зустріч<select id="meet-target" class="${inp} mt-1">${opts.map(x=>`<option value="${esc(x.value)}">${esc(x.label)}</option>`).join("")}</select></label>
             <input id="meet-title" class="${inp}" maxlength="100" placeholder="Назва зустрічі (необов'язково)">
             <button id="meet-create" class="${btn} theme-btn-primary" ${opts.length?"":"disabled"}>＋ Створити та підключитися</button>
-            <div class="text-[11px] theme-text-secondary">Для дзвінків потрібне налаштування LiveKit у властивостях Apps Script. API-ключі зберігаються лише на сервері.</div>
+            
           </div>
           <section class="space-y-2"><div class="font-bold">Активні зустрічі, до яких у вас є доступ</div>${(active.meetings||[]).map(x=>`<div class="p-3 rounded-xl border theme-border flex flex-wrap gap-2 items-center"><div class="flex-1 min-w-[140px]"><b>${esc(x.title)}</b><div class="text-xs theme-text-secondary">${x.scope==="dm"?"Особиста зустріч":x.scope==="class"?"Клас":"Група / канал"} · створив ${esc(x.creator)}</div><div class="text-[10px] opacity-60">${fmtDt(x.createdAt)}</div></div><button data-meet-join="${esc(x.meetingId)}" class="${btn} theme-btn-primary">Приєднатися</button>${x.mine?`<button data-meet-end="${esc(x.meetingId)}" class="${btn} text-red-500">Завершити для всіх</button>`:""}</div>`).join("") || "<div class='text-xs theme-text-secondary'>Активних зустрічей немає.</div>"}</section>
         </div>`;
@@ -5399,7 +5399,7 @@
         if (!soft) navSeq++; curThread = id;
         const r = await call("globerDmThread", { withId: id });
         body().innerHTML = `<button id="th-back" class="${btn}">← Назад</button><div class="font-bold">${r.with ? who(r.with.id, r.with.name) : ""}</div>
-        <div class="flex flex-wrap gap-2"><button id="th-meet" class="${btn} theme-btn-primary">📹 Відеозустріч</button><button id="th-chess" class="${btn}">♟ Викликати на шахи · 15:00 кожному</button></div><div class="space-y-1">${r.messages.map(m => `<div class="${m.mine ? "ml-10 bg-sky-500/20" : "mr-10 theme-accent-bg-light"} p-2 rounded-xl break-words">${fmtAnchors(m.text)}${attHtml(m.attach)}${!m.mine ? ` <button data-mrep="${esc(m.msgId)}" class="text-xs opacity-50" title="Поскаржитися">🚩</button>` : ""}</div>`).join("")}</div>
+        <div class="flex flex-wrap gap-2"><button id="th-meet" class="${btn} theme-btn-primary">📹 Відеозустріч</button><button id="th-chess" class="${btn}">♟ Викликати на шахи · 15:00 кожному</button></div><div class="space-y-2">${r.messages.map(m => `<div class="${m.mine ? "ml-10 bg-sky-500/20" : "mr-10 theme-accent-bg-light"} p-2 rounded-xl break-words"><div class="whitespace-pre-wrap">${fmtAnchors(m.text)}</div>${m.edited?`<span class="text-[10px] opacity-50">(ред.)</span>`:""}${attHtml(m.attach)}${window.ATMessageUI.render("dm",id,m)}${!m.mine ? ` <button data-mrep="${esc(m.msgId)}" class="text-xs opacity-50" title="Поскаржитися">🚩</button>` : ""}</div>`).join("")}</div>
         <div class="flex gap-2"><input id="th-tx" class="${inp}" maxlength="1000"><button id="th-att" class="${btn}" title="Надіслати файл (до 10 МБ)">📎</button><input id="th-file" type="file" multiple accept="image/*,video/*,*/*" class="hidden"><button id="th-go" class="${btn} theme-btn-primary">➤</button></div><div id="th-prog" class="text-xs theme-text-secondary"></div>`;
         $("th-back").onclick = () => render();
         $("th-meet").onclick = () => window.ATMeet && window.ATMeet.start("dm", id, r.with ? r.with.name : "Особиста зустріч", { peerId:id });
@@ -5416,7 +5416,8 @@
             try { const ids=[]; for(const f of files){const up=await ATX.upload(f, "dm", id, v => { $("th-prog").textContent = "Завантаження " + f.name + ": " + Math.round(v * 100) + "%"; });ids.push(up.id);} await call("globerDmSend", { email: r.with.email, text: $("th-tx").value, attach: ids }); thread(id); }
             catch (e) { toast(e.message); $("th-prog").textContent = ""; }
         };
-        body().onclick = e => {
+        body().onclick = async e => {
+            if (await window.ATMessageUI.handle(e,"dm",id,()=>thread(id))) return;
             const f = e.target.closest("[data-file]"); if (f) return ATX.download(f.dataset.file, f.dataset.fname).catch(er => toast(er.message));
             const m = e.target.closest("[data-mrep]"); if (m) { const msg = r.messages.find(x => x.msgId === m.dataset.mrep); ATX.report("message", m.dataset.mrep, "Повідомлення від " + (r.with ? r.with.name : ""), msg ? msg.text : ""); }
         };
@@ -5458,7 +5459,7 @@
         if (tab!=="communities" || (my!==navSeq && !soft)) return;
         const c=r.community, managers=c.canManage, owner=c.isOwner, channel=c.kind==="channel";
         const roleName = v => ({owner:"власник",admin:"адміністратор",member:"учасник",restricted:"обмежений (лише читання)",platform_admin:"адміністратор ArTesolymp"}[v] || v);
-        const msgHtml = r.messages.map(m => `<div class="p-2 rounded-xl border theme-border ${m.mine?"ml-5 theme-accent-bg-light":"mr-5"}"><div class="flex items-center gap-2 text-[11px] theme-text-secondary"><b class="flex-1">${channel?esc(m.name):who(m.senderId,m.name)}</b>${m.edited?"(ред.)":""} · ${fmtDt(m.createdAt)}${m.mine?`<button data-cm-edit="${esc(m.messageId)}" class="px-1">✎</button>`:""}${m.canDelete?`<button data-cm-del="${esc(m.messageId)}" class="px-1 text-red-500">✕</button>`:""}</div><div class="whitespace-pre-wrap break-words mt-1">${fmtAnchors(m.text)}</div>${attHtml(m.attachments)}</div>`).join("");
+        const msgHtml = r.messages.map(m => `<div class="p-2 rounded-xl border theme-border ${m.mine?"ml-5 theme-accent-bg-light":"mr-5"}"><div class="flex items-center gap-2 text-[11px] theme-text-secondary"><b class="flex-1">${channel?esc(m.name):who(m.senderId,m.name)}</b>${m.edited?"(ред.)":""} · ${fmtDt(m.createdAt)}${m.canDelete?`<button data-cm-del="${esc(m.messageId)}" class="px-1 text-red-500">✕</button>`:""}</div><div class="whitespace-pre-wrap break-words mt-1">${fmtAnchors(m.text)}</div>${attHtml(m.attachments)}${window.ATMessageUI.render("community",id,m)}</div>`).join("");
         const inviteAllowed = true; // усі учасники можуть запрошувати; обмеження стосується публікацій у чаті
         const canPost = !!c.canPost;
         const canModerate = owner || c.role === "admin";
@@ -5491,7 +5492,7 @@
         let chosenFiles=[];
         if($("co-pick-files")) { $("co-pick-files").onclick=()=>$("co-files").click(); $("co-files").onchange=e=>{chosenFiles=Array.from(e.target.files||[]).slice(0,5);$("co-files-names").textContent=chosenFiles.map(f=>f.name).join(", ")+(e.target.files.length>5?" (перші 5 файлів)":"");}; }
         if($("co-send")) $("co-send").onclick=async()=>{const b=$("co-send"),v=$("co-message").value.trim();if(!v&&!chosenFiles.length)return;b.disabled=true;try{const ids=[];for(const f of chosenFiles){const up=await ATX.upload(f,"community",id,p=>{$("co-upload-status").textContent=f.name+": "+Math.round(p*100)+"%";});ids.push(up.id);}await call("globerCommunitySend",{communityId:id,text:v,attach:ids});await openCommunity(id);}catch(e){toast(e.message);b.disabled=false;$("co-upload-status").textContent="";}};
-        body().onclick=async e=>{const file=e.target.closest("[data-file]");if(file){e.stopPropagation();return ATX.download(file.dataset.file,file.dataset.fname).catch(er=>toast(er.message));}const x=e.target.closest("[data-cm-edit],[data-cm-del],[data-cm-remove],[data-co-pick-user]");if(!x)return;try{
+        body().onclick=async e=>{if(await window.ATMessageUI.handle(e,"community",id,()=>openCommunity(id)))return;const file=e.target.closest("[data-file]");if(file){e.stopPropagation();return ATX.download(file.dataset.file,file.dataset.fname).catch(er=>toast(er.message));}const x=e.target.closest("[data-cm-edit],[data-cm-del],[data-cm-remove],[data-co-pick-user]");if(!x)return;try{
             if(x.dataset.coPickUser){$("co-invite-selected").value=x.dataset.coPickUser;$("co-invite-picked").textContent="Обрано: "+x.dataset.coPickName;$("co-invite").disabled=false;return;}
             if(x.dataset.cmEdit){const old=r.messages.find(m=>m.messageId===x.dataset.cmEdit);const val=prompt("Редагувати повідомлення:",old?old.text:"");if(val===null)return;await call("globerCommunityEditMessage",{messageId:x.dataset.cmEdit,text:val});return openCommunity(id);}
             if(x.dataset.cmDel){if(!confirm("Видалити повідомлення?"))return;await call("globerCommunityDeleteMessage",{messageId:x.dataset.cmDel});return openCommunity(id);}
@@ -5652,14 +5653,14 @@
         try {
             const r = await call("globerCxChat", { classId:id });
             if (curClass !== id || curSub !== "chat") return;
-            root.innerHTML = `<div class="space-y-2 max-h-[48vh] overflow-y-auto" id="cl-chat-list">${r.messages.map(m => `<div class="rounded-xl border theme-border p-2 ${m.mine?"ml-5 theme-accent-bg-light":"mr-5"}"><div class="flex items-center gap-2 text-[11px] theme-text-secondary"><b class="flex-1">${who(m.userId,m.name)}</b>${m.edited?"(ред.)":""} · ${fmtDt(m.createdAt)}${m.mine?`<button data-cl-chat-edit="${esc(m.messageId)}" class="px-1">✎</button>`:""}${m.canDelete?`<button data-cl-chat-del="${esc(m.messageId)}" class="px-1 text-red-500">✕</button>`:""}</div><div class="whitespace-pre-wrap break-words mt-1">${fmtAnchors(m.text)}</div>${attHtml(m.attachments)}</div>`).join("") || "<div class='text-xs theme-text-secondary'>Чат класу ще порожній. Напишіть перше повідомлення!</div>"}</div><div class="space-y-2"><textarea id="cl-chat-text" maxlength="2000" rows="2" class="${inp}" placeholder="Повідомлення для всього класу…"></textarea><div class="flex flex-wrap gap-2 items-center"><button id="cl-chat-pick" class="${btn}">📎 Додати файли</button><input id="cl-chat-files" type="file" multiple class="hidden"><span id="cl-chat-files-name" class="text-[11px] theme-text-secondary"></span><button id="cl-chat-send" class="${btn} theme-btn-primary">➤ Надіслати</button><span id="cl-chat-progress" class="text-[11px] theme-text-secondary"></span></div></div><div class="text-[10px] theme-text-secondary">Повідомлення та вкладення бачать лише учасники цього класу. Максимум 5 файлів по 10 МБ.</div>`;
+            root.innerHTML = `<div class="space-y-2 max-h-[48vh] overflow-y-auto" id="cl-chat-list">${r.messages.map(m => `<div class="rounded-xl border theme-border p-2 ${m.mine?"ml-5 theme-accent-bg-light":"mr-5"}"><div class="flex items-center gap-2 text-[11px] theme-text-secondary"><b class="flex-1">${who(m.userId,m.name)}</b>${m.edited?"(ред.)":""} · ${fmtDt(m.createdAt)}${m.canDelete?`<button data-cl-chat-del="${esc(m.messageId)}" class="px-1 text-red-500">✕</button>`:""}</div><div class="whitespace-pre-wrap break-words mt-1">${fmtAnchors(m.text)}</div>${attHtml(m.attachments)}${window.ATMessageUI.render("class",id,m)}</div>`).join("") || "<div class='text-xs theme-text-secondary'>Чат класу ще порожній. Напишіть перше повідомлення!</div>"}</div><div class="space-y-2"><textarea id="cl-chat-text" maxlength="2000" rows="2" class="${inp}" placeholder="Повідомлення для всього класу…"></textarea><div class="flex flex-wrap gap-2 items-center"><button id="cl-chat-pick" class="${btn}">📎 Додати файли</button><input id="cl-chat-files" type="file" multiple class="hidden"><span id="cl-chat-files-name" class="text-[11px] theme-text-secondary"></span><button id="cl-chat-send" class="${btn} theme-btn-primary">➤ Надіслати</button><span id="cl-chat-progress" class="text-[11px] theme-text-secondary"></span></div></div><div class="text-[10px] theme-text-secondary">Повідомлення та вкладення бачать лише учасники цього класу. Максимум 5 файлів по 10 МБ.</div>`;
             const list=$("cl-chat-list"); if(list) list.scrollTop=list.scrollHeight;
             let chatFiles=[];
             $("cl-chat-pick").onclick=()=>$("cl-chat-files").click();
             $("cl-chat-files").onchange=e=>{chatFiles=Array.from(e.target.files||[]).slice(0,5);$("cl-chat-files-name").textContent=chatFiles.map(f=>f.name).join(", ")+(e.target.files.length>5?" (перші 5)":"");};
             $("cl-chat-send").onclick=async()=>{const b=$("cl-chat-send"),v=$("cl-chat-text").value.trim();if(!v&&!chatFiles.length)return;b.disabled=true;try{const ids=[];for(const f of chatFiles){const up=await ATX.upload(f,"classchat",id,p=>{$("cl-chat-progress").textContent=f.name+": "+Math.round(p*100)+"%";});ids.push(up.id);}await call("globerCxChatSend",{classId:id,text:v,attach:ids});await loadClassChat(id);}catch(e){toast(e.message);b.disabled=false;$ ("cl-chat-progress").textContent="";}};
             $("cl-chat-text").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("cl-chat-send").click();}});
-            root.onclick=async e=>{const f=e.target.closest("[data-file]");if(f){e.stopPropagation();return ATX.download(f.dataset.file,f.dataset.fname).catch(er=>toast(er.message));}const x=e.target.closest("[data-cl-chat-edit],[data-cl-chat-del]");if(!x)return;try{
+            root.onclick=async e=>{if(await window.ATMessageUI.handle(e,"class",id,()=>loadClassChat(id)))return;const f=e.target.closest("[data-file]");if(f){e.stopPropagation();return ATX.download(f.dataset.file,f.dataset.fname).catch(er=>toast(er.message));}const x=e.target.closest("[data-cl-chat-edit],[data-cl-chat-del]");if(!x)return;try{
                 if(x.dataset.clChatEdit){const m=r.messages.find(z=>z.messageId===x.dataset.clChatEdit),v=prompt("Редагувати повідомлення:",m?m.text:"");if(v===null)return;await call("globerCxChatEdit",{messageId:x.dataset.clChatEdit,text:v});}
                 else if(x.dataset.clChatDel){if(!confirm("Видалити повідомлення з чату класу?"))return;await call("globerCxChatDelete",{messageId:x.dataset.clChatDel});}
                 await loadClassChat(id);
@@ -6062,6 +6063,41 @@
         });
     }
     setTimeout(decorate, 1500); setInterval(() => { if (!document.hidden) decorate(); }, 4000);
+    window.ATMessageUI = {
+      render(context, scopeId, m) {
+        const id=String(m.msgId||m.messageId||""), reactions=Array.isArray(m.reactions)?m.reactions:[];
+        const quick=["👍","❤️","😂","🤣","👏","🔥","🎉","😮","😢","🤔"];
+        const reactionHtml=quick.map(emoji=>{const r=reactions.find(x=>x.emoji===emoji),count=r?Number(r.count)||0:0;return `<button type="button" data-msg-react="${esc(emoji)}" data-msg-id="${esc(id)}" class="px-2 py-1 rounded-lg border border-current/20 text-[11px] ${r&&r.mine?"bg-sky-500/20":"opacity-75"}">${emoji}${count?" "+count:""}</button>`;}).join("");
+        const reply=m.replyPreview?`<div class="mt-1 mb-1 rounded-lg border-l-2 border-sky-500 bg-black/5 px-2 py-1 text-[11px] opacity-80"><b>↪ ${esc(m.replyPreview.name||"Повідомлення")}</b><div class="truncate">${esc(m.replyPreview.text||"Вкладення")}</div></div>`:"";
+        const forwarded=m.forwardedFrom?`<div class="text-[10px] opacity-60 mt-1">↗ Переслано з ${esc(m.forwardedFrom)}</div>`:"";
+        const receipt=m.mine?`<span class="text-[10px] ml-auto ${Number(m.readCount)>0?"text-sky-500":"opacity-50"}" title="${Number(m.readCount)>0?"Прочитано принаймні одним учасником":"Надіслано"}">${Number(m.readCount)>0?"✔✔":"✔"}</span>`:"";
+        return `${reply}${forwarded}<div class="flex flex-wrap items-center gap-1 mt-2" data-msg-tools="${esc(id)}">${reactionHtml}<button type="button" data-msg-action="reply" data-msg-id="${esc(id)}" data-msg-text="${esc(m.text||"")}" class="px-2 py-1 rounded-lg text-[11px] border border-current/20">↩ Відповісти</button><button type="button" data-msg-action="forward" data-msg-id="${esc(id)}" data-msg-text="${esc(m.text||"")}" class="px-2 py-1 rounded-lg text-[11px] border border-current/20">↗ Переслати</button>${m.mine?`<button type="button" data-msg-action="edit" data-msg-id="${esc(id)}" data-msg-text="${esc(m.text||"")}" class="px-2 py-1 rounded-lg text-[11px] border border-current/20">✎ Змінити</button>`:""}${receipt}</div>`;
+      },
+      async handle(event, context, scopeId, refresh) {
+        const t=event.target.closest("[data-msg-action],[data-msg-react]");if(!t)return false;event.stopPropagation();
+        const messageId=t.dataset.msgId,action=t.dataset.msgAction;
+        try {
+          if(t.dataset.msgReact){await call("globerMessageFeature",{context,scopeId,messageId,action:"react",emoji:t.dataset.msgReact});if(refresh)await refresh();return true;}
+          if(action==="edit"){const text=prompt("Змінити текст повідомлення:",t.dataset.msgText||"");if(text===null)return true;await call("globerMessageFeature",{context,scopeId,messageId,action:"edit",text});toast("Повідомлення змінено.");if(refresh)await refresh();return true;}
+          if(action==="reply"){
+            const text=prompt("Відповідь на повідомлення:\n«"+String(t.dataset.msgText||"").slice(0,180)+"»\n\nВаш текст:","");if(text===null||!text.trim())return true;
+            const q={text:text.trim(),replyToId:messageId};
+            if(context==="dm"){q.userId=scopeId;await call("globerDmSend",q);}else if(context==="community"){q.communityId=scopeId;await call("globerCommunitySend",q);}else if(context==="class"){q.classId=scopeId;await call("globerCxChatSend",q);}else if(context==="meet"){q.meetingId=scopeId;await call("globerMeetChatSend",q);}
+            toast("Відповідь надіслано.");if(refresh)await refresh();return true;
+          }
+          if(action==="forward"){
+            const res=await call("globerMessageForwardTargets"),targets=res.targets||[];if(!targets.length){toast("Немає доступних чатів для пересилання.");return true;}
+            const old=document.getElementById("at-message-forward-modal");if(old)old.remove();
+            const modal=document.createElement("div");modal.id="at-message-forward-modal";modal.className="fixed inset-0 z-[260] bg-black/70 flex items-center justify-center p-4";
+            modal.innerHTML=`<div class="w-full max-w-md rounded-2xl border theme-border theme-bg-card p-4 space-y-3 shadow-2xl"><div class="font-bold text-lg">↗ Переслати повідомлення</div><label class="block text-sm">Куди переслати<select id="at-msg-forward-target" class="w-full mt-1 p-2 rounded-xl border theme-border theme-bg-card">${targets.map((x,i)=>`<option value="${i}">${esc(x.label)}</option>`).join("")}</select></label><label class="flex items-center gap-2 text-sm"><input id="at-msg-forward-origin" type="checkbox" checked> Додати згадку про джерело та автора</label><div class="text-[11px] theme-text-secondary">Текст і доступні вкладення буде переслано. Згадку про джерело та автора можна вимкнути.</div><div class="flex justify-end gap-2"><button id="at-msg-forward-cancel" class="px-3 py-2 rounded-xl border theme-border text-sm">Скасувати</button><button id="at-msg-forward-go" class="px-3 py-2 rounded-xl theme-btn-primary text-sm">Переслати</button></div></div>`;
+            document.body.appendChild(modal);modal.querySelector("#at-msg-forward-cancel").onclick=()=>modal.remove();modal.onclick=e=>{if(e.target===modal)modal.remove();};
+            modal.querySelector("#at-msg-forward-go").onclick=async()=>{const dest=targets[Number(modal.querySelector("#at-msg-forward-target").value)];if(!dest)return;const go=modal.querySelector("#at-msg-forward-go");go.disabled=true;try{const r=await call("globerMessageForward",{sourceContext:context,sourceScopeId:scopeId,messageId,targetContext:dest.context,targetId:dest.id,includeOrigin:modal.querySelector("#at-msg-forward-origin").checked});modal.remove();toast("Повідомлення переслано."+(r.hadAttachments&&!r.attachmentsForwarded?" Вкладення не копіювалися.":""));if(refresh)await refresh();}catch(err){toast(err.message);go.disabled=false;}};
+            return true;
+          }
+        }catch(err){toast(err.message||"Не вдалося виконати дію з повідомленням.");}
+        return true;
+      }
+    };
     window.ATX = { upload, download, report, review, fmtSize, esc, modal, renderAttachments, hydrateInline:hydrateInline };
 })();
 </script>
@@ -6244,7 +6280,7 @@
     $("at-meet-chat-files-btn").onclick = () => $("at-meet-chat-files").click();
     $("at-meet-chat-files").onchange = e => { const fs=Array.from(e.target.files||[]).slice(0,5); $("at-meet-chat-files-label").textContent=fs.map(f=>f.name).join(" · ")+(e.target.files.length>5?" · лише перші 5":""); applyMeetChatPermissions(currentMeet&&currentMeet.permissions); };
     $("at-meet-chat-input").addEventListener("keydown", e => { if (e.key === "Enter") sendMeetChat(); });
-    $("at-meet-chat").onclick = async e => { const b=e.target.closest("[data-meet-pin]"); if(!b||!currentMeet)return; try{await api("globerMeetChatPin",{meetingId:currentMeet.meetingId,messageId:b.dataset.meetPin,pinned:b.dataset.pinned!=="true"});await loadMeetChat();}catch(er){toast(er.message);} };
+    $("at-meet-chat").onclick = async e => { if(window.ATMessageUI&&await window.ATMessageUI.handle(e,"meet",currentMeet&&currentMeet.meetingId,async()=>{await loadMeetChat();try{await publishMeetSignal("at-meet-chat-refresh",{updated:true});}catch(_){}}))return;const b=e.target.closest("[data-meet-pin]");if(!b||!currentMeet)return;try{await api("globerMeetChatPin",{meetingId:currentMeet.meetingId,messageId:b.dataset.meetPin,pinned:b.dataset.pinned!=="true"});await loadMeetChat();}catch(er){toast(er.message);} };
     $("at-meet-permissions").onclick = openMeetPermissions;
     $("at-iframe-demo").onclick = shareMeetIframe;
     $("at-meet-admins").onclick = () => { const el=$("at-meet-people"); if(el.classList.contains("hidden"))el.classList.remove("hidden"); renderMeetPeople(); el.scrollIntoView({behavior:"smooth",block:"nearest"}); };
@@ -6649,7 +6685,7 @@
     try {
       const r=await api("globerMeetChatList",{meetingId:currentMeet.meetingId});
       currentMeet.permissions=r.permissions||currentMeet.permissions||{};currentMeet.adminIds=r.adminIds||currentMeet.adminIds||{};currentMeet.isModerator=!!r.canModerate;currentMeet.isCreator=!!r.isCreator;
-      const sig=(r.messages||[]).map(m=>m.messageId+":"+m.pinned+":"+m.text+":"+(m.attachments||[]).map(a=>a.id).join(",")).join("|");
+      const sig=(r.messages||[]).map(m=>m.messageId+":"+m.pinned+":"+m.text+":"+m.edited+":"+m.readCount+":"+JSON.stringify(m.reactions||[])+":"+String(m.replyToId||"")+":"+(m.attachments||[]).map(a=>a.id).join(",")).join("|");
       if(sig!==meetChatSignature){meetChatSignature=sig;renderMeetChat(r.messages||[]);}
       applyMeetChatPermissions(currentMeet.permissions);
       $("at-meet-permissions").classList.toggle("hidden",!currentMeet.isModerator);
@@ -6669,7 +6705,7 @@
     const log=$("at-meet-chat");if(!log)return;
     const pinned=(messages||[]).find(m=>m.pinned),bar=$("at-meet-chat-pinned");
     if(bar){bar.classList.toggle("hidden",!pinned);bar.textContent=pinned?"📌 Закріплено · "+pinned.name+": "+(pinned.text||((pinned.attachments||[]).length?"Вкладення":"")):"";}
-    log.innerHTML=(messages||[]).map(m=>`<div class="rounded-lg bg-slate-800 px-2 py-2 break-words"><div class="flex items-center gap-2 text-[11px] text-slate-400"><b class="flex-1">${esc(m.name||"Учасник")}</b>${m.pinned?"📌":""}${currentMeet&&currentMeet.isModerator?`<button data-meet-pin="${esc(m.messageId)}" data-pinned="${m.pinned?"true":"false"}" class="px-2 py-1 rounded border border-slate-600">${m.pinned?"Відкріпити":"📌 Закріпити"}</button>`:""}</div>${m.text?`<div class="whitespace-pre-wrap mt-1">${esc(m.text)}</div>`:""}${window.ATX&&window.ATX.renderAttachments?window.ATX.renderAttachments(m.attachments||[]):""}</div>`).join("")||"<div class='text-xs text-slate-500'>Повідомлень ще немає.</div>";
+    log.innerHTML=(messages||[]).map(m=>`<div class="rounded-lg bg-slate-800 px-2 py-2 break-words"><div class="flex items-center gap-2 text-[11px] text-slate-400"><b class="flex-1">${esc(m.name||"Учасник")}</b>${m.edited?"(ред.)":""}${m.pinned?"📌":""}${currentMeet&&currentMeet.isModerator?`<button data-meet-pin="${esc(m.messageId)}" data-pinned="${m.pinned?"true":"false"}" class="px-2 py-1 rounded border border-slate-600">${m.pinned?"Відкріпити":"📌 Закріпити"}</button>`:""}</div>${m.text?`<div class="whitespace-pre-wrap mt-1">${esc(m.text)}</div>`:""}${window.ATX&&window.ATX.renderAttachments?window.ATX.renderAttachments(m.attachments||[]):""}${window.ATMessageUI?window.ATMessageUI.render("meet",currentMeet.meetingId,m):""}</div>`).join("")||"<div class='text-xs text-slate-500'>Повідомлень ще немає.</div>";
     log.scrollTop=log.scrollHeight;
     if(window.ATX&&window.ATX.hydrateInline)window.ATX.hydrateInline(log);
   }
