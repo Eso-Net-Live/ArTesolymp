@@ -1115,7 +1115,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbyKRJ0f-YwbKGdrthTdutle96YD6C_Klk5aQRaFdh_cogFDZLd2xzcma2aKVbkg4V8U/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbzNET7ANDO-02zshY2r7u_RCtQQ8YQBwTIlR1-GOZa_E2C7Gb0QgqkfLLJmkyV0SMQ3/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -5999,6 +5999,7 @@
   let liveRoom = null, currentMeet = null;
   let bgProcessor = null, bgObjectUrl = null, currentGame = null, chessLibPromise = null, gamePoll = null, gameClockTimer = null, chosenSquare = null, meetStateTimer = null;
   const remoteEls = new Map();
+  let handRaised = false, meetGridMode = true, meetStartedAt = 0;
   const glyphs = { wk:"♔",wq:"♕",wr:"♖",wb:"♗",wn:"♘",wp:"♙",bk:"♚",bq:"♛",br:"♜",bb:"♝",bn:"♞",bp:"♟︎" };
 
   function loadScript(src, globalName) {
@@ -6023,11 +6024,21 @@
   }
   function meetShell() {
     let root = $("at-meet-modal"); if (root) return root;
+    if (!$("at-meet-fullscreen-style")) {
+      const style = document.createElement("style"); style.id = "at-meet-fullscreen-style";
+      style.textContent = `
+        #at-meet-modal:fullscreen { padding:0 !important; background:#020617 !important; }
+        #at-meet-modal:fullscreen > div { max-width:none !important; border:0 !important; border-radius:0 !important; }
+        #at-meet-videos [data-participant$=":screen"]:fullscreen { width:100vw !important; height:100vh !important; max-width:none !important; min-height:0 !important; aspect-ratio:auto !important; border:0 !important; border-radius:0 !important; background:#000 !important; }
+        #at-meet-videos [data-participant$=":screen"]:fullscreen video { width:100% !important; height:100% !important; object-fit:contain !important; }
+      `;
+      document.head.appendChild(style);
+    }
     document.body.insertAdjacentHTML("beforeend", `
       <div id="at-meet-modal" class="hidden fixed inset-0 z-[180] bg-slate-950 text-slate-100 p-2 sm:p-4">
         <div class="w-full h-full max-w-[1500px] mx-auto flex flex-col rounded-2xl border border-slate-700 bg-slate-900 overflow-hidden shadow-2xl">
           <header class="flex flex-wrap items-center gap-2 p-3 border-b border-slate-700">
-            <div class="flex-1 min-w-[150px]"><div id="at-meet-title" class="font-black text-lg">ArTesolymp Meet</div><div id="at-meet-state" class="text-xs text-slate-400">Підключення…</div></div>
+            <div class="flex-1 min-w-[150px]"><div id="at-meet-title" class="font-black text-lg">ArTesolymp Meet</div><div id="at-meet-state" class="text-xs text-slate-400">Підключення…</div><div id="at-meet-count" class="text-[11px] text-slate-500">Учасників: 0</div></div>
             <button id="at-audio-unlock" class="hidden px-3 py-2 text-xs rounded-xl bg-amber-700 hover:bg-amber-600">🔊 Увімкнути звук</button>
             <button id="at-meet-copy" class="px-3 py-2 text-xs rounded-xl border border-slate-600 hover:bg-slate-800">🔗 Запросити</button>
             <button id="at-meet-end" class="px-3 py-2 text-xs rounded-xl bg-rose-700 hover:bg-rose-600">Завершити</button>
@@ -6041,9 +6052,21 @@
               <div class="flex flex-wrap items-center justify-center gap-2 py-2 border-y border-slate-700">
                 <button id="at-mic" class="px-4 py-3 rounded-xl bg-slate-700 text-sm">🎤 Увімкнути мікрофон</button>
                 <button id="at-cam" class="px-4 py-3 rounded-xl bg-slate-700 text-sm">📷 Увімкнути камеру</button>
-                <button id="at-screen" class="px-4 py-3 rounded-xl bg-slate-700 text-sm">🖥 Поділитися екраном</button>
+                <button id="at-screen" class="px-4 py-3 rounded-xl bg-slate-700 text-sm">🖥 Екран + звук</button>
+                <button id="at-meet-fullscreen" class="px-4 py-3 rounded-xl bg-slate-700 text-sm">⛶ На весь екран</button>
+                <button id="at-hand" class="px-4 py-3 rounded-xl bg-slate-700 text-sm">✋ Підняти руку</button>
+                <button id="at-layout" class="px-4 py-3 rounded-xl bg-slate-700 text-sm">▦ Сітка</button>
+                <button id="at-mute-all" class="hidden px-4 py-3 rounded-xl bg-rose-800 hover:bg-rose-700 text-sm">🔇 Вимкнути всіх</button>
                 <button id="at-blur" class="px-4 py-3 rounded-xl bg-slate-700 text-sm">🌫 Розмити фон</button>
                 <label class="px-4 py-3 rounded-xl bg-slate-700 text-sm cursor-pointer">🌄 Свій фон<input id="at-bg-file" type="file" accept="image/png,image/jpeg,image/webp" class="hidden"></label>
+              </div>
+              <div class="flex flex-wrap items-center justify-center gap-2 text-sm" id="at-meet-reactions">
+                <span class="text-slate-400 px-2">Реакції:</span>
+                <button data-meet-reaction="👍" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700">👍</button>
+                <button data-meet-reaction="👏" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700">👏</button>
+                <button data-meet-reaction="❤️" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700">❤️</button>
+                <button data-meet-reaction="😂" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700">😂</button>
+                <button data-meet-reaction="🎉" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700">🎉</button>
               </div>
               <div class="rounded-xl border border-slate-700 p-3 flex-1 min-h-32 flex flex-col">
                 <div class="font-bold text-sm mb-2">💬 Чат зустрічі</div><div id="at-meet-chat" class="flex-1 min-h-20 max-h-44 overflow-y-auto space-y-1 text-sm"></div>
@@ -6074,6 +6097,14 @@
     $("at-mic").onclick = toggleMic;
     $("at-cam").onclick = toggleCam;
     $("at-screen").onclick = toggleScreen;
+    $("at-meet-fullscreen").onclick = toggleMeetFullscreen;
+    $("at-hand").onclick = toggleRaiseHand;
+    $("at-layout").onclick = toggleMeetLayout;
+    $("at-mute-all").onclick = muteAllParticipants;
+    $("at-meet-reactions").addEventListener("click", ev => {
+      const btn = ev.target.closest("[data-meet-reaction]");
+      if (btn) sendMeetReaction(btn.dataset.meetReaction);
+    });
     $("at-blur").onclick = toggleBlur;
     $("at-bg-file").onchange = useVirtualBackground;
     $("at-meet-chat-send").onclick = sendMeetChat;
@@ -6117,7 +6148,12 @@
       currentMeet.scope = credentials.scope; currentMeet.scopeId = credentials.scopeId;
       currentMeet.createdAt = credentials.createdAt || new Date().toISOString();
       currentMeet.creatorId = credentials.creatorId || "";
+      currentMeet.isModerator = !!credentials.isModerator;
+      currentMeet.roomName = credentials.roomName || "";
       currentMeet.title = credentials.title || currentMeet.title;
+      meetStartedAt = Date.now(); handRaised = false;
+      if ($("at-hand")) $("at-hand").textContent = "✋ Підняти руку";
+      if ($("at-mute-all")) $("at-mute-all").classList.toggle("hidden", !currentMeet.isModerator);
       $("at-meet-title").textContent = currentMeet.title;
       $("at-meet-end").classList.toggle("hidden", !currentMeet.isMine);
       $("at-meet-state").textContent = "Завантаження відеозв’язку…";
@@ -6126,10 +6162,17 @@
       const room = new LK.Room({ adaptiveStream:true, dynacast:true }); liveRoom = room;
       room.on(LK.RoomEvent.TrackSubscribed, (track, publication, participant) => addParticipantTrack(track, participant, false));
       room.on(LK.RoomEvent.TrackUnsubscribed, (track, publication, participant) => removeParticipantTrack(track, participant));
-      room.on(LK.RoomEvent.ParticipantConnected, participant => addParticipantTile(participant, false));
-      room.on(LK.RoomEvent.ParticipantDisconnected, participant => removeParticipantTile(participant));
+      room.on(LK.RoomEvent.ParticipantConnected, participant => { addParticipantTile(participant, false); updateMeetCount(); });
+      room.on(LK.RoomEvent.ParticipantDisconnected, participant => { removeParticipantTile(participant); updateMeetCount(); });
+      if (LK.RoomEvent.TrackMuted) room.on(LK.RoomEvent.TrackMuted, (publication, participant) => refreshModeratorButton(participant));
+      if (LK.RoomEvent.TrackUnmuted) room.on(LK.RoomEvent.TrackUnmuted, (publication, participant) => refreshModeratorButton(participant));
       room.on(LK.RoomEvent.LocalTrackPublished, (publication, participant) => { if (publication.track) addParticipantTrack(publication.track, participant, true); });
-      room.on(LK.RoomEvent.LocalTrackUnpublished, (publication, participant) => { if (publication.track) removeParticipantTrack(publication.track, participant); });
+      room.on(LK.RoomEvent.LocalTrackUnpublished, (publication, participant) => {
+        if (publication.track) removeParticipantTrack(publication.track, participant);
+        if (String(publication.source || "").toLowerCase().includes("screen")) {
+          const screenBtn = $("at-screen"); if (screenBtn) screenBtn.textContent = "🖥 Екран + звук";
+        }
+      });
       room.on(LK.RoomEvent.DataReceived, (payload, participant, kind, topic) => receiveMeetChat(payload, participant, topic));
       room.on(LK.RoomEvent.AudioPlaybackStatusChanged, () => {
         const unlock = $("at-audio-unlock"); if (unlock) unlock.classList.toggle("hidden", !!room.canPlaybackAudio);
@@ -6139,6 +6182,7 @@
       $("at-audio-unlock").classList.toggle("hidden", !!room.canPlaybackAudio);
       $("at-meet-state").textContent = "Підключено · камера та мікрофон вимкнені, доки ви їх не ввімкнете.";
       room.remoteParticipants.forEach(p => { addParticipantTile(p, false); p.trackPublications.forEach(pub => { if (pub.track) addParticipantTrack(pub.track, p, false); }); });
+      updateMeetCount();
       // Keep permissions explicit: joining a meeting never silently turns on the camera or microphone.
       await room.localParticipant.setMicrophoneEnabled(false);
       await room.localParticipant.setCameraEnabled(false);
@@ -6146,6 +6190,7 @@
       if(meetStateTimer)clearInterval(meetStateTimer);
       meetStateTimer=setInterval(async()=>{
         const activeId=currentMeet&&currentMeet.meetingId;if(!activeId)return;
+        updateMeetCount();
         try{const st=await api("globerMeetState",{meetingId:activeId});if(st.status!=="active"&&currentMeet&&currentMeet.meetingId===activeId){toast("Зустріч завершена.");await leaveMeeting();}}
         catch(err){if(String(err.message||"").includes("більше не маєте доступу")&&currentMeet&&currentMeet.meetingId===activeId){toast("Доступ до зустрічі втрачено.");await leaveMeeting();}}
       },5000);
@@ -6164,18 +6209,37 @@
     const placeholder = document.createElement("div"); placeholder.className="text-slate-400 text-sm"; placeholder.textContent=key.endsWith(":screen")?"Очікування демонстрації екрана…":local?"Ви · камера вимкнена":"Учасник підключився"; wrap.appendChild(placeholder);
     const label = document.createElement("div"); label.className="absolute bottom-2 left-2 rounded-lg bg-black/60 px-2 py-1 text-[11px]";
     label.textContent=key.endsWith(":screen")?((participant.name||"Учасник")+" · екран"):local?"Ви":(participant.name||("Учасник "+String(participant.identity||"").slice(-5)));
-    wrap.appendChild(label); $("at-meet-videos").appendChild(wrap); remoteEls.set(key, wrap); return wrap;
+    wrap.appendChild(label);
+    if (key.endsWith(":screen")) {
+      const full = document.createElement("button"); full.type = "button";
+      full.className = "absolute top-2 right-2 z-20 rounded-lg bg-black/70 hover:bg-black px-3 py-2 text-xs";
+      full.textContent = "⛶ На весь екран";
+      full.addEventListener("click", ev => { ev.stopPropagation(); openScreenFullscreen(wrap); });
+      wrap.appendChild(full);
+    } else if (!local && currentMeet && currentMeet.isModerator) {
+      const mute = document.createElement("button"); mute.type = "button";
+      mute.className = "absolute top-2 right-2 z-20 rounded-lg bg-rose-700/90 hover:bg-rose-600 px-3 py-2 text-xs";
+      mute.dataset.moderatorMute = key; mute.textContent = "🔇 Вимкнути мікрофон";
+      mute.addEventListener("click", ev => { ev.stopPropagation(); moderatorMuteParticipant(participant); });
+      wrap.appendChild(mute);
+    }
+    $("at-meet-videos").appendChild(wrap); remoteEls.set(key, wrap); return wrap;
   }
   function trackTileKey(track,participant) {
     const id=String(participant.identity||"participant"), src=String(track&&track.source||"").toLowerCase();
     return track&&track.kind==="video"&&(src.includes("screen")||src.includes("screenshare"))?id+":screen":id;
   }
   function addParticipantTrack(track, participant, local) {
+    // Never attach our own published microphone/screen audio to our speakers.
+    // This prevents local sidetone/feedback while remote participants still hear us.
+    if (local && track.kind === "audio") return;
     const key=String(participant.identity||(local?"me":"participant")), element=track.attach();
     element.autoplay=true;element.playsInline=true;
     if(track.kind==="video"){
-      const tileKey=trackTileKey(track,participant),wrap=addParticipantTile(participant,local,tileKey),old=wrap.querySelector("video");
-      element.className="w-full h-full object-cover";if(old)old.remove();
+      const tileKey=trackTileKey(track,participant),isScreen=tileKey.endsWith(":screen"),wrap=addParticipantTile(participant,local,tileKey),old=wrap.querySelector("video");
+      element.className="w-full h-full " + (isScreen ? "object-contain bg-black cursor-zoom-in" : "object-cover");
+      if (isScreen) element.addEventListener("dblclick", () => openScreenFullscreen(wrap));
+      if(old)old.remove();
       const placeholder=wrap.querySelector(":scope > div:not(.absolute)");if(placeholder)placeholder.remove();
       wrap.insertBefore(element,wrap.firstChild);
     }else{
@@ -6194,7 +6258,10 @@
   }
   async function toggleMic() {
     if(!liveRoom)return;const next=!(liveRoom.localParticipant.isMicrophoneEnabled);
-    try{await liveRoom.localParticipant.setMicrophoneEnabled(next);$("at-mic").textContent=next?"🔇 Вимкнути мікрофон":"🎤 Увімкнути мікрофон";}catch(e){toast("Мікрофон: "+e.message);}
+    try{
+      await liveRoom.localParticipant.setMicrophoneEnabled(next, { echoCancellation:true, noiseSuppression:true, autoGainControl:true });
+      $("at-mic").textContent=next?"🔇 Вимкнути мікрофон":"🎤 Увімкнути мікрофон";
+    }catch(e){toast("Мікрофон: "+e.message);}
   }
   async function toggleCam() {
     if(!liveRoom)return;const next=!(liveRoom.localParticipant.isCameraEnabled);
@@ -6205,8 +6272,107 @@
     }catch(e){toast("Камера: "+e.message);}
   }
   async function toggleScreen() {
-    if(!liveRoom)return;const p=liveRoom.localParticipant, next=!(p.isScreenShareEnabled);
-    try{await p.setScreenShareEnabled(next);$("at-screen").textContent=next?"⏹ Зупинити демонстрацію":"🖥 Поділитися екраном";}catch(e){toast("Демонстрація екрана: "+e.message);}
+    if(!liveRoom)return;
+    const p=liveRoom.localParticipant, next=!(p.isScreenShareEnabled);
+    try{
+      if (next) {
+        // On Chrome/Edge choose a browser tab and enable "Share tab audio".
+        await p.setScreenShareEnabled(true, { audio:{ restrictOwnAudio:true }, systemAudio:"include", suppressLocalAudioPlayback:true });
+        $("at-screen").textContent="⏹ Зупинити демонстрацію";
+        toast("Демонстрацію запущено. Для звуку вкладки оберіть вкладку браузера та увімкніть «Поділитися звуком вкладки».");
+      } else {
+        await p.setScreenShareEnabled(false);
+        $("at-screen").textContent="🖥 Екран + звук";
+      }
+    }catch(e){toast("Демонстрація екрана: "+e.message);}
+  }
+  async function toggleMeetFullscreen() {
+    const root=$("at-meet-modal"); if(!root)return;
+    try {
+      if(document.fullscreenElement) await document.exitFullscreen();
+      else if(root.requestFullscreen) await root.requestFullscreen();
+      else toast("Повноекранний режим не підтримується цим браузером.");
+    } catch(e) { toast("Не вдалося відкрити повний екран: "+e.message); }
+  }
+  async function openScreenFullscreen(tile) {
+    if(!tile)return;
+    try {
+      if(document.fullscreenElement===tile) await document.exitFullscreen();
+      else if(tile.requestFullscreen) await tile.requestFullscreen();
+      else await toggleMeetFullscreen();
+    } catch(e) { toast("Не вдалося відкрити демонстрацію на весь екран: "+e.message); }
+  }
+  async function toggleMeetLayout() {
+    meetGridMode=!meetGridMode;
+    const grid=$("at-meet-videos"); if(!grid)return;
+    grid.className=meetGridMode ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 content-start" : "grid grid-cols-1 gap-3 content-start";
+    $("at-layout").textContent=meetGridMode?"▦ Сітка":"▣ Один стовпець";
+  }
+  function updateMeetCount() {
+    if(!liveRoom)return;
+    const n=liveRoom.remoteParticipants.size+1, el=$("at-meet-count");
+    if(el)el.textContent="Учасників: "+n+(meetStartedAt?" · "+Math.floor((Date.now()-meetStartedAt)/60000)+" хв":"");
+  }
+  async function publishMeetSignal(topic, data) {
+    if(!liveRoom)return;
+    try { await liveRoom.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(data)), { reliable:true, topic }); }
+    catch(e) { toast("Не вдалося надіслати сигнал: "+e.message); }
+  }
+  async function toggleRaiseHand() {
+    if(!liveRoom)return;
+    handRaised=!handRaised;
+    $("at-hand").textContent=handRaised?"✋ Опустити руку":"✋ Підняти руку";
+    await publishMeetSignal("at-meet-hand", { raised:handRaised, name:(window.currentUser&&window.currentUser.name)||"Учасник" });
+    toast(handRaised?"Ви підняли руку.":"Ви опустили руку.");
+  }
+  async function sendMeetReaction(emoji) {
+    if(!liveRoom)return;
+    await publishMeetSignal("at-meet-reaction", { emoji:String(emoji||"👍").slice(0,8) });
+    showMeetReaction(liveRoom.localParticipant, emoji);
+  }
+  function showMeetReaction(participant, emoji) {
+    const key=String(participant&&participant.identity||"me");
+    const tile=remoteEls.get(key); if(!tile)return;
+    const bubble=document.createElement("div"); bubble.className="absolute top-10 left-1/2 -translate-x-1/2 z-30 text-4xl drop-shadow-lg pointer-events-none";
+    bubble.textContent=String(emoji||"👍").slice(0,8); tile.appendChild(bubble);
+    setTimeout(()=>bubble.remove(),2200);
+  }
+  function refreshModeratorButton(participant) {
+    if(!participant)return;
+    const tile=remoteEls.get(String(participant.identity||"")); if(!tile)return;
+    const btn=tile.querySelector("[data-moderator-mute]"); if(!btn)return;
+    const LK=window.LivekitClient, src=LK&&LK.Track&&LK.Track.Source?LK.Track.Source.Microphone:"microphone";
+    const pub=participant.getTrackPublication?participant.getTrackPublication(src):null;
+    btn.textContent=pub&&pub.isMuted?"🔇 Мікрофон вимкнено":"🔇 Вимкнути мікрофон";
+  }
+  async function muteAllParticipants() {
+    if(!liveRoom||!currentMeet||!currentMeet.isModerator)return;
+    const participants=Array.from(liveRoom.remoteParticipants.values());
+    if(!participants.length){toast("Інших учасників поки немає.");return;}
+    if(!confirm("Вимкнути мікрофони всім іншим учасникам? Вони зможуть увімкнути їх знову."))return;
+    let ok=0, skipped=0;
+    for(const participant of participants){
+      const LK=window.LivekitClient, src=LK&&LK.Track&&LK.Track.Source?LK.Track.Source.Microphone:"microphone";
+      const pub=participant.getTrackPublication?participant.getTrackPublication(src):null;
+      const sid=pub&&(pub.trackSid||pub.sid);
+      if(!sid){skipped++;continue;}
+      try{await api("globerMeetMuteParticipant",{meetingId:currentMeet.meetingId,identity:String(participant.identity||""),trackSid:String(sid),muted:true});ok++;}
+      catch(e){skipped++;}
+    }
+    toast("Вимкнено мікрофонів: "+ok+(skipped?" · пропущено: "+skipped:""));
+  }
+  async function moderatorMuteParticipant(participant) {
+    if(!currentMeet||!currentMeet.isModerator||!participant)return;
+    const LK=window.LivekitClient, src=LK&&LK.Track&&LK.Track.Source?LK.Track.Source.Microphone:"microphone";
+    const pub=participant.getTrackPublication?participant.getTrackPublication(src):null;
+    const sid=pub&&(pub.trackSid||pub.sid);
+    if(!sid){toast("У цього учасника зараз немає опублікованого мікрофона.");return;}
+    if(!confirm("Вимкнути мікрофон цього учасника? Він зможе ввімкнути його знову."))return;
+    try {
+      await api("globerMeetMuteParticipant", { meetingId:currentMeet.meetingId, identity:String(participant.identity||""), trackSid:String(sid), muted:true });
+      toast("Мікрофон учасника вимкнено.");
+      refreshModeratorButton(participant);
+    } catch(e) { toast("Не вдалося вимкнути мікрофон: "+e.message); }
   }
   async function cameraTrack() {
     if(!liveRoom)return null;
@@ -6247,9 +6413,12 @@
     try{await liveRoom.localParticipant.publishData(new TextEncoder().encode(text),{reliable:true,topic:"at-meet-chat"});addMeetChat("Ви",text);input.value="";}catch(e){toast("Не вдалося надіслати повідомлення: "+e.message);}
   }
   function receiveMeetChat(payload, participant, topic) {
+    let raw="";try{raw=new TextDecoder().decode(payload);}catch(_){return;}
+    const who="Учасник "+String(participant&&participant.identity||"").slice(-5);
+    if(topic==="at-meet-reaction") { try { const d=JSON.parse(raw); showMeetReaction(participant,d.emoji); } catch(_){} return; }
+    if(topic==="at-meet-hand") { try { const d=JSON.parse(raw); addMeetChat(who,d.raised?"✋ Підняв руку":"Опустив руку"); } catch(_){} return; }
     if(topic&&topic!=="at-meet-chat")return;
-    let text="";try{text=new TextDecoder().decode(payload);}catch(_){return;}
-    addMeetChat("Учасник "+String(participant&&participant.identity||"").slice(-5),text);
+    addMeetChat(who,raw);
   }
   function addMeetChat(name,text) {
     const log=$("at-meet-chat");if(!log)return;const row=document.createElement("div");row.className="rounded-lg bg-slate-800 px-2 py-1 break-words";
@@ -6262,6 +6431,9 @@
     document.querySelectorAll("audio[data-lk-audio]").forEach(x=>x.remove());
     if($("at-audio-unlock"))$("at-audio-unlock").classList.add("hidden");
     if(bgObjectUrl){URL.revokeObjectURL(bgObjectUrl);bgObjectUrl=null;}bgProcessor=null;window.__atBlurOn=false;
+    handRaised=false;meetStartedAt=0;if($("at-hand"))$("at-hand").textContent="✋ Підняти руку";
+    if($("at-mute-all"))$("at-mute-all").classList.add("hidden");
+    if($("at-screen"))$("at-screen").textContent="🖥 Екран + звук";
     remoteEls.forEach(el=>{if(el&&el.remove)el.remove();});remoteEls.clear();
     const root=$("at-meet-modal");if(root)root.classList.add("hidden");
   }
