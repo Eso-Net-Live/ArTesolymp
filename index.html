@@ -1115,7 +1115,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbzAr8lj8OV_UhjjjhR97cumOoA2Z6jMB8v116tzIasaHXBwqta7nOkdMxfYy5hpOjjp/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbyKRJ0f-YwbKGdrthTdutle96YD6C_Klk5aQRaFdh_cogFDZLd2xzcma2aKVbkg4V8U/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -6103,7 +6103,10 @@
     const root = meetShell(); root.classList.remove("hidden");
     $("at-meet-title").textContent = title || "ArTesolymp Meet";
     $("at-meet-state").textContent = "Перевірка доступу…";
-    if(persistentBotPanel)persistentBotPanel.classList.add("hidden");
+    // persistentBotPanel is not part of this frontend build; guard the optional legacy panel reference.
+    if (typeof persistentBotPanel !== "undefined" && persistentBotPanel && persistentBotPanel.classList) {
+      persistentBotPanel.classList.add("hidden");
+    }
     $("at-meet-videos").innerHTML = "";
     $("at-meet-chat").innerHTML = "";
     $("at-meet-end").classList.toggle("hidden", !isMine);
