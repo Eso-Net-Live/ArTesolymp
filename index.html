@@ -1115,7 +1115,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbyBVxF3fXw-wRPQ-_eaWjRhDeetKAQbf97bqoANny6tU3fqAEh6V1WHjJI2eqRmJl8g/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbyDhJh_N0fRCaAuCp_SzrKRwRc3ZBAVy-_jXd2eL_5CG6YoLsEyhjr1_lY74MiZTZHE/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -4967,6 +4967,7 @@
     const NAMES = { frame: "Рамки", bg: "Фони профілю", nameColor: "Кольори імені" };
     const LBL = { frame_gold: "Золота", frame_neon: "Неон", frame_olympian: "Олімпієць", frame_sysadmin: "Сисадмін", bg_sunset: "Захід", bg_ocean: "Океан", bg_forest: "Ліс", bg_space: "Космос", nc_red: "Червоний", nc_gold: "Золотий", nc_cyan: "Блакитний", nc_pink: "Рожевий", nc_lime: "Лаймовий" };
     let me = null, tab = "dm", duelTimer = null, curThread = null, curClass = null, curPost = null, curCommunity = null, curSub = "stream", navSeq = 0, soft = null, clTick = 0, cxPend = [], chessTo = null;
+    let chessActive = false, chessGamesCache = null, chessListBusy = false;
     const cxc = {};   // кеш «показати зразу — оновити тихо»
     const call = async (a, p) => apiRequest(a, p || {});
     const toast = m => showNotification(m);
@@ -4981,7 +4982,40 @@
       </div>
     </div>`);
     const TABS = [["dm", "💬 ЛС"], ["communities", "👥 Групи / канали"], ["class", "🏫 Класи"], ["meet", "📹 Meet"], ["cards", "🎁 Картки"], ["league", "🏅 Ліга"], ["duel", "⚔️ Дуелі"], ["build", "🧠 Конструктор"], ["fb", "⭐ Відгуки / 🚩 Скарги"]];
-    const visibleTabs = () => me && me.isAdmin ? TABS.concat([["admin", "🛡 Адмін-панель"]]) : TABS;
+    // «Шахи» показуються лише за наявності очікуваного виклику або незавершеної партії.
+    const visibleTabs = () => {
+        const tabs = TABS.slice();
+        if (chessActive || chessTo) tabs.splice(4, 0, ["chess", "♟ Шахи"]);
+        if (me && me.isAdmin) tabs.push(["admin", "🛡 Адмін-панель"]);
+        return tabs;
+    };
+    function applyChessActivity(games, keepForTarget) {
+        chessGamesCache = Array.isArray(games) ? games : [];
+        const active = chessGamesCache.some(g => g && (g.status === "pending" || g.status === "active"));
+        const next = active || !!keepForTarget || !!chessTo;
+        const changed = next !== chessActive;
+        chessActive = next;
+        if (changed) setTabs();
+        return active;
+    }
+    async function refreshChessActivity(navigateWhenEmpty) {
+        if (chessListBusy) return chessGamesCache || [];
+        chessListBusy = true;
+        try {
+            const r = await call("globerChessList");
+            const active = applyChessActivity(r.games || []);
+            if (!active && !chessTo && tab === "chess" && navigateWhenEmpty && !$("at-ch-board")) {
+                tab = "dm";
+                setTabs();
+                const modal = $("hb-modal");
+                if (modal && !modal.classList.contains("hidden")) await render();
+            }
+            return chessGamesCache;
+        } catch (_) {
+            // Тимчасова мережева помилка не має приховувати вкладку за останнім відомим станом.
+            return chessGamesCache || [];
+        } finally { chessListBusy = false; }
+    }
     const btn = "px-3 py-2 rounded-xl border theme-border font-bold text-xs hover:border-sky-400";
     const inp = "w-full p-2 rounded-xl border theme-border theme-bg-card text-sm";
     const body = () => {
@@ -5204,7 +5238,11 @@
         };
     }
     async function chess() {
-        const r=await call("globerChessList"), target=chessTo; chessTo=null;
+        const target=chessTo; chessTo=null;
+        const r={games: chessGamesCache !== null ? chessGamesCache : ((await call("globerChessList")).games || [])};
+        const active=applyChessActivity(r.games, !!target);
+        if (!active && !target) { tab="dm"; setTabs(); return dm(); }
+        setTabs();
         body().innerHTML = `<div class="space-y-3"><div class="rounded-2xl border theme-border p-3 space-y-2"><div class="text-lg font-black">♟ ArTesolymp Chess</div><p class="text-xs theme-text-secondary">Особисті шахові партії з контролем 15 хвилин на кожного гравця. Колір фігур визначається випадково після прийняття виклику.</p>
           ${target?`<div class="p-2 rounded-xl theme-accent-bg-light text-sm">Виклик для <b>${esc(target.name)}</b></div><button id="ch-target-go" class="${btn} theme-btn-primary">Надіслати шаховий виклик</button>`:""}
           <div class="flex flex-wrap gap-2"><input id="ch-user" class="${inp} flex-1" placeholder="ID користувача або email"><button id="ch-create" class="${btn} theme-btn-primary">Викликати · 15:00 кожному</button></div>
@@ -5216,15 +5254,17 @@
             const result=g.result==="resign"?"суперник здався або ви здалися":g.result==="timeout"?"час вичерпано":g.result==="checkmate"?"мат":g.result==="stalemate"?"пат":g.result==="draw"?"нічия":"завершена";
             return `<div class="p-3 rounded-xl border theme-border text-xs"><b>${esc(g.opponentNameForMe||g.opponentName||g.challengerName)}</b> · ${esc(result)} ${g.winnerId?(g.winnerId===g.whiteId?"· перемогли білі":"· перемогли чорні"):""}</div>`;
           }).join("") || "<div class='text-xs theme-text-secondary'>Поки немає шахових партій.</div>"}</section></div>`;
-        const create=async uidOrEmail=>{try{const arg=uidOrEmail.includes("@")?{email:uidOrEmail}:{userId:uidOrEmail};const j=await call("globerChessCreate",arg);toast("Виклик надіслано: "+j.opponentName);return chess();}catch(e){toast(e.message);}};
+        const create=async uidOrEmail=>{try{const arg=uidOrEmail.includes("@")?{email:uidOrEmail}:{userId:uidOrEmail};const j=await call("globerChessCreate",arg);chessGamesCache=null;toast("Виклик надіслано: "+j.opponentName);await refreshChessActivity(false);return chess();}catch(e){toast(e.message);}};
         if($("ch-create"))$("ch-create").onclick=()=>create($("ch-user").value.trim());
         if($("ch-target-go"))$("ch-target-go").onclick=()=>create(target.id);
-        body().onclick=async e=>{const a=e.target.closest("[data-ch-accept],[data-ch-decline],[data-ch-open]");if(!a)return;try{if(a.dataset.chAccept){await call("globerChessAccept",{gameId:a.dataset.chAccept});return window.ATChess.open(a.dataset.chAccept);}if(a.dataset.chDecline){await call("globerChessDecline",{gameId:a.dataset.chDecline});return chess();}if(a.dataset.chOpen)return window.ATChess.open(a.dataset.chOpen);}catch(er){toast(er.message);}};
+        body().onclick=async e=>{const a=e.target.closest("[data-ch-accept],[data-ch-decline],[data-ch-open]");if(!a)return;try{if(a.dataset.chAccept){await call("globerChessAccept",{gameId:a.dataset.chAccept});chessGamesCache=null;await refreshChessActivity(false);return window.ATChess.open(a.dataset.chAccept);}if(a.dataset.chDecline){await call("globerChessDecline",{gameId:a.dataset.chDecline});chessGamesCache=null;await refreshChessActivity(false);return chess();}if(a.dataset.chOpen)return window.ATChess.open(a.dataset.chOpen);}catch(er){toast(er.message);}};
     }
 
     async function render() {
         navSeq++; curThread = null; curClass = null; curPost = null;
         if (!me) await load(); if (!me) return;
+        await refreshChessActivity(false);
+        if (tab === "chess" && !chessActive && !chessTo) tab = "dm";
         if (tab === "admin" && !me.isAdmin) tab = "dm";
         setTabs();
         const f = { dm, communities, cards, class:cls, meet, chess, league, duel, build, fb, admin }[tab];
@@ -5248,9 +5288,10 @@
     }
     setInterval(() => {
         if (document.hidden || softBusy || !me) return;
-        if (tab === "class" && (clTick = (clTick + 1) % 4)) return;
         const modal = $("hb-modal"); if (!modal || modal.classList.contains("hidden")) return;
         if ($("du-clock")) return;   // іде дуель — не чіпаємо
+        refreshChessActivity(true);
+        if (tab === "class" && (clTick = (clTick + 1) % 4)) return;
         const a = document.activeElement;
         if (a && /^(INPUT|TEXTAREA)$/.test(a.tagName) && a.value && body().contains(a)) return;   // користувач щось вводить
         if (++softTick % 4 === 0) call("globerSocMe").then(x => { me = x; setTabs(); walTxt(); }).catch(() => {});
