@@ -404,6 +404,8 @@
                     <a href="javascript:showDocs('doc-export')" class="block py-1">9. Експорт тесту в JSON</a>
                     <a href="javascript:showDocs('doc-results')" class="block py-1">10. Результати та CSV</a>
                     <a href="javascript:showDocs('doc-faq')" class="block py-1">11. Часті питання</a>
+                    <a href="javascript:showDocs('doc-meet')" class="block py-1">12. Відеозустрічі Meet</a>
+                    <a href="javascript:showDocs('doc-chess')" class="block py-1">13. Шахи та виклики</a>
                     <button onclick="showSection('landing')" class="mt-3 w-full px-3 py-2 rounded-xl border theme-border text-xs font-bold hover:border-sky-400"><i class="fa-solid fa-arrow-left mr-1"></i> На головну</button>
                 </aside>
 
@@ -584,6 +586,25 @@
                             <div><b>Не можу відредагувати тест.</b><p class="theme-text-secondary">Його вже проходили. Створіть копію в Профілі та редагуйте її.</p></div>
                             <div><b>У результатах 0 за текстове питання.</b><p class="theme-text-secondary">Воно ще не оцінене вчителем. Оцініть у Профілі й оновіть таблицю.</p></div>
                         </div>
+                    </section>
+
+                    <section id="doc-meet" class="rounded-2xl theme-bg-card border theme-border p-6 space-y-3 scroll-mt-24">
+                        <h3 class="text-xl font-extrabold">12. Відеозустрічі ArTesolymp Meet</h3>
+                        <ul class="list-disc pl-5 space-y-1 text-sm">
+                            <li>Відкрийте Хаб → Meet або натисніть «Відеозустріч» у приватному чаті, групі чи класі. Посилання на зустріч можна запросити через відповідний чат.</li>
+                            <li>Після входу мікрофон і камера вимкнені. Увімкніть потрібний пристрій вручну та надайте дозвіл браузеру. Екран передається після натискання «Поділитися екраном» та вибору в системному вікні.</li>
+                            <li>Кнопка «Увімкнути звук» з'являється лише тоді, коли браузер заблокував автоматичне відтворення аудіо.</li>
+                            <li>«Розмити фон» і «Свій фон» працюють у сумісних сучасних браузерах. Якщо обробка відео не підтримується, можна користуватися камерою без ефекту.</li>
+                            <li>Для роботи Meet адміністратор платформи має налаштувати LiveKit: <code>LIVEKIT_URL</code>, <code>LIVEKIT_API_KEY</code> та <code>LIVEKIT_API_SECRET</code> у Script Properties Apps Script. Секрет не можна вставляти у HTML.</li>
+                        </ul>
+                    </section>
+
+                    <section id="doc-chess" class="rounded-2xl theme-bg-card border theme-border p-6 space-y-3 scroll-mt-24">
+                        <h3 class="text-xl font-extrabold">13. Шахи ArTesolymp</h3>
+                        <ul class="list-disc pl-5 space-y-1 text-sm">
+                            <li>Для гри з людиною відкрийте Хаб → Шахи або приватний чат та надішліть виклик. Обидва гравці мають додати Chess.com у профіль. Після прийняття виклику кольори призначаються випадково, кожному надається 15 хвилин.</li>
+                            <li>Ходи перевіряються на легальність, а стан партії та шахові годинники зберігаються сервером. Підключення до Chess.com для керування ходами не використовується.</li>
+                        </ul>
                     </section>
                 </div>
             </div>
@@ -1094,7 +1115,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbzFqQA9I_AIlciHsrO8n4bRSf1vpe_4CldBWFQorH7LnWFy_xRKzuhvSysszep1nePS/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycby42ySCwRiTIAdL9SwvS_FZPz1aR6Eaqrkb23AZ1iaXt1b8LDTtoJcH3rLzBGBwCYkY/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -4959,7 +4980,7 @@
         <div id="hb-body" class="flex-1 overflow-y-auto p-3 text-sm space-y-3"></div>
       </div>
     </div>`);
-    const TABS = [["dm", "💬 ЛС"], ["communities", "👥 Групи / канали"], ["cards", "🎁 Картки"], ["class", "🏫 Класи"], ["league", "🏅 Ліга"], ["duel", "⚔️ Дуелі"], ["build", "🧠 Конструктор"], ["fb", "⭐ Відгуки / 🚩 Скарги"]];
+    const TABS = [["dm", "💬 ЛС"], ["communities", "👥 Групи / канали"], ["class", "🏫 Класи"], ["meet", "📹 Meet"], ["chess", "♟ Шахи"], ["cards", "🎁 Картки"], ["league", "🏅 Ліга"], ["duel", "⚔️ Дуелі"], ["build", "🧠 Конструктор"], ["fb", "⭐ Відгуки / 🚩 Скарги"]];
     const visibleTabs = () => me && me.isAdmin ? TABS.concat([["admin", "🛡 Адмін-панель"]]) : TABS;
     const btn = "px-3 py-2 rounded-xl border theme-border font-bold text-xs hover:border-sky-400";
     const inp = "w-full p-2 rounded-xl border theme-border theme-bg-card text-sm";
@@ -5042,6 +5063,8 @@
             }
             pfClose();
             if (k === "dm") gotoHub("dm", () => thread(u.userId));
+            else if (k === "meet") window.ATMeet && window.ATMeet.start("dm", u.userId, "Зустріч з " + u.name, {peerId:u.userId});
+            else if (k === "chess") { chessTo={id:u.userId,name:u.name}; gotoHub("chess"); }
             else if (k === "duel") { duelTo = { id:u.userId, name:u.name }; gotoHub("duel"); }
             else if (k === "card") { cardTo = { id:u.userId, name:u.name }; gotoHub("cards"); }
         });
@@ -5065,7 +5088,7 @@
         const stats = isT ? stat(s.olympiads || 0, "олімпіад") + stat(s.tests || 0, "тестів") : stat(s.attempts || 0, "робіт") + stat(s.avgPct == null ? "—" : s.avgPct + "%", "середній") + stat((s.gems || 0) + " 💎", "гемів");
         const soc = Object.keys(u.socials || {});
         const socialManage = !u.isMe ? `<button data-pf="${u.blockedByMe ? "unblock" : "block"}" class="${btn}">${u.blockedByMe ? "🔓 Розблокувати" : "⛔ Заблокувати"}</button><button data-pf="${u.ignoredByMe ? "unignore" : "ignore"}" class="${btn}">${u.ignoredByMe ? "Показувати знову" : "🙈 Ігнорувати"}</button>` : "";
-        const acts = (u.canDm ? `<button data-pf="dm" class="${btn} theme-btn-primary">💬 Написати</button>` : "") + (!u.isMe && !u.blockedByMe && !u.blockedMe ? `<button data-pf="duel" class="${btn}">⚔️ Дуель</button>` : "") + (u.canCard ? `<button data-pf="card" class="${btn}">🎁 Картка</button>` : "") + socialManage;
+        const acts = (u.canDm ? `<button data-pf="dm" class="${btn} theme-btn-primary">💬 Написати</button><button data-pf="meet" class="${btn}">📹 Зустріч</button>` : "") + (!u.isMe && !u.blockedByMe && !u.blockedMe ? `<button data-pf="duel" class="${btn}">⚔️ Дуель</button>` : "") + (!u.isMe && u.socials && u.socials.chess ? `<button data-pf="chess" class="${btn}">♟ Шаховий виклик</button>` : "") + (u.canCard ? `<button data-pf="card" class="${btn}">🎁 Картка</button>` : "") + socialManage;
         $("pf-body").innerHTML = (PF.hist.length ? `<button data-pf="back" class="${btn}">← Назад</button>` : "") +
             card(u, (u.titles && u.titles.length ? " · 🏆 " + esc(u.titles.join(", ")) : "") + (u.className ? " · 🏫 " + esc(u.className) : "") + (u.isMe ? " · це ви" : "")) +
             `<div class="flex gap-2">${stats}</div>` +
@@ -5106,9 +5129,9 @@
         body().innerHTML = `<div class="space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-2"><div><div class="font-black text-xl">🛡 Центр адміністрування ArTesolymp</div><div class="text-xs theme-text-secondary">Керування акаунтами, класами, приватними спільнотами та скаргами.</div></div><button id="adm-refresh" class="${btn}">↻ Оновити дані</button></div>
           <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">${statCards.map(x => `<div class="p-3 rounded-xl border theme-border"><div class="text-xl font-black tabular-nums">${Number(x[1])||0}</div><div class="text-[11px] theme-text-secondary">${esc(x[0])}</div></div>`).join("")}</div>
-          <section class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-extrabold">👤 Облікові записи (${r.users.length} останніх, до 250)</div><input id="adm-search" class="${inp}" placeholder="Пошук за ім’ям, поштою або ID…"><div id="adm-users" class="space-y-2">${r.users.map(x => `<div class="adm-user p-3 rounded-xl border theme-border space-y-2" data-search="${esc((x.name+" "+x.email+" "+x.userId).toLowerCase())}"><div class="flex flex-wrap justify-between gap-1"><b class="break-words">${esc(x.name)}</b><span class="text-[11px] theme-text-secondary break-all">${esc(x.userId)}</span></div><div class="text-xs theme-text-secondary break-all">${esc(x.email)}</div>${x.requestedRole === "Учитель" ? `<div class="text-xs text-amber-600 font-bold">⏳ Очікує підтвердження ролі вчителя</div>` : ""}${x.userId === me.profile.userId ? `<div class="text-xs theme-text-secondary">Поточний адміністратор — захищений від зміни через цю панель.</div>` : `<div class="grid sm:grid-cols-4 gap-2"><label class="text-[11px]">Статус<select data-adm-badge="${esc(x.userId)}" class="${inp}">${badgeOptions.map(v => `<option value="${v[0]}" ${x.badge===v[0]?"selected":""}>${v[1]}</option>`).join("")}</select></label><label class="text-[11px]">Роль<select data-adm-role="${esc(x.userId)}" class="${inp}"><option value="Учень" ${x.role==="Учень"?"selected":""}>Учень</option><option value="Учитель" ${x.role==="Учитель"?"selected":""}>Учитель</option><option value="Олімпієць" ${x.role==="Олімпієць"?"selected":""}>Олімпієць</option></select></label><label class="text-[11px] flex items-center gap-2"><input data-adm-disabled="${esc(x.userId)}" type="checkbox" ${x.disabled?"checked":""}> Вимкнено</label><button data-adm-save="${esc(x.userId)}" class="${btn} theme-btn-primary self-end">Зберегти</button></div>`}</div>`).join("") || "<div class='theme-text-secondary'>Користувачів немає.</div>"}</div><div class="text-[11px] theme-text-secondary">Зміна ролі не робить користувача адміністратором. Адмін-статус задається окремо через badge або ADMIN_EMAILS.</div></section>
-          <section class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-extrabold">👥 Приватні групи та канали (${r.communities.length})</div>${r.communities.map(x => `<div class="p-2 rounded-xl border theme-border flex flex-wrap items-center gap-2"><div class="flex-1 min-w-0"><b>${x.kind==="channel"?"📣":"👥"} ${esc(x.name)}</b><div class="text-[11px] theme-text-secondary">Власник: ${esc(x.owner)} · ${x.members} учасн. · ${x.hasPassword?"🔐 пароль":"без пароля"}</div><div class="text-[10px] opacity-60 break-all">${esc(x.communityId)}</div></div><button data-adm-community-delete="${esc(x.communityId)}" class="${btn} text-red-500">Видалити</button></div>`).join("") || "<div class='text-xs theme-text-secondary'>Спільнот ще немає.</div>"}</section>
-          <section class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-extrabold">🏫 Класи (${r.classes.length})</div>${r.classes.map(x => `<div class="p-2 rounded-xl border theme-border flex flex-wrap items-center gap-2"><div class="flex-1 min-w-0"><b>${esc(x.name)}</b><div class="text-[11px] theme-text-secondary">Власник: ${esc(x.owner)} · ${x.members} учасн. · код ${esc(x.code)}</div><div class="text-[10px] opacity-60 break-all">${esc(x.classId)}</div></div><button data-adm-class-delete="${esc(x.classId)}" class="${btn} text-red-500">Видалити</button></div>`).join("") || "<div class='text-xs theme-text-secondary'>Класів ще немає.</div>"}</section>
+          <section class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-extrabold">👤 Облікові записи (${r.users.length} останніх, до 250)</div><input id="adm-search" class="${inp}" placeholder="Пошук за ім’ям, поштою або ID…"><div id="adm-users" class="space-y-2">${r.users.map(x => `<div class="adm-user p-3 rounded-xl border theme-border space-y-2" data-search="${esc((x.name+" "+x.email+" "+x.userId).toLowerCase())}"><div class="flex flex-wrap justify-between gap-1"><b class="break-words">${esc(x.name)}</b><span class="text-[11px] theme-text-secondary break-all">${esc(x.userId)}</span></div><div class="text-xs theme-text-secondary break-all">${esc(x.email)}</div>${x.requestedRole === "Учитель" ? `<div class="text-xs text-amber-600 font-bold">⏳ Очікує підтвердження ролі вчителя</div>` : ""}${x.userId === me.profile.userId ? `<div class="text-xs theme-text-secondary">Поточний адміністратор — захищений від зміни через цю панель.</div>` : `<div class="grid sm:grid-cols-5 gap-2"><label class="text-[11px]">Статус<select data-adm-badge="${esc(x.userId)}" class="${inp}">${badgeOptions.map(v => `<option value="${v[0]}" ${x.badge===v[0]?"selected":""}>${v[1]}</option>`).join("")}</select></label><label class="text-[11px]">Примітка до статусу<input data-adm-note="${esc(x.userId)}" maxlength="40" class="${inp}" value="${esc(x.badgeNote || "")}" placeholder="До 40 символів"></label><label class="text-[11px]">Роль<select data-adm-role="${esc(x.userId)}" class="${inp}"><option value="Учень" ${x.role==="Учень"?"selected":""}>Учень</option><option value="Учитель" ${x.role==="Учитель"?"selected":""}>Учитель</option><option value="Олімпієць" ${x.role==="Олімпієць"?"selected":""}>Олімпієць</option></select></label><label class="text-[11px] flex items-center gap-2"><input data-adm-disabled="${esc(x.userId)}" type="checkbox" ${x.disabled?"checked":""}> Вимкнено</label><button data-adm-save="${esc(x.userId)}" class="${btn} theme-btn-primary self-end">Зберегти</button></div>`}</div>`).join("") || "<div class='theme-text-secondary'>Користувачів немає.</div>"}</div><div class="text-[11px] theme-text-secondary">Зміна ролі не робить користувача адміністратором. Адмін-статус задається окремо через badge або ADMIN_EMAILS.</div></section>
+          <section class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-extrabold">👥 Приватні групи та канали (${r.communities.length})</div>${r.communities.map(x => `<div class="p-2 rounded-xl border theme-border flex flex-wrap items-center gap-2"><div class="flex-1 min-w-0"><b>${x.kind==="channel"?"📣":"👥"} ${esc(x.name)}</b><div class="text-[11px] theme-text-secondary">Власник: ${esc(x.owner)} · ${x.members} учасн. · ${x.hasPassword?"🔐 пароль":"без пароля"}</div><div class="text-[10px] opacity-60 break-all">${esc(x.communityId)}</div></div><button data-adm-community-enter="${esc(x.communityId)}" class="${btn} theme-btn-primary">Увійти без запиту</button><button data-adm-community-delete="${esc(x.communityId)}" class="${btn} text-red-500">Видалити</button></div>`).join("") || "<div class='text-xs theme-text-secondary'>Спільнот ще немає.</div>"}</section>
+          <section class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-extrabold">🏫 Класи (${r.classes.length})</div>${r.classes.map(x => `<div class="p-2 rounded-xl border theme-border flex flex-wrap items-center gap-2"><div class="flex-1 min-w-0"><b>${esc(x.name)}</b><div class="text-[11px] theme-text-secondary">Власник: ${esc(x.owner)} · ${x.members} учасн. · код ${esc(x.code)}</div><div class="text-[10px] opacity-60 break-all">${esc(x.classId)}</div></div><button data-adm-class-enter="${esc(x.classId)}" class="${btn} theme-btn-primary">Увійти без запиту</button><button data-adm-class-delete="${esc(x.classId)}" class="${btn} text-red-500">Видалити</button></div>`).join("") || "<div class='text-xs theme-text-secondary'>Класів ще немає.</div>"}</section>
           <section class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-extrabold">🚩 Черга скарг (${reports.length})</div>${reports.map(x => `<div class="p-2 rounded-xl border theme-border text-xs space-y-1"><div><b>${esc(x.targetType)}</b> · ${esc(x.reason)} · від ${esc(x.reporter || "користувач")}</div>${x.quote?`<div class="p-1.5 rounded theme-accent-bg-light">${esc(x.quote)}</div>`:""}${x.text?`<div>${esc(x.text)}</div>`:""}<div class="flex gap-2"><button data-adm-report="${esc(x.reportId)}" data-status="done" class="${btn}">✅ Розглянуто</button><button data-adm-report="${esc(x.reportId)}" data-status="rejected" class="${btn}">Відхилити</button></div></div>`).join("") || "<div class='text-xs theme-text-secondary'>Нових скарг немає.</div>"}</section>
         </div>`;
         const search = $("adm-search");
@@ -5120,9 +5143,17 @@
                 let b;
                 if ((b=q("[data-adm-save]"))) {
                     const id=b.dataset.admSave, root=b.closest(".adm-user");
-                    const badge=root.querySelector(`[data-adm-badge="${CSS.escape(id)}"]`), role=root.querySelector(`[data-adm-role="${CSS.escape(id)}"]`), disabled=root.querySelector(`[data-adm-disabled="${CSS.escape(id)}"]`);
+                    const badge=root.querySelector(`[data-adm-badge="${CSS.escape(id)}"]`), role=root.querySelector(`[data-adm-role="${CSS.escape(id)}"]`), disabled=root.querySelector(`[data-adm-disabled="${CSS.escape(id)}"]`), note=root.querySelector(`[data-adm-note="${CSS.escape(id)}"]`);
                     b.disabled=true; b.textContent="Збереження…";
-                    await call("globerAdminSetUser", { userId:id, badge:badge.value, role:role.value, disabled:disabled.checked }); toast("Акаунт оновлено."); return admin();
+                    await call("globerAdminSetUser", { userId:id, badge:badge.value, badgeNote:note ? note.value : "", role:role.value, disabled:disabled.checked }); toast("Акаунт оновлено."); return admin();
+                }
+                if ((b=q("[data-adm-community-enter]"))) {
+                    const j=await call("globerAdminEnterCommunity", { communityId:b.dataset.admCommunityEnter });
+                    toast("Вхід адміністратора записано в аудит."); tab="communities"; await render(); return openCommunity(j.communityId);
+                }
+                if ((b=q("[data-adm-class-enter]"))) {
+                    const j=await call("globerCxAdminEnterClass", { classId:b.dataset.admClassEnter });
+                    toast("Вхід адміністратора записано в аудит."); tab="class"; curSub="stream"; await render(); return openClass(j.classId);
                 }
                 if ((b=q("[data-adm-community-delete]"))) {
                     if (!confirm("Видалити цю групу/канал разом з учасниками, повідомленнями й запрошеннями?")) return;
@@ -5136,16 +5167,63 @@
             } catch (err) { toast(err.message); if (e.target) { e.target.disabled=false; } }
         };
     }
+    async function meet() {
+        const [d, c, cl, active] = await Promise.all([
+            call("globerDmInbox"), call("globerCommunityList"), call("globerClassList"), call("globerMeetList")
+        ]);
+        const opts = [];
+        (d.threads || []).forEach(x => opts.push({ value:"dm::"+x.withId, label:"💬 ЛС · "+x.name }));
+        (c.communities || []).forEach(x => opts.push({ value:"community::"+x.communityId, label:(x.kind==="channel"?"📣 Канал · ":"👥 Група · ")+x.name }));
+        (cl.classes || []).forEach(x => opts.push({ value:"class::"+x.classId, label:"🏫 Клас · "+x.name }));
+        body().innerHTML = `<div class="space-y-3">
+          <div class="rounded-2xl border theme-border p-3 space-y-2"><div class="text-lg font-black">📹 ArTesolymp Meet</div><p class="text-xs theme-text-secondary">Відео та аудіо, демонстрація екрана, розмиття або власний фон. Шахи працюють окремо у вкладці «Шахи» та в особистих викликах.</p>
+            <label class="block text-xs font-bold">Де створити зустріч<select id="meet-target" class="${inp} mt-1">${opts.map(x=>`<option value="${esc(x.value)}">${esc(x.label)}</option>`).join("")}</select></label>
+            <input id="meet-title" class="${inp}" maxlength="100" placeholder="Назва зустрічі (необов'язково)">
+            <button id="meet-create" class="${btn} theme-btn-primary" ${opts.length?"":"disabled"}>＋ Створити та підключитися</button>
+            <div class="text-[11px] theme-text-secondary">Для дзвінків потрібне налаштування LiveKit у властивостях Apps Script. API-ключі зберігаються лише на сервері.</div>
+          </div>
+          <section class="space-y-2"><div class="font-bold">Активні зустрічі, до яких у вас є доступ</div>${(active.meetings||[]).map(x=>`<div class="p-3 rounded-xl border theme-border flex flex-wrap gap-2 items-center"><div class="flex-1 min-w-[140px]"><b>${esc(x.title)}</b><div class="text-xs theme-text-secondary">${x.scope==="dm"?"Особиста зустріч":x.scope==="class"?"Клас":"Група / канал"} · створив ${esc(x.creator)}</div><div class="text-[10px] opacity-60">${fmtDt(x.createdAt)}</div></div><button data-meet-join="${esc(x.meetingId)}" class="${btn} theme-btn-primary">Приєднатися</button>${x.mine?`<button data-meet-end="${esc(x.meetingId)}" class="${btn} text-red-500">Завершити для всіх</button>`:""}</div>`).join("") || "<div class='text-xs theme-text-secondary'>Активних зустрічей немає.</div>"}</section>
+        </div>`;
+        if ($("meet-create")) $("meet-create").onclick = async () => {
+            const parts=String($("meet-target").value||"").split("::"); if(parts.length!==2)return toast("Оберіть клас, групу або особистий чат.");
+            const [scope,id]=parts; let opts={}; if(scope==="dm")opts.peerId=id;
+            try { await window.ATMeet.start(scope,id,$("meet-title").value.trim(),opts); } catch(e){toast(e.message);}
+        };
+        body().onclick = async e => {
+            const j=e.target.closest("[data-meet-join]"); if(j) return window.ATMeet.join(j.dataset.meetJoin);
+            const end=e.target.closest("[data-meet-end]"); if(end){if(!confirm("Завершити зустріч для всіх учасників?"))return;try{await call("globerMeetEnd",{meetingId:end.dataset.meetEnd});toast("Зустріч завершено.");return meet();}catch(er){toast(er.message);}}
+        };
+    }
+    async function chess() {
+        const r=await call("globerChessList"), target=chessTo; chessTo=null;
+        body().innerHTML = `<div class="space-y-3"><div class="rounded-2xl border theme-border p-3 space-y-2"><div class="text-lg font-black">♟ ArTesolymp Chess</div><p class="text-xs theme-text-secondary">Особисті шахові партії з контролем 15 хвилин на кожного гравця. Колір фігур визначається випадково після прийняття виклику.</p>
+          ${target?`<div class="p-2 rounded-xl theme-accent-bg-light text-sm">Виклик для <b>${esc(target.name)}</b></div><button id="ch-target-go" class="${btn} theme-btn-primary">Надіслати шаховий виклик</button>`:""}
+          <div class="flex flex-wrap gap-2"><input id="ch-user" class="${inp} flex-1" placeholder="ID користувача або email"><button id="ch-create" class="${btn} theme-btn-primary">Викликати · 15:00 кожному</button></div>
+          <p class="text-[11px] theme-text-secondary">Обидва користувачі повинні додати посилання Chess.com у свої профілі. Годинник партії зберігається на сервері.</p></div>
+          <section class="space-y-2"><div class="font-bold">Ваші партії та запрошення</div>${(r.games||[]).map(g=>{
+            if(g.status==="pending"&&g.isIncoming)return `<div class="p-3 rounded-xl border theme-border space-y-2"><b>♟ ${esc(g.challengerName)} викликає вас</b><div class="text-xs theme-text-secondary">15 хвилин кожному · колір буде випадковим</div><div class="flex gap-2"><button data-ch-accept="${esc(g.gameId)}" class="${btn} theme-btn-primary">Прийняти</button><button data-ch-decline="${esc(g.gameId)}" class="${btn}">Відхилити</button></div></div>`;
+            if(g.status==="pending")return `<div class="p-3 rounded-xl border theme-border"><b>Очікується відповідь: ${esc(g.opponentName)}</b><div class="text-xs theme-text-secondary">Запрошення надіслано</div></div>`;
+            if(g.status==="active")return `<button data-ch-open="${esc(g.gameId)}" class="w-full text-left p-3 rounded-xl border theme-border hover:border-sky-400"><b>♟ ${esc(g.opponentNameForMe)} · партія триває</b><div class="text-xs theme-text-secondary">Ви граєте ${g.myColor==="w"?"білими":"чорними"} · 15:00 кожному</div></button>`;
+            const result=g.result==="resign"?"суперник здався або ви здалися":g.result==="timeout"?"час вичерпано":g.result==="checkmate"?"мат":g.result==="stalemate"?"пат":g.result==="draw"?"нічия":"завершена";
+            return `<div class="p-3 rounded-xl border theme-border text-xs"><b>${esc(g.opponentNameForMe||g.opponentName||g.challengerName)}</b> · ${esc(result)} ${g.winnerId?(g.winnerId===g.whiteId?"· перемогли білі":"· перемогли чорні"):""}</div>`;
+          }).join("") || "<div class='text-xs theme-text-secondary'>Поки немає шахових партій.</div>"}</section></div>`;
+        const create=async uidOrEmail=>{try{const arg=uidOrEmail.includes("@")?{email:uidOrEmail}:{userId:uidOrEmail};const j=await call("globerChessCreate",arg);toast("Виклик надіслано: "+j.opponentName);return chess();}catch(e){toast(e.message);}};
+        if($("ch-create"))$("ch-create").onclick=()=>create($("ch-user").value.trim());
+        if($("ch-target-go"))$("ch-target-go").onclick=()=>create(target.id);
+        body().onclick=async e=>{const a=e.target.closest("[data-ch-accept],[data-ch-decline],[data-ch-open]");if(!a)return;try{if(a.dataset.chAccept){await call("globerChessAccept",{gameId:a.dataset.chAccept});return window.ATChess.open(a.dataset.chAccept);}if(a.dataset.chDecline){await call("globerChessDecline",{gameId:a.dataset.chDecline});return chess();}if(a.dataset.chOpen)return window.ATChess.open(a.dataset.chOpen);}catch(er){toast(er.message);}};
+    }
+
     async function render() {
         navSeq++; curThread = null; curClass = null; curPost = null;
         if (!me) await load(); if (!me) return;
         if (tab === "admin" && !me.isAdmin) tab = "dm";
         setTabs();
-        const f = { dm, communities, cards, class:cls, league, duel, build, fb, admin }[tab];
+        const f = { dm, communities, cards, class:cls, meet, chess, league, duel, build, fb, admin }[tab];
         body().innerHTML = "<div class='theme-text-secondary'>Завантаження…</div>";
         try { await f(); } catch (e) { body().innerHTML = `<div class="text-red-500">${esc(e.message)}</div>`; }
         walTxt();
     }
+    window.ATHubShow = async function (nextTab) { tab = nextTab; $("hb-modal").classList.remove("hidden"); if (!me) await load(); return render(); };
     function openHub() { if (!requireLogin()) return; $("hb-modal").classList.remove("hidden"); load().then(render); }
     $("hb-fab").onclick = openHub; $("hb-close").onclick = () => $("hb-modal").classList.add("hidden");
     $("hb-tabs").addEventListener("click", e => { const t = e.target.dataset && e.target.dataset.tab; if (t) { tab = t; render(); } });
@@ -5270,9 +5348,12 @@
     async function thread(id) {
         if (!soft) navSeq++; curThread = id;
         const r = await call("globerDmThread", { withId: id });
-        body().innerHTML = `<button id="th-back" class="${btn}">← Назад</button><div class="font-bold">${r.with ? who(r.with.id, r.with.name) : ""}</div><div class="space-y-1">${r.messages.map(m => `<div class="${m.mine ? "ml-10 bg-sky-500/20" : "mr-10 theme-accent-bg-light"} p-2 rounded-xl break-words">${fmtAnchors(m.text)}${attHtml(m.attach)}${!m.mine ? ` <button data-mrep="${esc(m.msgId)}" class="text-xs opacity-50" title="Поскаржитися">🚩</button>` : ""}</div>`).join("")}</div>
+        body().innerHTML = `<button id="th-back" class="${btn}">← Назад</button><div class="font-bold">${r.with ? who(r.with.id, r.with.name) : ""}</div>
+        <div class="flex flex-wrap gap-2"><button id="th-meet" class="${btn} theme-btn-primary">📹 Відеозустріч</button><button id="th-chess" class="${btn}">♟ Викликати на шахи · 15:00 кожному</button></div><div class="space-y-1">${r.messages.map(m => `<div class="${m.mine ? "ml-10 bg-sky-500/20" : "mr-10 theme-accent-bg-light"} p-2 rounded-xl break-words">${fmtAnchors(m.text)}${attHtml(m.attach)}${!m.mine ? ` <button data-mrep="${esc(m.msgId)}" class="text-xs opacity-50" title="Поскаржитися">🚩</button>` : ""}</div>`).join("")}</div>
         <div class="flex gap-2"><input id="th-tx" class="${inp}" maxlength="1000"><button id="th-att" class="${btn}" title="Надіслати файл (до 10 МБ)">📎</button><input id="th-file" type="file" class="hidden"><button id="th-go" class="${btn} theme-btn-primary">➤</button></div><div id="th-prog" class="text-xs theme-text-secondary"></div>`;
         $("th-back").onclick = () => render();
+        $("th-meet").onclick = () => window.ATMeet && window.ATMeet.start("dm", id, r.with ? r.with.name : "Особиста зустріч", { peerId:id });
+        $("th-chess").onclick = async () => { try { const j=await call("globerChessCreate", { userId:id }); toast("Шаховий виклик надіслано. Партія — 15 хвилин кожному."); tab="chess"; await render(); } catch(e){ toast(e.message); } };
         $("th-go").onclick = async () => {
             const b = $("th-go"), tx = $("th-tx"); if (b.disabled) return;
             b.disabled = true; b.textContent = "Надсилання…";
@@ -5305,7 +5386,7 @@
           </div>
           <div class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-extrabold">🔑 Приєднатися за кодом</div><div class="grid sm:grid-cols-3 gap-2"><input id="co-join-code" class="${inp}" placeholder="Код запрошення"><input id="co-join-password" type="password" class="${inp}" placeholder="Пароль (якщо є)"><button id="co-join" class="${btn} theme-btn-primary">Приєднатися</button></div></div>
           ${r.invites.length ? `<section class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-extrabold">📨 Запрошення для вас (${r.invites.length})</div>${r.invites.map(x => `<div class="p-2 rounded-xl border theme-border flex flex-wrap gap-2 items-center"><div class="flex-1 min-w-0"><b>${x.kind==="channel"?"📣":"👥"} ${esc(x.name)}</b><div class="text-xs theme-text-secondary">Від ${esc(x.from)} · роль: ${x.role==="admin"?"адміністратор":"учасник"}</div></div><button data-co-accept="${esc(x.inviteId)}" class="${btn} theme-btn-primary">Прийняти</button><button data-co-decline="${esc(x.inviteId)}" class="${btn}">Відхилити</button></div>`).join("")}</section>` : ""}
-          <section class="space-y-2"><div class="font-extrabold">Мої групи та канали (${r.communities.length})</div>${r.communities.map(x => `<button data-co-open="${esc(x.communityId)}" class="w-full text-left p-3 rounded-2xl border theme-border hover:border-sky-400"><div class="flex items-center gap-2"><b class="flex-1">${x.kind==="channel"?"📣":"👥"} ${esc(x.name)}</b><span class="text-[10px] rounded-full theme-badge px-2 py-1">${x.role==="owner"?"власник":x.role==="admin"?"адмін":"учасник"}</span></div><div class="text-xs theme-text-secondary mt-1">${esc(x.description)} · ${x.members} учасн. · ${x.hasPassword?"🔐 пароль":"без пароля"}</div>${x.inviteCode?`<div class="text-[11px] mt-1">Код: <code>${esc(x.inviteCode)}</code></div>`:""}</button>`).join("") || "<div class='text-xs theme-text-secondary'>Поки немає спільнот. Створіть власну або приєднайтеся за кодом.</div>"}</section>
+          <section class="space-y-2"><div class="font-extrabold">Мої групи та канали (${r.communities.length})</div>${r.communities.map(x => `<button data-co-open="${esc(x.communityId)}" class="w-full text-left p-3 rounded-2xl border theme-border hover:border-sky-400"><div class="flex items-center gap-2"><b class="flex-1">${x.kind==="channel"?"📣":"👥"} ${esc(x.name)}</b><span class="text-[10px] rounded-full theme-badge px-2 py-1">${x.role==="owner"?"власник":x.role==="admin"?"адмін":"учасник"}</span></div><div class="text-xs theme-text-secondary mt-1">${esc(x.description)} · ${x.members} учасн. · ${x.hasPassword?"🔐 пароль":"без пароля"}</div>${x.inviteCode?`<div class="text-[11px] mt-1">Код: <code>${esc(x.inviteCode)}</code>${x.hasPassword?` · пароль: <code>${esc(x.memberPassword || "потрібно оновити")}</code>`:""}</div>`:""}</button>`).join("") || "<div class='text-xs theme-text-secondary'>Поки немає спільнот. Створіть власну або приєднайтеся за кодом.</div>"}</section>
         </div>`;
         $("co-create").onclick = async () => {
             const b=$("co-create"); if(b.disabled)return; b.disabled=true; b.textContent="Створення…";
@@ -5326,27 +5407,47 @@
         const my=navSeq; const r=await call("globerCommunityView", { communityId:id });
         if (tab!=="communities" || (my!==navSeq && !soft)) return;
         const c=r.community, managers=c.canManage, owner=c.isOwner, channel=c.kind==="channel";
-        const msgHtml = r.messages.map(m => `<div class="p-2 rounded-xl border theme-border ${m.mine?"ml-5 theme-accent-bg-light":"mr-5"}"><div class="flex items-center gap-2 text-[11px] theme-text-secondary"><b class="flex-1">${esc(m.name)}</b>${m.edited?"(ред.)":""} · ${fmtDt(m.createdAt)}${m.mine?`<button data-cm-edit="${esc(m.messageId)}" class="px-1">✎</button>`:""}${m.canDelete?`<button data-cm-del="${esc(m.messageId)}" class="px-1 text-red-500">✕</button>`:""}</div><div class="whitespace-pre-wrap break-words mt-1">${fmtAnchors(m.text)}</div></div>`).join("");
+        const roleName = v => ({owner:"власник",admin:"адміністратор",member:"учасник",restricted:"обмежений (лише читання)",platform_admin:"адміністратор ArTesolymp"}[v] || v);
+        const msgHtml = r.messages.map(m => `<div class="p-2 rounded-xl border theme-border ${m.mine?"ml-5 theme-accent-bg-light":"mr-5"}"><div class="flex items-center gap-2 text-[11px] theme-text-secondary"><b class="flex-1">${channel?esc(m.name):who(m.senderId,m.name)}</b>${m.edited?"(ред.)":""} · ${fmtDt(m.createdAt)}${m.mine?`<button data-cm-edit="${esc(m.messageId)}" class="px-1">✎</button>`:""}${m.canDelete?`<button data-cm-del="${esc(m.messageId)}" class="px-1 text-red-500">✕</button>`:""}</div><div class="whitespace-pre-wrap break-words mt-1">${fmtAnchors(m.text)}</div>${attHtml(m.attachments)}</div>`).join("");
+        const inviteAllowed = true; // усі учасники можуть запрошувати; обмеження стосується публікацій у чаті
+        const canPost = !!c.canPost;
+        const canModerate = owner || c.role === "admin";
+        const canSetRoles = owner || c.role === "admin" || c.role === "platform_admin";
         body().innerHTML = `<div class="space-y-3">
-          <div class="flex flex-wrap gap-2"><button id="co-back" class="${btn}">← Спільноти</button><button id="co-leave" class="${btn} text-red-500">Покинути</button></div>
-          <div class="rounded-2xl p-4 text-white" style="background:${clColor(c.name)}"><div class="text-xl font-black">${channel?"📣":"👥"} ${esc(c.name)}</div><div class="text-sm opacity-90">${esc(c.description)}</div><div class="text-xs opacity-80 mt-1">Власник: ${esc(c.owner)} · ${c.role==="owner"?"ви власник":c.role==="admin"?"ви адміністратор":"учасник"}</div>${c.inviteCode?`<div class="text-xs mt-2">Код для запрошення: <code class="bg-white/20 rounded px-1.5 py-1 select-all">${esc(c.inviteCode)}</code>${c.hasPassword?" · 🔐 пароль увімкнено":" · без пароля"}</div>`:""}</div>
-          ${managers?`<section class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-bold">Додати учасника</div><div class="grid sm:grid-cols-[1fr_150px_auto] gap-2"><input id="co-invite-email" class="${inp}" placeholder="Пошта користувача"><select id="co-invite-role" class="${inp}">${owner?'<option value="member">👤 Учасник</option><option value="admin">🛡 Адміністратор</option>':'<option value="member">👤 Учасник</option>'}</select><button id="co-invite" class="${btn} theme-btn-primary">Запросити</button></div><div class="text-[11px] theme-text-secondary">Якщо користувач дозволив додавання без підтвердження — він приєднається одразу. Інакше йому прийде запрошення, яке треба прийняти.</div></section>`:""}
-          ${owner?`<details class="rounded-2xl border theme-border p-3"><summary class="font-bold cursor-pointer">⚙ Налаштування спільноти (лише власник)</summary><div class="space-y-2 pt-2"><input id="co-edit-name" maxlength="60" class="${inp}" value="${esc(c.name)}" placeholder="Назва"><textarea id="co-edit-desc" maxlength="500" rows="2" class="${inp}" placeholder="Опис">${esc(c.description)}</textarea><label class="flex items-center gap-2 text-xs"><input id="co-edit-pass-enable" type="checkbox" ${c.hasPassword?"checked":""}> Захистити паролем</label><input id="co-edit-pass" type="password" maxlength="64" class="${inp}" placeholder="Новий пароль (4–64 символи)"><div class="text-[11px] theme-text-secondary">Увімкніть пароль і введіть новий, або зніміть позначку, щоб прибрати пароль.</div><label class="flex items-center gap-2 text-xs"><input id="co-edit-code" type="checkbox"> Оновити код запрошення (старий код стане недійсним)</label><button id="co-edit-save" class="${btn} theme-btn-primary">Зберегти зміни</button><button id="co-delete" class="${btn} text-red-500">Видалити спільноту</button></div></details>`:""}
-          <section class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-bold">Учасники (${r.members.length})</div>${r.members.map(m=>`<div class="flex items-center gap-2 text-xs"><span class="flex-1">${esc(m.name)} ${m.isMe?"(ви)":""}</span><b>${m.role==="owner"?"власник":m.role==="admin"?"адмін":"учасник"}</b>${owner&&!m.isMe?`<select data-cm-role="${esc(m.userId)}" class="p-1 rounded-lg border theme-border theme-bg-card"><option value="${m.role}" selected>${m.role==="admin"?"Адмін":"Учасник"}</option><option value="${m.role==="admin"?"member":"admin"}">${m.role==="admin"?"Зробити учасником":"Зробити адміном"}</option></select><button data-cm-remove="${esc(m.userId)}" class="text-red-500 px-1">Видалити</button>`:""}</div>`).join("")}</section>
-          <section class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-bold">${channel?"Стрічка каналу":"Загальний чат"}</div><div id="co-messages" class="space-y-2 max-h-[42vh] overflow-y-auto">${msgHtml||"<div class='text-xs theme-text-secondary'>Поки немає повідомлень.</div>"}</div>${c.canPost?`<div class="flex gap-2"><textarea id="co-message" maxlength="2000" rows="2" class="${inp}" placeholder="${channel?"Нова публікація…":"Ваше повідомлення…"}"></textarea><button id="co-send" class="${btn} theme-btn-primary">➤</button></div>`:`<div class="text-xs theme-text-secondary">У цьому каналі публікують лише власник та адміністратори.</div>`}</section>
+          <div class="flex flex-wrap gap-2"><button id="co-back" class="${btn}">← Спільноти</button><button id="co-meet" class="${btn} theme-btn-primary">📹 Відеозустріч</button><button id="co-leave" class="${btn} text-red-500">Покинути</button></div>
+          <div class="rounded-2xl p-4 text-white" style="background:${clColor(c.name)}"><div class="text-xl font-black">${channel?"📣":"👥"} ${esc(c.name)}</div><div class="text-sm opacity-90">${esc(c.description)}</div><div class="text-xs opacity-80 mt-1">Власник: ${esc(c.owner)} · ${roleName(c.role)}</div>
+            <div class="mt-3 rounded-xl bg-black/15 p-2 space-y-1"><div class="text-xs">Код для запрошення: <code id="co-code-value" class="bg-white/20 rounded px-1.5 py-1 select-all">${esc(c.inviteCode || "—")}</code> <button id="co-copy-code" class="underline text-xs">Копіювати</button></div><div class="text-xs">Пароль: <code id="co-password-value" class="bg-white/20 rounded px-1.5 py-1 select-all">${c.hasPassword ? esc(c.memberPassword || "Власник має оновити старий пароль") : "не встановлено"}</code> ${c.memberPassword?`<button id="co-copy-password" class="underline text-xs">Копіювати</button>`:""}</div><div class="text-[10px] opacity-80">Усі учасники цієї спільноти бачать код і пароль. Не використовуйте пароль від інших акаунтів.</div></div>
+          </div>
+          ${inviteAllowed?`<section class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-bold">👥 Запросити учасника</div><input id="co-invite-search" class="${inp}" placeholder="Почніть вводити ім’я користувача (від 2 символів)"><div id="co-invite-results" class="space-y-1 text-xs"></div><input id="co-invite-selected" type="hidden"><div id="co-invite-picked" class="text-xs theme-text-secondary">Нікого не обрано.</div><div class="flex flex-wrap gap-2 items-center">${owner?`<select id="co-invite-role" class="${inp} !w-auto"><option value="member">👤 Учасник</option><option value="admin">🛡 Адміністратор</option></select>`:`<span class="text-xs theme-text-secondary">Роль запрошеного: учасник</span>`}<button id="co-invite" class="${btn} theme-btn-primary" disabled>Запросити обраного</button></div><div class="text-[11px] theme-text-secondary">Якщо користувач дозволив автоматичне додавання — він приєднається відразу. Інакше отримає запрошення та сам вирішить. Призначати адмінів може лише власник.</div></section>`:"<div class='text-xs theme-text-secondary'>Ваш доступ обмежено: надсилання повідомлень вимкнено, але запрошувати учасників можна.</div>"}
+          ${owner?`<details class="rounded-2xl border theme-border p-3"><summary class="font-bold cursor-pointer">⚙ Налаштування спільноти (власник)</summary><div class="space-y-2 pt-2"><input id="co-edit-name" maxlength="60" class="${inp}" value="${esc(c.name)}" placeholder="Назва"><textarea id="co-edit-desc" maxlength="500" rows="2" class="${inp}" placeholder="Опис">${esc(c.description)}</textarea><label class="flex items-center gap-2 text-xs"><input id="co-edit-pass-enable" type="checkbox" ${c.hasPassword?"checked":""}> Захистити паролем</label><input id="co-edit-pass" type="password" maxlength="64" class="${inp}" placeholder="${c.hasPassword?"Новий пароль (залиште порожнім без змін)":"Новий пароль (4–64 символи)"}"><div class="text-[11px] theme-text-secondary">Для старих спільнот пароль зберігався лише як хеш. Введіть новий, щоб усі учасники могли його бачити.</div><label class="flex items-center gap-2 text-xs"><input id="co-edit-code" type="checkbox"> Оновити код запрошення (старий стане недійсним)</label><button id="co-edit-save" class="${btn} theme-btn-primary">Зберегти зміни</button><button id="co-delete" class="${btn} text-red-500">Видалити спільноту</button></div></details>`:""}
+          <section class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-bold">Учасники (${r.members.length})</div>${r.members.map(m=>`<div class="flex flex-wrap items-center gap-2 text-xs"><span class="flex-1 min-w-[110px]">${m.profileVisible?who(m.userId,m.name):esc(m.name)} ${m.isMe?"(ви)":""}</span><b>${roleName(m.role)}</b>${m.protected?`<span class="text-[10px] theme-text-secondary">🔒 захищений акаунт</span>`:canSetRoles&&!m.isMe&&m.role!=="owner"&&(owner||["member","restricted"].includes(m.role))?`<select data-cm-role="${esc(m.userId)}" class="p-1 rounded-lg border theme-border theme-bg-card"><option value="member" ${m.role==="member"?"selected":""}>Учасник</option>${owner?`<option value="admin" ${m.role==="admin"?"selected":""}>Адміністратор</option>`:""}<option value="restricted" ${m.role==="restricted"?"selected":""}>Обмежити (без публікацій)</option></select>${(owner||(c.role==="admin"&&["member","restricted"].includes(m.role)))?`<button data-cm-remove="${esc(m.userId)}" class="text-red-500 px-1">Видалити</button>`:""}`:""}</div>`).join("")}</section>
+          <section class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-bold">${channel?"Стрічка каналу":"Загальний чат"}</div><div id="co-messages" class="space-y-2 max-h-[42vh] overflow-y-auto">${msgHtml||"<div class='text-xs theme-text-secondary'>Поки немає повідомлень.</div>"}</div>${canPost?`<textarea id="co-message" maxlength="2000" rows="2" class="${inp}" placeholder="${channel?"Нова публікація…":"Ваше повідомлення…"}"></textarea><div class="flex flex-wrap items-center gap-2"><button id="co-pick-files" class="${btn}">📎 Додати файли</button><input id="co-files" type="file" multiple class="hidden"><span id="co-files-names" class="text-[11px] theme-text-secondary"></span><button id="co-send" class="${btn} theme-btn-primary">Надіслати</button><span id="co-upload-status" class="text-[11px] theme-text-secondary"></span></div>`:`<div class="text-xs theme-text-secondary">${c.role==="restricted"?"Ваш доступ лише для читання.":"У цьому каналі публікують лише власник та адміністратори."}</div>`}</section>
         </div>`;
         $("co-back").onclick=()=>{curCommunity=null;render();};
+        $("co-meet").onclick=()=>window.ATMeet && window.ATMeet.start("community", id, c.name + " — зустріч");
         $("co-leave").onclick=async()=>{if(!confirm("Покинути цю спільноту?"))return;try{await call("globerCommunityLeave",{communityId:id});curCommunity=null;toast("Ви покинули спільноту.");render();}catch(e){toast(e.message);}};
-        if($("co-invite")) $("co-invite").onclick=async()=>{try{const j=await call("globerCommunityInvite",{communityId:id,email:$("co-invite-email").value,role:$("co-invite-role").value});toast(j.added?"Користувача додано.":"Запрошення надіслано — очікує підтвердження.");await openCommunity(id);}catch(e){toast(e.message);}};
-        if($("co-edit-save")) $("co-edit-save").onclick=async()=>{try{await call("globerCommunityUpdate",{communityId:id,name:$("co-edit-name").value,description:$("co-edit-desc").value,passwordEnabled:$("co-edit-pass-enable").checked,password:$("co-edit-pass").value,regenerateInviteCode:$("co-edit-code").checked});toast("Спільноту оновлено.");await openCommunity(id);}catch(e){toast(e.message);}};
-        if($("co-delete")) $("co-delete").onclick=async()=>{if(!confirm("Видалити спільноту разом із повідомленнями, запрошеннями та учасниками?"))return;try{await call("globerCommunityDelete",{communityId:id});curCommunity=null;toast("Спільноту видалено.");render();}catch(e){toast(e.message);}};
-        if($("co-send")) $("co-send").onclick=async()=>{const b=$("co-send"),v=$("co-message").value;if(!v.trim())return;b.disabled=true;try{await call("globerCommunitySend",{communityId:id,text:v});await openCommunity(id);}catch(e){toast(e.message);b.disabled=false;}};
-        body().onclick=async e=>{const x=e.target.closest("[data-cm-edit],[data-cm-del],[data-cm-role],[data-cm-remove]");if(!x)return;try{
+        const copyText = async value => { try { await navigator.clipboard.writeText(value); toast("Скопійовано."); } catch(_) { toast("Не вдалося скопіювати — виділіть текст вручну."); } };
+        if($("co-copy-code")) $("co-copy-code").onclick=()=>copyText(c.inviteCode||"");
+        if($("co-copy-password")) $("co-copy-password").onclick=()=>copyText(c.memberPassword||"");
+        if($("co-invite-search")) {
+            let timer=null;
+            $("co-invite-search").oninput=()=>{ clearTimeout(timer); const q=$("co-invite-search").value.trim(); $("co-invite-results").innerHTML=""; $("co-invite-selected").value=""; $("co-invite").disabled=true; $("co-invite-picked").textContent="Нікого не обрано."; if(q.length<2)return;
+                timer=setTimeout(async()=>{try{const z=await call("globerCommunityInviteSearch",{communityId:id,query:q});$("co-invite-results").innerHTML=(z.users||[]).map(v=>`<button data-co-pick-user="${esc(v.userId)}" data-co-pick-name="${esc(v.name)}" class="w-full text-left rounded-lg border theme-border p-2 hover:border-sky-400">${esc(v.name)} <span class="opacity-60">· ${v.allowAdd?"можна додати одразу":"потрібне підтвердження"}</span></button>`).join("")||"<div class='text-xs theme-text-secondary'>Не знайдено. Перевірте написання імені.</div>";}catch(e){toast(e.message);}},250);
+            };
+        }
+        if($("co-invite")) $("co-invite").onclick=async()=>{const uid=$("co-invite-selected").value;if(!uid)return;const b=$("co-invite");b.disabled=true;try{const j=await call("globerCommunityInvite",{communityId:id,userId:uid,role:owner?$("co-invite-role").value:"member"});toast(j.added?"Користувача додано.":"Запрошення надіслано — очікує підтвердження.");await openCommunity(id);}catch(e){toast(e.message);b.disabled=false;}};
+        if($("co-edit-save")) $("co-edit-save").onclick=async()=>{try{await call("globerCommunityUpdate",{communityId:id,name:$ ("co-edit-name").value,description:$ ("co-edit-desc").value,passwordEnabled:$ ("co-edit-pass-enable").checked,password:$ ("co-edit-pass").value,regenerateInviteCode:$ ("co-edit-code").checked});toast("Спільноту оновлено.");await openCommunity(id);}catch(e){toast(e.message);}};
+        if($("co-delete")) $("co-delete").onclick=async()=>{if(!confirm("Видалити спільноту разом із повідомленнями, файлами, запрошеннями та учасниками?"))return;try{await call("globerCommunityDelete",{communityId:id});curCommunity=null;toast("Спільноту видалено.");render();}catch(e){toast(e.message);}};
+        let chosenFiles=[];
+        if($("co-pick-files")) { $("co-pick-files").onclick=()=>$("co-files").click(); $("co-files").onchange=e=>{chosenFiles=Array.from(e.target.files||[]).slice(0,5);$("co-files-names").textContent=chosenFiles.map(f=>f.name).join(", ")+(e.target.files.length>5?" (перші 5 файлів)":"");}; }
+        if($("co-send")) $("co-send").onclick=async()=>{const b=$("co-send"),v=$("co-message").value.trim();if(!v&&!chosenFiles.length)return;b.disabled=true;try{const ids=[];for(const f of chosenFiles){const up=await ATX.upload(f,"community",id,p=>{$("co-upload-status").textContent=f.name+": "+Math.round(p*100)+"%";});ids.push(up.id);}await call("globerCommunitySend",{communityId:id,text:v,attach:ids});await openCommunity(id);}catch(e){toast(e.message);b.disabled=false;$("co-upload-status").textContent="";}};
+        body().onclick=async e=>{const file=e.target.closest("[data-file]");if(file){e.stopPropagation();return ATX.download(file.dataset.file,file.dataset.fname).catch(er=>toast(er.message));}const x=e.target.closest("[data-cm-edit],[data-cm-del],[data-cm-remove],[data-co-pick-user]");if(!x)return;try{
+            if(x.dataset.coPickUser){$("co-invite-selected").value=x.dataset.coPickUser;$("co-invite-picked").textContent="Обрано: "+x.dataset.coPickName;$("co-invite").disabled=false;return;}
             if(x.dataset.cmEdit){const old=r.messages.find(m=>m.messageId===x.dataset.cmEdit);const val=prompt("Редагувати повідомлення:",old?old.text:"");if(val===null)return;await call("globerCommunityEditMessage",{messageId:x.dataset.cmEdit,text:val});return openCommunity(id);}
             if(x.dataset.cmDel){if(!confirm("Видалити повідомлення?"))return;await call("globerCommunityDeleteMessage",{messageId:x.dataset.cmDel});return openCommunity(id);}
-            if(x.dataset.cmRole){await call("globerCommunityMemberRole",{communityId:id,userId:x.dataset.cmRole,role:x.value});toast("Роль учасника змінено.");return openCommunity(id);}
             if(x.dataset.cmRemove){if(!confirm("Видалити учасника зі спільноти?"))return;await call("globerCommunityRemoveMember",{communityId:id,userId:x.dataset.cmRemove});return openCommunity(id);}
         }catch(er){toast(er.message);}};
+        body().querySelectorAll("[data-cm-role]").forEach(el=>el.onchange=async()=>{try{await call("globerCommunityMemberRole",{communityId:id,userId:el.dataset.cmRole,role:el.value});toast("Роль учасника змінено.");await openCommunity(id);}catch(e){toast(e.message);}});
         const box=$("co-messages"); if(box) box.scrollTop=box.scrollHeight;
     }
 
@@ -5447,11 +5548,12 @@
           <div class="text-xl font-extrabold pb-1 border-b flex justify-between mt-3" style="color:${col};border-color:${col}"><span>Учні</span><span class="text-sm">${r.students.length}</span></div>
           ${r.students.map(st => `<div class="flex items-center gap-2 py-1.5">${circ("#64748b", ini(st.name))}<span class="flex-1">${who(st.userId, st.name)}</span><span class="text-xs theme-text-secondary">${st.gems} 💎</span>${T ? `<button data-sdel="${esc(st.userId)}" data-sname="${esc(st.name)}" class="px-2 text-red-500" title="Видалити з класу">✕</button>` : ""}</div>`).join("") || "<div class='theme-text-secondary'>Учнів поки немає.</div>"}`;
         else main = composer + (r.posts.length ? r.posts.map(card).join("") : "<div class='theme-text-secondary'>У стрічці поки порожньо.</div>");
-        body().innerHTML = `<div class="flex gap-2"><button id="cl-back" class="${btn}">← Усі класи</button>${!c.isOwner ? `<button id="cl-rep" class="${btn}" title="Поскаржитися на клас">🚩 Скарга</button>` : ""}</div>
+        body().innerHTML = `<div class="flex flex-wrap gap-2"><button id="cl-back" class="${btn}">← Усі класи</button><button id="cl-meet" class="${btn} theme-btn-primary">📹 Зустріч класу</button>${!c.isOwner ? `<button id="cl-rep" class="${btn}" title="Поскаржитися на клас">🚩 Скарга</button>` : ""}</div>
         <div class="rounded-2xl p-4 text-white" style="background:${col}"><div class="text-2xl font-extrabold break-words">${esc(c.name)}</div><div class="text-sm opacity-90">${who(c.ownerId, c.owner)}</div>${T ? `<div class="text-xs mt-2 opacity-90">Код класу: <code class="bg-white/20 px-1.5 py-0.5 rounded">${esc(c.code)}</code></div>` : ""}</div>
         <div class="flex flex-wrap gap-1 border-b theme-border">${[["stream", "Стрічка"], ["chat", "💬 Загальний чат"], ["work", "Завдання"], ["grades", "Оцінки"], ["people", "Учасники"], ...(c.isOwner ? [["settings", "⚙ Налаштування"]] : [])].map(t => `<button data-sub="${t[0]}" class="px-3 py-2 text-xs font-bold" style="${curSub === t[0] ? `color:${col};border-bottom:3px solid ${col}` : ""}">${t[1]}</button>`).join("")}</div>
         <div class="space-y-3">${main}</div>${c.isOwner ? `<button id="cl-delclass" class="${btn} text-red-500">🗑 Видалити клас</button>` : `<button id="cl-leave" class="${btn} text-red-500">Покинути клас</button>`}`;
         $("cl-back").onclick = () => render();
+        if ($("cl-meet")) $("cl-meet").onclick = () => window.ATMeet && window.ATMeet.start("class", id, c.name + " — класна зустріч");
         if ($("cl-save-class")) $("cl-save-class").onclick = async () => { try { await call("globerCxClassUpdate", { classId:id, name:$ ("cl-edit-name").value, regenerateCode:$ ("cl-regen-code").checked }); delete cxc["c:" + id]; toast("Клас оновлено."); curSub="settings"; openClass(id); } catch(e) { toast(e.message); } };
         if (curSub === "chat") loadClassChat(id);
         if ($("cl-rep")) $("cl-rep").onclick = () => ATX.report("class", id, c.name);
@@ -5500,11 +5602,14 @@
         try {
             const r = await call("globerCxChat", { classId:id });
             if (curClass !== id || curSub !== "chat") return;
-            root.innerHTML = `<div class="space-y-2 max-h-[48vh] overflow-y-auto" id="cl-chat-list">${r.messages.map(m => `<div class="rounded-xl border theme-border p-2 ${m.mine?"ml-5 theme-accent-bg-light":"mr-5"}"><div class="flex items-center gap-2 text-[11px] theme-text-secondary"><b class="flex-1">${who(m.userId,m.name)}</b>${m.edited?"(ред.)":""} · ${fmtDt(m.createdAt)}${m.mine?`<button data-cl-chat-edit="${esc(m.messageId)}" class="px-1">✎</button>`:""}${m.canDelete?`<button data-cl-chat-del="${esc(m.messageId)}" class="px-1 text-red-500">✕</button>`:""}</div><div class="whitespace-pre-wrap break-words mt-1">${fmtAnchors(m.text)}</div></div>`).join("") || "<div class='text-xs theme-text-secondary'>Чат класу ще порожній. Напишіть перше повідомлення!</div>"}</div><div class="flex gap-2"><textarea id="cl-chat-text" maxlength="2000" rows="2" class="${inp}" placeholder="Повідомлення для всього класу…"></textarea><button id="cl-chat-send" class="${btn} theme-btn-primary">➤</button></div><div class="text-[10px] theme-text-secondary">Повідомлення бачать лише учасники цього класу.</div>`;
+            root.innerHTML = `<div class="space-y-2 max-h-[48vh] overflow-y-auto" id="cl-chat-list">${r.messages.map(m => `<div class="rounded-xl border theme-border p-2 ${m.mine?"ml-5 theme-accent-bg-light":"mr-5"}"><div class="flex items-center gap-2 text-[11px] theme-text-secondary"><b class="flex-1">${who(m.userId,m.name)}</b>${m.edited?"(ред.)":""} · ${fmtDt(m.createdAt)}${m.mine?`<button data-cl-chat-edit="${esc(m.messageId)}" class="px-1">✎</button>`:""}${m.canDelete?`<button data-cl-chat-del="${esc(m.messageId)}" class="px-1 text-red-500">✕</button>`:""}</div><div class="whitespace-pre-wrap break-words mt-1">${fmtAnchors(m.text)}</div>${attHtml(m.attachments)}</div>`).join("") || "<div class='text-xs theme-text-secondary'>Чат класу ще порожній. Напишіть перше повідомлення!</div>"}</div><div class="space-y-2"><textarea id="cl-chat-text" maxlength="2000" rows="2" class="${inp}" placeholder="Повідомлення для всього класу…"></textarea><div class="flex flex-wrap gap-2 items-center"><button id="cl-chat-pick" class="${btn}">📎 Додати файли</button><input id="cl-chat-files" type="file" multiple class="hidden"><span id="cl-chat-files-name" class="text-[11px] theme-text-secondary"></span><button id="cl-chat-send" class="${btn} theme-btn-primary">➤ Надіслати</button><span id="cl-chat-progress" class="text-[11px] theme-text-secondary"></span></div></div><div class="text-[10px] theme-text-secondary">Повідомлення та вкладення бачать лише учасники цього класу. Максимум 5 файлів по 10 МБ.</div>`;
             const list=$("cl-chat-list"); if(list) list.scrollTop=list.scrollHeight;
-            $("cl-chat-send").onclick=async()=>{const b=$("cl-chat-send"),v=$("cl-chat-text").value.trim();if(!v)return;b.disabled=true;try{await call("globerCxChatSend",{classId:id,text:v});await loadClassChat(id);}catch(e){toast(e.message);b.disabled=false;}};
+            let chatFiles=[];
+            $("cl-chat-pick").onclick=()=>$("cl-chat-files").click();
+            $("cl-chat-files").onchange=e=>{chatFiles=Array.from(e.target.files||[]).slice(0,5);$("cl-chat-files-name").textContent=chatFiles.map(f=>f.name).join(", ")+(e.target.files.length>5?" (перші 5)":"");};
+            $("cl-chat-send").onclick=async()=>{const b=$("cl-chat-send"),v=$("cl-chat-text").value.trim();if(!v&&!chatFiles.length)return;b.disabled=true;try{const ids=[];for(const f of chatFiles){const up=await ATX.upload(f,"classchat",id,p=>{$("cl-chat-progress").textContent=f.name+": "+Math.round(p*100)+"%";});ids.push(up.id);}await call("globerCxChatSend",{classId:id,text:v,attach:ids});await loadClassChat(id);}catch(e){toast(e.message);b.disabled=false;$ ("cl-chat-progress").textContent="";}};
             $("cl-chat-text").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("cl-chat-send").click();}});
-            root.onclick=async e=>{const x=e.target.closest("[data-cl-chat-edit],[data-cl-chat-del]");if(!x)return;try{
+            root.onclick=async e=>{const f=e.target.closest("[data-file]");if(f){e.stopPropagation();return ATX.download(f.dataset.file,f.dataset.fname).catch(er=>toast(er.message));}const x=e.target.closest("[data-cl-chat-edit],[data-cl-chat-del]");if(!x)return;try{
                 if(x.dataset.clChatEdit){const m=r.messages.find(z=>z.messageId===x.dataset.clChatEdit),v=prompt("Редагувати повідомлення:",m?m.text:"");if(v===null)return;await call("globerCxChatEdit",{messageId:x.dataset.clChatEdit,text:v});}
                 else if(x.dataset.clChatDel){if(!confirm("Видалити повідомлення з чату класу?"))return;await call("globerCxChatDelete",{messageId:x.dataset.clChatDel});}
                 await loadClassChat(id);
@@ -5878,6 +5983,367 @@
     setTimeout(decorate, 1500); setInterval(() => { if (!document.hidden) decorate(); }, 4000);
     window.ATX = { upload, download, report, review, fmtSize, esc, modal };
 })();
+</script>
+<script>
+/* =====================================================================
+ * ArTesolymp Meet + Chess client
+ * LiveKit is used for real multi-user audio/video. Chess is available
+ * separately for user-vs-user challenges and is not embedded in Meet.
+ * ===================================================================== */
+(function () {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const api = (action, payload) => apiRequest(action, payload || {});
+  const toast = msg => { if (typeof showNotification === "function") showNotification(msg); else alert(msg); };
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  let liveRoom = null, currentMeet = null;
+  let bgProcessor = null, bgObjectUrl = null, currentGame = null, chessLibPromise = null, gamePoll = null, gameClockTimer = null, chosenSquare = null, meetStateTimer = null;
+  const remoteEls = new Map();
+  const glyphs = { wk:"♔",wq:"♕",wr:"♖",wb:"♗",wn:"♘",wp:"♙",bk:"♚",bq:"♛",br:"♜",bb:"♝",bn:"♞",bp:"♟︎" };
+
+  function loadScript(src, globalName) {
+    if (window[globalName]) return Promise.resolve(window[globalName]);
+    return new Promise((resolve, reject) => {
+      const existing = Array.from(document.scripts).find(x => x.src === src);
+      if (existing) {
+        existing.addEventListener("load", () => resolve(window[globalName]), { once:true });
+        existing.addEventListener("error", reject, { once:true });
+        if (window[globalName]) resolve(window[globalName]);
+        return;
+      }
+      const script = document.createElement("script"); script.src = src; script.async = true;
+      script.onload = () => window[globalName] ? resolve(window[globalName]) : reject(new Error("SDK не завантажився."));
+      script.onerror = () => reject(new Error("Не вдалося завантажити SDK відеозустрічі."));
+      document.head.appendChild(script);
+    });
+  }
+  function loadChessLib() {
+    if (!chessLibPromise) chessLibPromise = import("https://cdn.jsdelivr.net/npm/chess.js@1.4.0/dist/esm/chess.js");
+    return chessLibPromise;
+  }
+  function meetShell() {
+    let root = $("at-meet-modal"); if (root) return root;
+    document.body.insertAdjacentHTML("beforeend", `
+      <div id="at-meet-modal" class="hidden fixed inset-0 z-[180] bg-slate-950 text-slate-100 p-2 sm:p-4">
+        <div class="w-full h-full max-w-[1500px] mx-auto flex flex-col rounded-2xl border border-slate-700 bg-slate-900 overflow-hidden shadow-2xl">
+          <header class="flex flex-wrap items-center gap-2 p-3 border-b border-slate-700">
+            <div class="flex-1 min-w-[150px]"><div id="at-meet-title" class="font-black text-lg">ArTesolymp Meet</div><div id="at-meet-state" class="text-xs text-slate-400">Підключення…</div></div>
+            <button id="at-audio-unlock" class="hidden px-3 py-2 text-xs rounded-xl bg-amber-700 hover:bg-amber-600">🔊 Увімкнути звук</button>
+            <button id="at-meet-copy" class="px-3 py-2 text-xs rounded-xl border border-slate-600 hover:bg-slate-800">🔗 Запросити</button>
+            <button id="at-meet-end" class="px-3 py-2 text-xs rounded-xl bg-rose-700 hover:bg-rose-600">Завершити</button>
+            <button id="at-meet-close" class="px-3 py-2 text-xs rounded-xl border border-slate-600">Вийти ✕</button>
+          </header>
+          <div id="at-meet-layout" class="flex-1 min-h-0 grid grid-cols-1">
+            <section class="min-h-0 flex flex-col p-3 gap-3 overflow-y-auto">
+              <div id="at-meet-videos" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 content-start">
+                <div class="rounded-xl border border-slate-700 bg-slate-800 min-h-44 flex items-center justify-center text-slate-400 text-sm">Очікування учасників…</div>
+              </div>
+              <div class="flex flex-wrap items-center justify-center gap-2 py-2 border-y border-slate-700">
+                <button id="at-mic" class="px-4 py-3 rounded-xl bg-slate-700 text-sm">🎤 Увімкнути мікрофон</button>
+                <button id="at-cam" class="px-4 py-3 rounded-xl bg-slate-700 text-sm">📷 Увімкнути камеру</button>
+                <button id="at-screen" class="px-4 py-3 rounded-xl bg-slate-700 text-sm">🖥 Поділитися екраном</button>
+                <button id="at-blur" class="px-4 py-3 rounded-xl bg-slate-700 text-sm">🌫 Розмити фон</button>
+                <label class="px-4 py-3 rounded-xl bg-slate-700 text-sm cursor-pointer">🌄 Свій фон<input id="at-bg-file" type="file" accept="image/png,image/jpeg,image/webp" class="hidden"></label>
+              </div>
+              <div class="rounded-xl border border-slate-700 p-3 flex-1 min-h-32 flex flex-col">
+                <div class="font-bold text-sm mb-2">💬 Чат зустрічі</div><div id="at-meet-chat" class="flex-1 min-h-20 max-h-44 overflow-y-auto space-y-1 text-sm"></div>
+                <div class="flex gap-2 mt-2"><input id="at-meet-chat-input" maxlength="500" class="min-w-0 flex-1 rounded-lg px-3 py-2 bg-slate-800 border border-slate-700 text-sm" placeholder="Повідомлення учасникам…"><button id="at-meet-chat-send" class="px-4 rounded-lg bg-sky-700 text-sm">➤</button></div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>`);
+    root = $("at-meet-modal");
+    $("at-meet-close").onclick = leaveMeeting;
+    $("at-audio-unlock").onclick = async () => {
+      if (!liveRoom) return;
+      try { await liveRoom.startAudio(); $("at-audio-unlock").classList.add("hidden"); toast("Звук зустрічі увімкнено."); }
+      catch (e) { toast("Не вдалося увімкнути звук: " + e.message); }
+    };
+    $("at-meet-end").onclick = async () => {
+      if (!currentMeet || !currentMeet.isMine) return leaveMeeting();
+      if (!confirm("Завершити цю зустріч для всіх учасників?")) return;
+      try { await api("globerMeetEnd", { meetingId:currentMeet.meetingId }); toast("Зустріч завершено для всіх."); } catch(e) { toast(e.message); }
+      await leaveMeeting();
+    };
+    $("at-meet-copy").onclick = async () => {
+      if (!currentMeet) return;
+      const link = makeMeetLink(currentMeet.meetingId);
+      try { await navigator.clipboard.writeText(link); toast("Посилання на зустріч скопійовано."); } catch(_) { prompt("Скопіюйте посилання на зустріч:", link); }
+    };
+    $("at-mic").onclick = toggleMic;
+    $("at-cam").onclick = toggleCam;
+    $("at-screen").onclick = toggleScreen;
+    $("at-blur").onclick = toggleBlur;
+    $("at-bg-file").onchange = useVirtualBackground;
+    $("at-meet-chat-send").onclick = sendMeetChat;
+    $("at-meet-chat-input").addEventListener("keydown", e => { if (e.key === "Enter") sendMeetChat(); });
+    return root;
+  }
+  function makeMeetLink(id) {
+    const u = new URL(window.location.href); u.searchParams.set("meet", id); u.hash = ""; return u.toString();
+  }
+  async function announceMeeting(scope, scopeId, peerId, link, title) {
+    const text = "📹 Відеозустріч «" + String(title || "ArTesolymp Meet") + "»\nПриєднатися: " + link;
+    if (scope === "dm") await api("globerDmSend", { userId:peerId, text });
+    else if (scope === "community") await api("globerCommunitySend", { communityId:scopeId, text });
+    else if (scope === "class") await api("globerCxChatSend", { classId:scopeId, text });
+  }
+  async function start(scope, scopeId, title, options) {
+    const opts = options || {};
+    const r = await api("globerMeetStart", { scope, scopeId, peerId:opts.peerId || "", title:title || "Зустріч ArTesolymp" });
+    const link = makeMeetLink(r.meetingId);
+    try { await announceMeeting(scope, scopeId, opts.peerId || "", link, title); }
+    catch(e) { toast("Зустріч створено. Посилання можна скопіювати; повідомлення не надіслано: " + e.message); }
+    return join(r.meetingId, true, title || r.title);
+  }
+  async function join(id, isMine, title) {
+    if (!id) throw new Error("Не вказано ID зустрічі.");
+    if (liveRoom) await leaveMeeting();
+    const root = meetShell(); root.classList.remove("hidden");
+    $("at-meet-title").textContent = title || "ArTesolymp Meet";
+    $("at-meet-state").textContent = "Перевірка доступу…";
+    if(persistentBotPanel)persistentBotPanel.classList.add("hidden");
+    $("at-meet-videos").innerHTML = "";
+    $("at-meet-chat").innerHTML = "";
+    $("at-meet-end").classList.toggle("hidden", !isMine);
+    currentMeet = { meetingId:id, isMine:!!isMine, title:title || "ArTesolymp Meet" };
+    try {
+      const credentials = await api("globerMeetToken", { meetingId:id });
+      currentMeet.isMine = !!credentials.isCreator;
+      currentMeet.scope = credentials.scope; currentMeet.scopeId = credentials.scopeId;
+      currentMeet.createdAt = credentials.createdAt || new Date().toISOString();
+      currentMeet.creatorId = credentials.creatorId || "";
+      currentMeet.title = credentials.title || currentMeet.title;
+      $("at-meet-title").textContent = currentMeet.title;
+      $("at-meet-end").classList.toggle("hidden", !currentMeet.isMine);
+      $("at-meet-state").textContent = "Завантаження відеозв’язку…";
+      const LK = await loadScript("https://cdn.jsdelivr.net/npm/livekit-client@2.25.0/dist/livekit-client.umd.min.js", "LivekitClient");
+      if (!LK || !LK.Room) throw new Error("LiveKit SDK не завантажився.");
+      const room = new LK.Room({ adaptiveStream:true, dynacast:true }); liveRoom = room;
+      room.on(LK.RoomEvent.TrackSubscribed, (track, publication, participant) => addParticipantTrack(track, participant, false));
+      room.on(LK.RoomEvent.TrackUnsubscribed, (track, publication, participant) => removeParticipantTrack(track, participant));
+      room.on(LK.RoomEvent.ParticipantConnected, participant => addParticipantTile(participant, false));
+      room.on(LK.RoomEvent.ParticipantDisconnected, participant => removeParticipantTile(participant));
+      room.on(LK.RoomEvent.LocalTrackPublished, (publication, participant) => { if (publication.track) addParticipantTrack(publication.track, participant, true); });
+      room.on(LK.RoomEvent.LocalTrackUnpublished, (publication, participant) => { if (publication.track) removeParticipantTrack(publication.track, participant); });
+      room.on(LK.RoomEvent.DataReceived, (payload, participant, kind, topic) => receiveMeetChat(payload, participant, topic));
+      room.on(LK.RoomEvent.AudioPlaybackStatusChanged, () => {
+        const unlock = $("at-audio-unlock"); if (unlock) unlock.classList.toggle("hidden", !!room.canPlaybackAudio);
+      });
+      room.on(LK.RoomEvent.Disconnected, () => { $("at-meet-state").textContent = "Зв’язок перервано."; });
+      await room.connect(credentials.serverUrl, credentials.token);
+      $("at-audio-unlock").classList.toggle("hidden", !!room.canPlaybackAudio);
+      $("at-meet-state").textContent = "Підключено · камера та мікрофон вимкнені, доки ви їх не ввімкнете.";
+      room.remoteParticipants.forEach(p => { addParticipantTile(p, false); p.trackPublications.forEach(pub => { if (pub.track) addParticipantTrack(pub.track, p, false); }); });
+      // Keep permissions explicit: joining a meeting never silently turns on the camera or microphone.
+      await room.localParticipant.setMicrophoneEnabled(false);
+      await room.localParticipant.setCameraEnabled(false);
+      addParticipantTile(room.localParticipant, true);
+      if(meetStateTimer)clearInterval(meetStateTimer);
+      meetStateTimer=setInterval(async()=>{
+        const activeId=currentMeet&&currentMeet.meetingId;if(!activeId)return;
+        try{const st=await api("globerMeetState",{meetingId:activeId});if(st.status!=="active"&&currentMeet&&currentMeet.meetingId===activeId){toast("Зустріч завершена.");await leaveMeeting();}}
+        catch(err){if(String(err.message||"").includes("більше не маєте доступу")&&currentMeet&&currentMeet.meetingId===activeId){toast("Доступ до зустрічі втрачено.");await leaveMeeting();}}
+      },5000);
+      toast("Ви приєдналися до ArTesolymp Meet.");
+    } catch(e) {
+      $("at-meet-state").textContent = e.message || "Не вдалося підключитися.";
+      toast(e.message || "Не вдалося підключитися до зустрічі.");
+      if (liveRoom) { try { await liveRoom.disconnect(); } catch(_){} liveRoom=null; }
+    }
+  }
+  function addParticipantTile(participant, local, keyOverride) {
+    const key = keyOverride || String(participant.identity || (local ? "me" : "participant"));
+    if (remoteEls.has(key)) return remoteEls.get(key);
+    const wrap = document.createElement("div"); wrap.className = "relative min-h-44 aspect-video rounded-xl overflow-hidden border border-slate-700 bg-slate-800 flex items-center justify-center";
+    wrap.dataset.participant = key;
+    const placeholder = document.createElement("div"); placeholder.className="text-slate-400 text-sm"; placeholder.textContent=key.endsWith(":screen")?"Очікування демонстрації екрана…":local?"Ви · камера вимкнена":"Учасник підключився"; wrap.appendChild(placeholder);
+    const label = document.createElement("div"); label.className="absolute bottom-2 left-2 rounded-lg bg-black/60 px-2 py-1 text-[11px]";
+    label.textContent=key.endsWith(":screen")?((participant.name||"Учасник")+" · екран"):local?"Ви":(participant.name||("Учасник "+String(participant.identity||"").slice(-5)));
+    wrap.appendChild(label); $("at-meet-videos").appendChild(wrap); remoteEls.set(key, wrap); return wrap;
+  }
+  function trackTileKey(track,participant) {
+    const id=String(participant.identity||"participant"), src=String(track&&track.source||"").toLowerCase();
+    return track&&track.kind==="video"&&(src.includes("screen")||src.includes("screenshare"))?id+":screen":id;
+  }
+  function addParticipantTrack(track, participant, local) {
+    const key=String(participant.identity||(local?"me":"participant")), element=track.attach();
+    element.autoplay=true;element.playsInline=true;
+    if(track.kind==="video"){
+      const tileKey=trackTileKey(track,participant),wrap=addParticipantTile(participant,local,tileKey),old=wrap.querySelector("video");
+      element.className="w-full h-full object-cover";if(old)old.remove();
+      const placeholder=wrap.querySelector(":scope > div:not(.absolute)");if(placeholder)placeholder.remove();
+      wrap.insertBefore(element,wrap.firstChild);
+    }else{
+      element.className="hidden";element.dataset.lkAudio="1";document.body.appendChild(element);
+    }
+  }
+  function removeParticipantTrack(track, participant) {
+    const els=track.detach();(Array.isArray(els)?els:[els]).forEach(el=>{if(el&&el.remove)el.remove();});
+    if(track.kind!=="video")return;
+    const key=trackTileKey(track,participant),wrap=remoteEls.get(key);
+    if(key.endsWith(":screen")){if(wrap)wrap.remove();remoteEls.delete(key);return;}
+    if(wrap&&!wrap.querySelector("video")){const p=document.createElement("div");p.className="text-slate-400 text-sm";p.textContent="Камера вимкнена";wrap.insertBefore(p,wrap.firstChild);}
+  }
+  function removeParticipantTile(participant) {
+    const id=String(participant.identity||"");[id,id+":screen"].forEach(key=>{const el=remoteEls.get(key);if(el)el.remove();remoteEls.delete(key);});
+  }
+  async function toggleMic() {
+    if(!liveRoom)return;const next=!(liveRoom.localParticipant.isMicrophoneEnabled);
+    try{await liveRoom.localParticipant.setMicrophoneEnabled(next);$("at-mic").textContent=next?"🔇 Вимкнути мікрофон":"🎤 Увімкнути мікрофон";}catch(e){toast("Мікрофон: "+e.message);}
+  }
+  async function toggleCam() {
+    if(!liveRoom)return;const next=!(liveRoom.localParticipant.isCameraEnabled);
+    try{
+      await liveRoom.localParticipant.setCameraEnabled(next);
+      $("at-cam").textContent=next?"📷 Вимкнути камеру":"📷 Увімкнути камеру";
+      if(!next){bgProcessor=null;window.__atBlurOn=false;$("at-blur").textContent="🌫 Розмити фон";}
+    }catch(e){toast("Камера: "+e.message);}
+  }
+  async function toggleScreen() {
+    if(!liveRoom)return;const p=liveRoom.localParticipant, next=!(p.isScreenShareEnabled);
+    try{await p.setScreenShareEnabled(next);$("at-screen").textContent=next?"⏹ Зупинити демонстрацію":"🖥 Поділитися екраном";}catch(e){toast("Демонстрація екрана: "+e.message);}
+  }
+  async function cameraTrack() {
+    if(!liveRoom)return null;
+    const LK=window.LivekitClient, source=LK&&LK.Track&&LK.Track.Source?LK.Track.Source.Camera:"camera";
+    const pub=liveRoom.localParticipant.getTrackPublication(source);
+    return pub&&pub.track?pub.track:null;
+  }
+  async function ensureBackgroundProcessor() {
+    if(bgProcessor)return bgProcessor;
+    const pkg=await import("https://cdn.jsdelivr.net/npm/@livekit/track-processors@0.8.3/+esm");
+    if(!pkg.BackgroundProcessor)throw new Error("Модуль обробки фону не підтримує цей браузер.");
+    if(pkg.supportsBackgroundProcessors&&!pkg.supportsBackgroundProcessors())throw new Error("Браузер не підтримує обробку фону.");
+    bgProcessor=pkg.BackgroundProcessor({mode:"background-blur",blurRadius:12});return bgProcessor;
+  }
+  async function toggleBlur() {
+    if(!liveRoom)return toast("Спочатку підключіться до зустрічі.");
+    try{
+      if(!(liveRoom.localParticipant.isCameraEnabled)) await liveRoom.localParticipant.setCameraEnabled(true);
+      const track=await cameraTrack();if(!track||!track.setProcessor)throw new Error("Обробка фону недоступна у цьому браузері.");
+      const p=await ensureBackgroundProcessor();
+      if(window.__atBlurOn){if(p.switchTo)await p.switchTo({mode:"disabled"});window.__atBlurOn=false;$("at-blur").textContent="🌫 Розмити фон";}
+      else{await track.setProcessor(p);if(p.switchTo)await p.switchTo({mode:"background-blur",blurRadius:12});window.__atBlurOn=true;$("at-blur").textContent="🌫 Прибрати розмиття";}
+    }catch(e){toast("Розмиття фону недоступне: "+e.message);}
+  }
+  async function useVirtualBackground(ev) {
+    const file=ev.target.files&&ev.target.files[0];ev.target.value="";if(!file||!liveRoom)return;
+    if(!/^image\/(png|jpeg|webp)$/i.test(file.type)||file.size>8*1024*1024)return toast("Оберіть JPG, PNG або WebP до 8 МБ.");
+    try{
+      if(!liveRoom.localParticipant.isCameraEnabled)await liveRoom.localParticipant.setCameraEnabled(true);
+      const track=await cameraTrack();if(!track||!track.setProcessor)throw new Error("Обробка фону недоступна.");
+      const p=await ensureBackgroundProcessor();if(!bgObjectUrl)bgObjectUrl=URL.createObjectURL(file);else{URL.revokeObjectURL(bgObjectUrl);bgObjectUrl=URL.createObjectURL(file);}
+      await track.setProcessor(p);if(p.switchTo)await p.switchTo({mode:"virtual-background",imagePath:bgObjectUrl});
+      window.__atBlurOn=true;$("at-blur").textContent="🌄 Віртуальний фон увімкнено";toast("Віртуальний фон застосовано.");
+    }catch(e){toast("Не вдалося встановити фон: "+e.message);}
+  }
+  async function sendMeetChat() {
+    const input=$("at-meet-chat-input"), text=String(input.value||"").trim();if(!text||!liveRoom)return;
+    try{await liveRoom.localParticipant.publishData(new TextEncoder().encode(text),{reliable:true,topic:"at-meet-chat"});addMeetChat("Ви",text);input.value="";}catch(e){toast("Не вдалося надіслати повідомлення: "+e.message);}
+  }
+  function receiveMeetChat(payload, participant, topic) {
+    if(topic&&topic!=="at-meet-chat")return;
+    let text="";try{text=new TextDecoder().decode(payload);}catch(_){return;}
+    addMeetChat("Учасник "+String(participant&&participant.identity||"").slice(-5),text);
+  }
+  function addMeetChat(name,text) {
+    const log=$("at-meet-chat");if(!log)return;const row=document.createElement("div");row.className="rounded-lg bg-slate-800 px-2 py-1 break-words";
+    const b=document.createElement("b");b.textContent=name+": ";const span=document.createElement("span");span.textContent=text;row.append(b,span);log.appendChild(row);log.scrollTop=log.scrollHeight;
+  }
+  async function leaveMeeting() {
+    if(meetStateTimer)clearInterval(meetStateTimer);meetStateTimer=null;
+    const room=liveRoom;liveRoom=null;currentMeet=null;
+    if(room){try{await room.disconnect();}catch(_){}}
+    document.querySelectorAll("audio[data-lk-audio]").forEach(x=>x.remove());
+    if($("at-audio-unlock"))$("at-audio-unlock").classList.add("hidden");
+    if(bgObjectUrl){URL.revokeObjectURL(bgObjectUrl);bgObjectUrl=null;}bgProcessor=null;window.__atBlurOn=false;
+    remoteEls.forEach(el=>{if(el&&el.remove)el.remove();});remoteEls.clear();
+    const root=$("at-meet-modal");if(root)root.classList.add("hidden");
+  }
+
+  // User-vs-user chess: chess.js is the rules authority in the browser; backend stores FEN, turn and clocks.
+  function formatClock(ms){ms=Math.max(0,Math.floor(Number(ms)||0));const sec=Math.ceil(ms/1000);return String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0");}
+  function chessResultText(g){if(g.status==="pending")return g.isIncoming?"Очікуєте прийняття виклику":"Очікується відповідь суперника";if(g.status==="active")return "Партія триває";if(g.result==="timeout")return "Час вичерпано";if(g.result==="resign")return "Здача";if(g.result==="checkmate")return "Мат";if(g.result==="stalemate")return "Пат";if(g.result==="draw")return "Нічия";return g.status;}
+  async function openChessGame(id) {
+    const root=$("hb-body");if(!root)return;
+    const data=await api("globerChessState",{gameId:id});currentGame=data.game;chosenSquare=null;
+    await loadChessLib();
+    root.innerHTML=`<div class="space-y-3"><div class="flex flex-wrap items-center gap-2"><button id="at-ch-back" class="px-3 py-2 rounded-xl border theme-border text-xs font-bold">← До шахів</button><div id="at-ch-status" class="font-bold flex-1">${esc(chessResultText(currentGame))}</div><button id="at-ch-resign" class="px-3 py-2 rounded-xl border border-red-400 text-red-500 text-xs font-bold">Здатися</button></div>
+      <div class="grid md:grid-cols-[minmax(0,500px)_minmax(0,1fr)] gap-3"><section class="space-y-2"><div class="flex justify-between text-sm"><b id="at-ch-black">♚ Чорні</b><span id="at-ch-black-clock" class="font-mono font-black">15:00</span></div><div id="at-ch-board" class="grid grid-cols-8 w-full max-w-[500px] aspect-square border theme-border rounded-lg overflow-hidden"></div><div class="flex justify-between text-sm"><b id="at-ch-white">♔ Білі</b><span id="at-ch-white-clock" class="font-mono font-black">15:00</span></div></section>
+      <section class="rounded-xl border theme-border p-3 space-y-2"><div class="font-bold">Історія ходів</div><div id="at-ch-history" class="text-sm max-h-64 overflow-y-auto break-words"></div><div class="text-xs theme-text-secondary">Ваш колір: ${currentGame.myColor==="w"?"білі":"чорні"}. Оберіть свою фігуру, потім клітинку призначення. Перетворення пішака виконується на ферзя за замовчуванням.</div></section></div></div>`;
+    $("at-ch-back").onclick=()=>{stopChessGameView();if(window.ATHubShow)window.ATHubShow("chess");};
+    $("at-ch-resign").onclick=async()=>{if(!confirm("Здати партію?"))return;try{await api("globerChessResign",{gameId:id});const r=await api("globerChessState",{gameId:id});currentGame=r.game;renderUserChess();}catch(e){toast(e.message);}};
+    $("at-ch-board").onclick=onChessBoardClick;
+    renderUserChess();
+    stopChessGameView();
+    gamePoll=setInterval(async()=>{if(!currentGame||currentGame.gameId!==id)return;try{const r=await api("globerChessState",{gameId:id});if(r.game.updatedAt!==currentGame.updatedAt||r.game.fen!==currentGame.fen||r.game.status!==currentGame.status){currentGame=r.game;chosenSquare=null;renderUserChess();}}catch(e){/* transient poll errors are retried */}},2200);
+    gameClockTimer=setInterval(updateChessClocks,250);
+  }
+  function stopChessGameView(){if(gamePoll)clearInterval(gamePoll);if(gameClockTimer)clearInterval(gameClockTimer);gamePoll=null;gameClockTimer=null;}
+  async function onChessBoardClick(e){
+    if(!currentGame||currentGame.status!=="active")return;
+    const sq=e.target.closest("[data-sq]");if(!sq)return;
+    const {Chess}=await loadChessLib(),game=new Chess(currentGame.fen),turn=game.turn();if(currentGame.myColor!==turn)return;
+    const square=sq.dataset.sq, piece=game.get(square);
+    if(chosenSquare){
+      const opts=game.moves({square:chosenSquare,verbose:true}).filter(m=>m.to===square);
+      if(opts.length){let promo="q";if(opts.some(m=>m.promotion)){const picked=prompt("Перетворити пішака на ферзя (q), туру (r), слона (b) або коня (n)?","q");promo=["q","r","b","n"].includes(String(picked||"q").toLowerCase())?String(picked||"q").toLowerCase():"q";}
+        const move=game.move({from:chosenSquare,to:square,promotion:promo});if(!move){chosenSquare=null;renderUserChess();return;}
+        const result=game.isCheckmate()?"checkmate":game.isStalemate()?"stalemate":game.isDraw()?"draw":"";
+        const uci=move.from+move.to+(move.promotion||"");
+        try{const r=await api("globerChessMove",{gameId:currentGame.gameId,ply:currentGame.moves.length,fen:game.fen(),san:move.san,uci,result});currentGame=r.game;chosenSquare=null;renderUserChess();}
+        catch(err){toast(err.message);const fresh=await api("globerChessState",{gameId:currentGame.gameId}).catch(()=>null);if(fresh)currentGame=fresh.game;chosenSquare=null;renderUserChess();}
+        return;
+      }
+    }
+    if(piece&&piece.color===turn)chosenSquare=square;else chosenSquare=null;
+    renderUserChess();
+  }
+  function renderUserChess(){
+    if(!currentGame)return;const gameData=currentGame;
+    const stat=$("at-ch-status");if(stat)stat.textContent=chessResultText(gameData)+(gameData.status==="active"?(gameData.turn===gameData.myColor?" · ваш хід":" · хід суперника"):"");
+    const w=$("at-ch-white"),b=$("at-ch-black");if(w)w.textContent="♔ Білі · "+(gameData.whiteName||"");if(b)b.textContent="♚ Чорні · "+(gameData.blackName||"");
+    const h=$("at-ch-history");if(h)h.textContent=(gameData.moves||[]).map((m,i)=>(i%2===0?Math.floor(i/2)+1+". ":"")+m.san).join(" ")||"Партія ще не має ходів.";
+    const boardEl=$("at-ch-board");if(!boardEl||!gameData.fen)return;
+    loadChessLib().then(({Chess})=>{
+      const g=new Chess(gameData.fen),board=g.board(),ranks=gameData.myColor==="b"?[7,6,5,4,3,2,1,0]:[0,1,2,3,4,5,6,7],files=gameData.myColor==="b"?[7,6,5,4,3,2,1,0]:[0,1,2,3,4,5,6,7],html=[];
+      for(const r of ranks)for(const c of files){const p=board[r][c],file="abcdefgh"[c],rank=8-r,square=file+rank,light=(r+c)%2===0,selected=chosenSquare===square;let hint=false;
+        if(chosenSquare){try{hint=g.moves({square:chosenSquare,verbose:true}).some(m=>m.to===square);}catch(_){}}
+        const glyph=p?glyphs[p.color+p.type]:"";
+        html.push(`<button data-sq="${square}" aria-label="${square}" class="relative flex items-center justify-center aspect-square ${light?"bg-amber-100":"bg-amber-800"}" style="font-size:clamp(22px,5vw,44px);color:${p&&p.color==="w"?"#fff":"#111"};text-shadow:${p&&p.color==="w"?"0 1px 2px #111":"0 1px 2px #fff"};${selected?"outline:4px solid #22c55e;outline-offset:-4px;":""}">${glyph}${hint?`<span class="absolute w-3 h-3 rounded-full bg-emerald-600/70"></span>`:""}<span class="absolute left-1 top-0 text-[9px] font-bold text-black/50">${c===files[0]?rank:""}</span><span class="absolute right-1 bottom-0 text-[9px] font-bold text-black/50">${r===ranks[ranks.length-1]?file:""}</span></button>`);
+      }
+      boardEl.innerHTML=html.join("");
+    });
+    updateChessClocks();
+  }
+  function updateChessClocks(){
+    if(!currentGame)return;
+    let w=currentGame.whiteMs,b=currentGame.blackMs;
+    if(currentGame.status==="active"){const start=Date.parse(currentGame.turnStartedAt||currentGame.updatedAt||Date.now());const elapsed=Math.max(0,Date.now()-start);if(currentGame.turn==="w")w=Math.max(0,w-elapsed);else b=Math.max(0,b-elapsed);}
+    if($("at-ch-white-clock"))$("at-ch-white-clock").textContent=formatClock(w);
+    if($("at-ch-black-clock"))$("at-ch-black-clock").textContent=formatClock(b);
+  }
+
+  window.ATMeet = { start, join, leave:leaveMeeting };
+  window.ATChess = {
+    open:openChessGame,
+    challenge:async (userId,name)=>{try{const r=await api("globerChessCreate",{userId});toast("Шаховий виклик надіслано "+(r.opponentName||name||"супернику")+". Відкрийте вкладку «Шахи» для статусу.");if(window.ATHubShow)window.ATHubShow("chess");}catch(e){toast(e.message);}}
+  };
+
+  // Deep-link support: https://your-site/?meet=meeting_id
+  let pendingMeetLink = new URLSearchParams(window.location.search).get("meet"), deepLinkStarted=false;
+  const deepLinkTimer=pendingMeetLink?setInterval(()=>{
+    if(deepLinkStarted||!pendingMeetLink)return;
+    if(typeof authToken!=="undefined"&&authToken){deepLinkStarted=true;clearInterval(deepLinkTimer);join(pendingMeetLink,false).catch(e=>toast(e.message));}
+  },1000):null;
+  if(pendingMeetLink&&!((typeof authToken!=="undefined")&&authToken)){
+    const ask=()=>{if(typeof showAuthModal==="function")showAuthModal();};window.addEventListener("load",()=>setTimeout(ask,900),{once:true});
+  }
+  window.addEventListener("beforeunload",()=>{stopChessGameView();if(liveRoom){try{liveRoom.disconnect();}catch(_){}}});
+})();
+
 </script>
 </body>
 </html>
