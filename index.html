@@ -602,7 +602,7 @@
                     <section id="doc-chess" class="rounded-2xl theme-bg-card border theme-border p-6 space-y-3 scroll-mt-24">
                         <h3 class="text-xl font-extrabold">13. Шахи ArTesolymp</h3>
                         <ul class="list-disc pl-5 space-y-1 text-sm">
-                            <li>Для гри з людиною відкрийте Хаб → Шахи або приватний чат та надішліть виклик. Обидва гравці мають додати Chess.com у профіль. Після прийняття виклику кольори призначаються випадково, кожному надається 15 хвилин.</li>
+                            <li>Для гри з людиною відкрийте профіль користувача та надішліть шаховий виклик або прийміть отримане запрошення. Обидва гравці мають додати Chess.com у профіль. Після прийняття виклику кольори призначаються випадково, кожному надається 15 хвилин.</li>
                             <li>Ходи перевіряються на легальність, а стан партії та шахові годинники зберігаються сервером. Підключення до Chess.com для керування ходами не використовується.</li>
                         </ul>
                     </section>
@@ -1115,7 +1115,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbzNET7ANDO-02zshY2r7u_RCtQQ8YQBwTIlR1-GOZa_E2C7Gb0QgqkfLLJmkyV0SMQ3/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbyBVxF3fXw-wRPQ-_eaWjRhDeetKAQbf97bqoANny6tU3fqAEh6V1WHjJI2eqRmJl8g/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -4966,7 +4966,7 @@
     const NC = { red: "#ef4444", gold: "#eab308", cyan: "#06b6d4", pink: "#ec4899", lime: "#84cc16" };
     const NAMES = { frame: "Рамки", bg: "Фони профілю", nameColor: "Кольори імені" };
     const LBL = { frame_gold: "Золота", frame_neon: "Неон", frame_olympian: "Олімпієць", frame_sysadmin: "Сисадмін", bg_sunset: "Захід", bg_ocean: "Океан", bg_forest: "Ліс", bg_space: "Космос", nc_red: "Червоний", nc_gold: "Золотий", nc_cyan: "Блакитний", nc_pink: "Рожевий", nc_lime: "Лаймовий" };
-    let me = null, tab = "dm", duelTimer = null, curThread = null, curClass = null, curPost = null, curCommunity = null, curSub = "stream", navSeq = 0, soft = null, clTick = 0, cxPend = [];
+    let me = null, tab = "dm", duelTimer = null, curThread = null, curClass = null, curPost = null, curCommunity = null, curSub = "stream", navSeq = 0, soft = null, clTick = 0, cxPend = [], chessTo = null;
     const cxc = {};   // кеш «показати зразу — оновити тихо»
     const call = async (a, p) => apiRequest(a, p || {});
     const toast = m => showNotification(m);
@@ -4980,7 +4980,7 @@
         <div id="hb-body" class="flex-1 overflow-y-auto p-3 text-sm space-y-3"></div>
       </div>
     </div>`);
-    const TABS = [["dm", "💬 ЛС"], ["communities", "👥 Групи / канали"], ["class", "🏫 Класи"], ["meet", "📹 Meet"], ["chess", "♟ Шахи"], ["cards", "🎁 Картки"], ["league", "🏅 Ліга"], ["duel", "⚔️ Дуелі"], ["build", "🧠 Конструктор"], ["fb", "⭐ Відгуки / 🚩 Скарги"]];
+    const TABS = [["dm", "💬 ЛС"], ["communities", "👥 Групи / канали"], ["class", "🏫 Класи"], ["meet", "📹 Meet"], ["cards", "🎁 Картки"], ["league", "🏅 Ліга"], ["duel", "⚔️ Дуелі"], ["build", "🧠 Конструктор"], ["fb", "⭐ Відгуки / 🚩 Скарги"]];
     const visibleTabs = () => me && me.isAdmin ? TABS.concat([["admin", "🛡 Адмін-панель"]]) : TABS;
     const btn = "px-3 py-2 rounded-xl border theme-border font-bold text-xs hover:border-sky-400";
     const inp = "w-full p-2 rounded-xl border theme-border theme-bg-card text-sm";
@@ -5049,6 +5049,14 @@
             const a = e.target.closest("[data-pf]"); if (!a) return; const k = a.dataset.pf, u = PF.user;
             if (k === "back") { const p = PF.hist.pop(); if (p) openProfile(p, true); return; }
             if (!u) return;
+            if (k === "meet-unban") {
+                a.disabled = true;
+                try {
+                    await call("globerMeetUnbanUser", { meetingId:a.dataset.meetId, userId:u.userId });
+                    delete PF.cache["u:" + u.userId]; toast("Бан на зустріч знято."); await openProfile(u.userId);
+                } catch (err) { a.disabled = false; toast(err.message); }
+                return;
+            }
             if (["block", "unblock", "ignore", "unignore"].includes(k)) {
                 a.disabled = true;
                 try {
@@ -5070,7 +5078,7 @@
         });
         return m;
     }
-    function pfClose() { const m = $("pf-modal"); if (m) m.classList.add("hidden"); PF.seq++; PF.hist = []; PF.cur = null; PF.user = null; }
+    function pfClose() { const m = $("pf-modal"); if (m) { m.classList.add("hidden"); m.style.zIndex = ""; } PF.seq++; PF.hist = []; PF.cur = null; PF.user = null; }
     async function openProfile(arg, fromBack) {
         if (typeof requireLogin === "function" && !requireLogin()) return;
         arg = typeof arg === "string" ? { userId: arg } : (arg || {});
@@ -5089,13 +5097,14 @@
         const soc = Object.keys(u.socials || {});
         const socialManage = !u.isMe ? `<button data-pf="${u.blockedByMe ? "unblock" : "block"}" class="${btn}">${u.blockedByMe ? "🔓 Розблокувати" : "⛔ Заблокувати"}</button><button data-pf="${u.ignoredByMe ? "unignore" : "ignore"}" class="${btn}">${u.ignoredByMe ? "Показувати знову" : "🙈 Ігнорувати"}</button>` : "";
         const acts = (u.canDm ? `<button data-pf="dm" class="${btn} theme-btn-primary">💬 Написати</button><button data-pf="meet" class="${btn}">📹 Зустріч</button>` : "") + (!u.isMe && !u.blockedByMe && !u.blockedMe ? `<button data-pf="duel" class="${btn}">⚔️ Дуель</button>` : "") + (!u.isMe && u.socials && u.socials.chess ? `<button data-pf="chess" class="${btn}">♟ Шаховий виклик</button>` : "") + (u.canCard ? `<button data-pf="card" class="${btn}">🎁 Картка</button>` : "") + socialManage;
+        const meetBanHtml = (u.meetBans && u.meetBans.length) ? `<section class="rounded-xl border border-rose-500/40 p-3 space-y-2"><b class="text-rose-500">⛔ Блокування у Meet</b>${u.meetBans.map(x => `<div class="flex flex-wrap items-center gap-2 text-xs"><span class="flex-1 min-w-0">${esc(x.title)}${x.reason ? `<span class="block opacity-60">${esc(x.reason)}</span>` : ""}</span><button data-pf="meet-unban" data-meet-id="${esc(x.meetingId)}" class="${btn}">🔓 Розбанити</button></div>`).join("")}</section>` : "";
         $("pf-body").innerHTML = (PF.hist.length ? `<button data-pf="back" class="${btn}">← Назад</button>` : "") +
             card(u, (u.titles && u.titles.length ? " · 🏆 " + esc(u.titles.join(", ")) : "") + (u.className ? " · 🏫 " + esc(u.className) : "") + (u.isMe ? " · це ви" : "")) +
             `<div class="flex gap-2">${stats}</div>` +
             (acts ? `<div class="flex flex-wrap gap-2">${acts}</div>` : (!u.isMe ? "<div class='text-xs theme-text-secondary'>Користувач обмежив особисті повідомлення.</div>" : "")) +
             (soc.length ? `<div class="flex flex-wrap gap-2">${soc.map(k => `<a class="${btn}" target="_blank" rel="noopener noreferrer" href="${esc(u.socials[k])}">${esc(k)}</a>`).join("")}</div>` : "") +
             (u.contactText ? `<div class="rounded-xl border theme-border p-3"><b>Контакт для зв’язку</b><div class="whitespace-pre-wrap break-words mt-1">${fmtAnchors(u.contactText)}</div></div>` : "") +
-            (u.achievements && u.achievements.length ? `<div>🎖 ${u.achievements.map(esc).join(" · ")}</div>` : "") +
+            (u.achievements && u.achievements.length ? `<div>🎖 ${u.achievements.map(esc).join(" · ")}</div>` : "") + meetBanHtml +
             (isT ? `<div class="font-bold">Стіна привітань</div>${u.cards && u.cards.length ? u.cards.map(c => `<div class="p-2 rounded-xl border theme-border"><b>${who(c.fromId, c.from)}</b> · ${c.gems} 💎<div class="break-words">${fmtAnchors(c.text)}</div></div>`).join("") : "<div class='theme-text-secondary'>Поки порожньо.</div>"}` : "");
     }
     async function gotoHub(t, after) {
@@ -5176,7 +5185,7 @@
         (c.communities || []).forEach(x => opts.push({ value:"community::"+x.communityId, label:(x.kind==="channel"?"📣 Канал · ":"👥 Група · ")+x.name }));
         (cl.classes || []).forEach(x => opts.push({ value:"class::"+x.classId, label:"🏫 Клас · "+x.name }));
         body().innerHTML = `<div class="space-y-3">
-          <div class="rounded-2xl border theme-border p-3 space-y-2"><div class="text-lg font-black">📹 ArTesolymp Meet</div><p class="text-xs theme-text-secondary">Відео та аудіо, демонстрація екрана, розмиття або власний фон. Шахи працюють окремо у вкладці «Шахи» та в особистих викликах.</p>
+          <div class="rounded-2xl border theme-border p-3 space-y-2"><div class="text-lg font-black">📹 ArTesolymp Meet</div><p class="text-xs theme-text-secondary">Відео та аудіо, демонстрація екрана, список учасників, налаштування пристроїв, керування доступом і персональний інтерфейс.</p>
             <label class="block text-xs font-bold">Де створити зустріч<select id="meet-target" class="${inp} mt-1">${opts.map(x=>`<option value="${esc(x.value)}">${esc(x.label)}</option>`).join("")}</select></label>
             <input id="meet-title" class="${inp}" maxlength="100" placeholder="Назва зустрічі (необов'язково)">
             <button id="meet-create" class="${btn} theme-btn-primary" ${opts.length?"":"disabled"}>＋ Створити та підключитися</button>
@@ -5350,7 +5359,7 @@
         const r = await call("globerDmThread", { withId: id });
         body().innerHTML = `<button id="th-back" class="${btn}">← Назад</button><div class="font-bold">${r.with ? who(r.with.id, r.with.name) : ""}</div>
         <div class="flex flex-wrap gap-2"><button id="th-meet" class="${btn} theme-btn-primary">📹 Відеозустріч</button><button id="th-chess" class="${btn}">♟ Викликати на шахи · 15:00 кожному</button></div><div class="space-y-1">${r.messages.map(m => `<div class="${m.mine ? "ml-10 bg-sky-500/20" : "mr-10 theme-accent-bg-light"} p-2 rounded-xl break-words">${fmtAnchors(m.text)}${attHtml(m.attach)}${!m.mine ? ` <button data-mrep="${esc(m.msgId)}" class="text-xs opacity-50" title="Поскаржитися">🚩</button>` : ""}</div>`).join("")}</div>
-        <div class="flex gap-2"><input id="th-tx" class="${inp}" maxlength="1000"><button id="th-att" class="${btn}" title="Надіслати файл (до 10 МБ)">📎</button><input id="th-file" type="file" class="hidden"><button id="th-go" class="${btn} theme-btn-primary">➤</button></div><div id="th-prog" class="text-xs theme-text-secondary"></div>`;
+        <div class="flex gap-2"><input id="th-tx" class="${inp}" maxlength="1000"><button id="th-att" class="${btn}" title="Надіслати файл (до 10 МБ)">📎</button><input id="th-file" type="file" multiple accept="image/*,video/*,*/*" class="hidden"><button id="th-go" class="${btn} theme-btn-primary">➤</button></div><div id="th-prog" class="text-xs theme-text-secondary"></div>`;
         $("th-back").onclick = () => render();
         $("th-meet").onclick = () => window.ATMeet && window.ATMeet.start("dm", id, r.with ? r.with.name : "Особиста зустріч", { peerId:id });
         $("th-chess").onclick = async () => { try { const j=await call("globerChessCreate", { userId:id }); toast("Шаховий виклик надіслано. Партія — 15 хвилин кожному."); tab="chess"; await render(); } catch(e){ toast(e.message); } };
@@ -5362,8 +5371,8 @@
         };
         $("th-att").onclick = () => $("th-file").click();
         $("th-file").onchange = async ev => {
-            const f = ev.target.files[0]; if (!f) return;
-            try { const up = await ATX.upload(f, "dm", id, v => { $("th-prog").textContent = "Завантаження " + f.name + ": " + Math.round(v * 100) + "%"; }); await call("globerDmSend", { email: r.with.email, text: $("th-tx").value, attach: [up.id] }); thread(id); }
+            const files = Array.from(ev.target.files || []).slice(0,5); if (!files.length) return;
+            try { const ids=[]; for(const f of files){const up=await ATX.upload(f, "dm", id, v => { $("th-prog").textContent = "Завантаження " + f.name + ": " + Math.round(v * 100) + "%"; });ids.push(up.id);} await call("globerDmSend", { email: r.with.email, text: $("th-tx").value, attach: ids }); thread(id); }
             catch (e) { toast(e.message); $("th-prog").textContent = ""; }
         };
         body().onclick = e => {
@@ -5485,7 +5494,7 @@
         const s = JSON.stringify(r); if (hit && hit._s === s) return; r._s = s; cxc[key] = r; paintClass(r, id);
     }
     const gradeTxt = (g, max) => g === null || g === undefined ? "—" : (g === 0 && max === 12 ? "Н/А" : g + "/" + max);
-    const attHtml = (list, extra) => (list && list.length ? `<div class="flex flex-wrap gap-1.5">${list.map(f => `<button data-file="${esc(f.id)}" data-fname="${esc(f.name)}" class="${btn}" title="Завантажити">📎 ${esc(f.name)} <span class="opacity-60">${ATX.fmtSize(f.size)}</span></button>`).join("")}${extra || ""}</div>` : "");
+    const attHtml = (list, extra) => (list && list.length ? `<div class="flex flex-wrap gap-2 mt-2">${list.map(f => {const mime=String(f.mime||"").toLowerCase(),id=esc(f.id),name=esc(f.name);if(mime.indexOf("image/")===0&&mime!=="image/svg+xml")return `<div class="max-w-full rounded-xl border theme-border p-1.5 space-y-1"><img data-inline-file="${id}" data-inline-mime="${esc(mime)}" alt="${name}" loading="lazy" class="inline-media-image block max-w-full max-h-72 rounded-lg object-contain bg-black/5" style="min-width:80px;min-height:48px"><div class="flex items-center gap-2 text-[10px] theme-text-secondary"><span class="flex-1 truncate">${name}</span><button data-file="${id}" data-fname="${name}" class="underline">Завантажити</button></div></div>`;if(mime.indexOf("video/")===0)return `<div class="w-full max-w-xl rounded-xl border theme-border p-1.5 space-y-1"><video data-inline-file="${id}" data-inline-mime="${esc(mime)}" controls playsinline preload="none" class="block w-full max-h-72 rounded-lg bg-black" style="min-height:100px"></video><div class="flex items-center gap-2 text-[10px] theme-text-secondary"><span class="flex-1 truncate">${name}</span><button data-file="${id}" data-fname="${name}" class="underline">Завантажити</button></div></div>`;return `<button data-file="${id}" data-fname="${name}" class="${btn}" title="Завантажити">📎 ${name} <span class="opacity-60">${ATX.fmtSize(f.size)}</span></button>`;}).join("")}${extra || ""}</div>` : "");
     function fmtAnchors(value) {
         const safeText = esc(String(value || ""));
         const linked = safeText.replace(/https?:\/\/[^\s<]+/gi, raw => {
@@ -5885,7 +5894,8 @@
     async function upload(file, scope, scopeId, onp) {
         if (!file.size) throw new Error("Порожній файл.");
         if (file.size > MAX) throw new Error("Файл завеликий (максимум 10 МБ).");
-        const meta = { name: file.name, mime: file.type || "application/octet-stream", scope, scopeId };
+        const ext=String(file.name||"").toLowerCase().split(".").pop(), guessed={gif:"image/gif",png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg",webp:"image/webp",bmp:"image/bmp",avif:"image/avif",mp4:"video/mp4",m4v:"video/mp4",webm:"video/webm",mov:"video/quicktime",mkv:"video/x-matroska",avi:"video/x-msvideo",ogv:"video/ogg"};
+        const meta = { name: file.name, mime: file.type || guessed[ext] || "application/octet-stream", scope, scopeId };
         if (file.size <= CH) { const r = await call("globerCxUploadSmall", Object.assign({ data: await b64(file) }, meta)); if (onp) onp(1); return r.file; }
         const total = Math.ceil(file.size / CH), st = await call("globerCxUploadStart", Object.assign({ size: file.size, total }, meta));
         let next = 0, done = 0;
@@ -5899,6 +5909,36 @@
         for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
         const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([arr], { type: r.mime || "application/octet-stream" })); a.download = r.name || name || "file";
         document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 5000);
+    }
+    const inlineUrls = new Map(), inlinePending = new Map();
+    async function loadInlineMedia(node) {
+        if (!node || node.dataset.inlineLoaded === "1") return;
+        const id = String(node.dataset.inlineFile || ""); if (!id) return;
+        node.dataset.inlineLoaded = "1";
+        try {
+            let url = inlineUrls.get(id);
+            if (!url) {
+                let job = inlinePending.get(id);
+                if (!job) job = call("globerCxFileGet", { fileId:id }).then(r => {
+                    const bin=atob(r.data),arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+                    const u=URL.createObjectURL(new Blob([arr],{type:r.mime||node.dataset.inlineMime||"application/octet-stream"}));inlineUrls.set(id,u);return u;
+                }).finally(()=>inlinePending.delete(id));
+                inlinePending.set(id,job);url=await job;
+            }
+            if (!node.isConnected) return;
+            node.src=url;if(node.tagName==="VIDEO")node.load();
+        } catch(e) { node.dataset.inlineLoaded="error"; if(node.tagName==="IMG")node.alt="Не вдалося показати медіафайл: "+(e.message||"помилка доступу"); }
+    }
+    const inlineIO = ("IntersectionObserver" in window) ? new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){inlineIO.unobserve(e.target);loadInlineMedia(e.target);}}),{rootMargin:"350px"}) : null;
+    function hydrateInline(root) {
+        if(!root)return;const nodes=[];if(root.matches&&root.matches("[data-inline-file]"))nodes.push(root);if(root.querySelectorAll)nodes.push(...root.querySelectorAll("[data-inline-file]"));
+        nodes.forEach(n=>{if(n.dataset.inlineLoaded)return;if(inlineIO)inlineIO.observe(n);else loadInlineMedia(n);});
+    }
+    const inlineMutation = new MutationObserver(records=>records.forEach(r=>r.addedNodes.forEach(n=>{if(n.nodeType===1)hydrateInline(n);} )));
+    inlineMutation.observe(document.body,{childList:true,subtree:true});
+
+    function renderAttachments(list) {
+        return (list||[]).map(f=>{const mime=String(f.mime||"").toLowerCase(),id=esc(f.id),name=esc(f.name);if(mime.indexOf("image/")===0&&mime!=="image/svg+xml")return `<div class="rounded-lg border border-slate-700 p-1.5 my-1"><img data-inline-file="${id}" data-inline-mime="${esc(mime)}" alt="${name}" loading="lazy" class="block max-w-full max-h-64 rounded-lg object-contain bg-black" style="min-width:80px;min-height:48px"><div class="flex justify-between gap-2 text-[10px] text-slate-400"><span class="truncate">${name}</span><button data-file="${id}" data-fname="${name}" class="underline">Завантажити</button></div></div>`;if(mime.indexOf("video/")===0)return `<div class="rounded-lg border border-slate-700 p-1.5 my-1"><video data-inline-file="${id}" data-inline-mime="${esc(mime)}" controls playsinline preload="none" class="block w-full max-h-64 rounded-lg bg-black" style="min-height:100px"></video><div class="flex justify-between gap-2 text-[10px] text-slate-400"><span class="truncate">${name}</span><button data-file="${id}" data-fname="${name}" class="underline">Завантажити</button></div></div>`;return `<button data-file="${id}" data-fname="${name}" class="text-xs underline">📎 ${name}</button>`;}).join("");
     }
 
     /* модальне вікно */
@@ -5981,7 +6021,7 @@
         });
     }
     setTimeout(decorate, 1500); setInterval(() => { if (!document.hidden) decorate(); }, 4000);
-    window.ATX = { upload, download, report, review, fmtSize, esc, modal };
+    window.ATX = { upload, download, report, review, fmtSize, esc, modal, renderAttachments, hydrateInline:hydrateInline };
 })();
 </script>
 <script>
@@ -5998,6 +6038,8 @@
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   let liveRoom = null, currentMeet = null;
   let bgProcessor = null, bgObjectUrl = null, currentGame = null, chessLibPromise = null, gamePoll = null, gameClockTimer = null, chosenSquare = null, meetStateTimer = null;
+  let meetNameMap = {}, meetDevices = { audioinput:[], videoinput:[], audiooutput:[] }, meetPrefs = {};
+  let meetChatTimer = null, meetChatLoading = false, meetChatSignature = "";
   const remoteEls = new Map();
   let handRaised = false, meetGridMode = true, meetStartedAt = 0;
   const glyphs = { wk:"♔",wq:"♕",wr:"♖",wb:"♗",wn:"♘",wp:"♙",bk:"♚",bq:"♛",br:"♜",bb:"♝",bn:"♞",bp:"♟︎" };
@@ -6031,6 +6073,15 @@
         #at-meet-modal:fullscreen > div { max-width:none !important; border:0 !important; border-radius:0 !important; }
         #at-meet-videos [data-participant$=":screen"]:fullscreen { width:100vw !important; height:100vh !important; max-width:none !important; min-height:0 !important; aspect-ratio:auto !important; border:0 !important; border-radius:0 !important; background:#000 !important; }
         #at-meet-videos [data-participant$=":screen"]:fullscreen video { width:100% !important; height:100% !important; object-fit:contain !important; }
+        #at-meet-modal[data-meet-theme="violet"] .at-meet-accent { background:#6d28d9 !important; }
+        #at-meet-modal[data-meet-theme="emerald"] .at-meet-accent { background:#047857 !important; }
+        #at-meet-modal[data-meet-theme="rose"] .at-meet-accent { background:#be123c !important; }
+        #at-meet-modal[data-meet-theme="light"] { background:#e2e8f0 !important; color:#0f172a !important; }
+        #at-meet-modal[data-meet-theme="light"] > div { background:#f8fafc !important; color:#0f172a !important; border-color:#cbd5e1 !important; }
+        #at-meet-modal[data-meet-density="compact"] #at-meet-videos > div { min-height:8rem; }
+        #at-meet-modal[data-meet-density="compact"] #at-meet-videos { gap:.35rem !important; }
+        #at-meet-modal[data-meet-density="compact"] #at-meet-toolbar button { padding:.45rem .65rem !important; }
+        #at-meet-modal.at-hide-chat #at-meet-chat-panel { display:none !important; }
       `;
       document.head.appendChild(style);
     }
@@ -6049,28 +6100,48 @@
               <div id="at-meet-videos" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 content-start">
                 <div class="rounded-xl border border-slate-700 bg-slate-800 min-h-44 flex items-center justify-center text-slate-400 text-sm">Очікування учасників…</div>
               </div>
-              <div class="flex flex-wrap items-center justify-center gap-2 py-2 border-y border-slate-700">
+              <div id="at-meet-toolbar" class="flex flex-wrap items-center justify-center gap-2 py-2 border-y border-slate-700">
                 <button id="at-mic" class="px-4 py-3 rounded-xl bg-slate-700 text-sm">🎤 Увімкнути мікрофон</button>
                 <button id="at-cam" class="px-4 py-3 rounded-xl bg-slate-700 text-sm">📷 Увімкнути камеру</button>
                 <button id="at-screen" class="px-4 py-3 rounded-xl bg-slate-700 text-sm">🖥 Екран + звук</button>
-                <button id="at-meet-fullscreen" class="px-4 py-3 rounded-xl bg-slate-700 text-sm">⛶ На весь екран</button>
-                <button id="at-hand" class="px-4 py-3 rounded-xl bg-slate-700 text-sm">✋ Підняти руку</button>
-                <button id="at-layout" class="px-4 py-3 rounded-xl bg-slate-700 text-sm">▦ Сітка</button>
-                <button id="at-mute-all" class="hidden px-4 py-3 rounded-xl bg-rose-800 hover:bg-rose-700 text-sm">🔇 Вимкнути всіх</button>
-                <button id="at-blur" class="px-4 py-3 rounded-xl bg-slate-700 text-sm">🌫 Розмити фон</button>
-                <label class="px-4 py-3 rounded-xl bg-slate-700 text-sm cursor-pointer">🌄 Свій фон<input id="at-bg-file" type="file" accept="image/png,image/jpeg,image/webp" class="hidden"></label>
+                <button id="at-functions" class="at-meet-accent px-4 py-3 rounded-xl bg-sky-700 text-sm font-bold">☰ Функції</button>
               </div>
-              <div class="flex flex-wrap items-center justify-center gap-2 text-sm" id="at-meet-reactions">
-                <span class="text-slate-400 px-2">Реакції:</span>
-                <button data-meet-reaction="👍" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700">👍</button>
-                <button data-meet-reaction="👏" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700">👏</button>
-                <button data-meet-reaction="❤️" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700">❤️</button>
-                <button data-meet-reaction="😂" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700">😂</button>
-                <button data-meet-reaction="🎉" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700">🎉</button>
+              <div id="at-functions-panel" class="hidden rounded-xl border border-slate-700 p-3 space-y-3">
+                <div class="flex flex-wrap gap-2">
+                  <button id="at-meet-fullscreen" class="px-3 py-2 rounded-lg bg-slate-700 text-xs">⛶ На весь екран</button>
+                  <button id="at-hand" class="px-3 py-2 rounded-lg bg-slate-700 text-xs">✋ Підняти руку</button>
+                  <button id="at-layout" class="px-3 py-2 rounded-lg bg-slate-700 text-xs">▦ Сітка</button>
+                  <button id="at-people-toggle" class="px-3 py-2 rounded-lg bg-slate-700 text-xs">👥 Учасники</button>
+                  <button id="at-mute-all" class="hidden px-3 py-2 rounded-lg bg-rose-800 hover:bg-rose-700 text-xs">🔇 Вимкнути всіх</button>
+                  <button id="at-refresh-devices" class="px-3 py-2 rounded-lg bg-slate-700 text-xs">↻ Оновити пристрої</button>
+                  <button id="at-meet-settings" class="px-3 py-2 rounded-lg bg-slate-700 text-xs">🎨 Налаштувати інтерфейс</button>
+                  <button id="at-meet-permissions" class="hidden px-3 py-2 rounded-lg bg-slate-700 text-xs">🛡 Права чату</button>
+                  <button id="at-iframe-demo" class="px-3 py-2 rounded-lg bg-slate-700 text-xs">🧩 Демонстрація iframe</button>
+                  <button id="at-meet-admins" class="hidden px-3 py-2 rounded-lg bg-slate-700 text-xs">👑 Адміністратори</button>
+                </div>
+                <div class="grid sm:grid-cols-3 gap-2 text-xs">
+                  <label class="block">🎤 Мікрофон<select id="at-mic-device" class="w-full mt-1 p-2 rounded-lg bg-slate-800 border border-slate-600"><option value="">Системний за замовчуванням</option></select></label>
+                  <label class="block">📷 Камера<select id="at-cam-device" class="w-full mt-1 p-2 rounded-lg bg-slate-800 border border-slate-600"><option value="">Системна за замовчуванням</option></select></label>
+                  <label class="block">🔊 Динаміки<select id="at-speaker-device" class="w-full mt-1 p-2 rounded-lg bg-slate-800 border border-slate-600"><option value="">Системні за замовчуванням</option></select></label>
+                </div>
+                <div id="at-meet-reactions" class="flex flex-wrap items-center gap-2 text-sm">
+                  <span class="text-slate-400 px-2">Реакції:</span>
+                  <button data-meet-reaction="👍" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700">👍</button>
+                  <button data-meet-reaction="👏" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700">👏</button>
+                  <button data-meet-reaction="❤️" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700">❤️</button>
+                  <button data-meet-reaction="😂" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700">😂</button>
+                  <button data-meet-reaction="🎉" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700">🎉</button>
+                </div>
+                <div class="text-[11px] text-slate-400">Щоб змінити фон, натисніть на власне відео та виберіть розмиття або зображення.</div>
               </div>
-              <div class="rounded-xl border border-slate-700 p-3 flex-1 min-h-32 flex flex-col">
-                <div class="font-bold text-sm mb-2">💬 Чат зустрічі</div><div id="at-meet-chat" class="flex-1 min-h-20 max-h-44 overflow-y-auto space-y-1 text-sm"></div>
-                <div class="flex gap-2 mt-2"><input id="at-meet-chat-input" maxlength="500" class="min-w-0 flex-1 rounded-lg px-3 py-2 bg-slate-800 border border-slate-700 text-sm" placeholder="Повідомлення учасникам…"><button id="at-meet-chat-send" class="px-4 rounded-lg bg-sky-700 text-sm">➤</button></div>
+              <input id="at-bg-file" type="file" accept="image/png,image/jpeg,image/webp" class="hidden">
+              <div id="at-meet-people" class="hidden rounded-xl border border-slate-700 p-3 space-y-2"></div>
+              <div id="at-meet-chat-panel" class="rounded-xl border border-slate-700 p-3 flex-1 min-h-32 flex flex-col">
+                <div class="font-bold text-sm mb-2">💬 Чат зустрічі</div>
+                <div id="at-meet-chat-pinned" class="hidden rounded-lg border border-amber-500/50 bg-amber-500/10 p-2 text-xs mb-2"></div>
+                <div id="at-meet-chat" class="flex-1 min-h-20 max-h-64 overflow-y-auto space-y-2 text-sm"></div>
+                <div class="flex flex-wrap gap-2 mt-2 items-center"><input id="at-meet-chat-input" maxlength="500" class="min-w-0 flex-1 rounded-lg px-3 py-2 bg-slate-800 border border-slate-700 text-sm" placeholder="Повідомлення учасникам…"><button id="at-meet-chat-files-btn" class="px-3 py-2 rounded-lg border border-slate-700 text-xs">📎 Файли</button><input id="at-meet-chat-files" type="file" multiple accept="image/*,video/*,*/*" class="hidden"><button id="at-meet-chat-send" class="px-4 rounded-lg bg-sky-700 text-sm">➤</button></div>
+                <div id="at-meet-chat-files-label" class="text-[10px] text-slate-400 mt-1"></div><div id="at-meet-chat-progress" class="text-[10px] text-slate-400"></div>
               </div>
             </section>
           </div>
@@ -6097,18 +6168,31 @@
     $("at-mic").onclick = toggleMic;
     $("at-cam").onclick = toggleCam;
     $("at-screen").onclick = toggleScreen;
+    $("at-functions").onclick = () => $("at-functions-panel").classList.toggle("hidden");
     $("at-meet-fullscreen").onclick = toggleMeetFullscreen;
     $("at-hand").onclick = toggleRaiseHand;
     $("at-layout").onclick = toggleMeetLayout;
     $("at-mute-all").onclick = muteAllParticipants;
+    $("at-people-toggle").onclick = () => { const el=$("at-meet-people"); el.classList.toggle("hidden"); if(!el.classList.contains("hidden"))renderMeetPeople(); };
+    $("at-meet-settings").onclick = openMeetSettings;
+    $("at-refresh-devices").onclick = refreshMeetDevices;
+    if(navigator.mediaDevices&&navigator.mediaDevices.addEventListener)navigator.mediaDevices.addEventListener("devicechange",refreshMeetDevices);
+    $("at-mic-device").onchange = ev => setMeetDevice("audioinput", ev.target.value);
+    $("at-cam-device").onchange = ev => setMeetDevice("videoinput", ev.target.value);
+    $("at-speaker-device").onchange = ev => setMeetDevice("audiooutput", ev.target.value);
     $("at-meet-reactions").addEventListener("click", ev => {
       const btn = ev.target.closest("[data-meet-reaction]");
       if (btn) sendMeetReaction(btn.dataset.meetReaction);
     });
-    $("at-blur").onclick = toggleBlur;
     $("at-bg-file").onchange = useVirtualBackground;
     $("at-meet-chat-send").onclick = sendMeetChat;
+    $("at-meet-chat-files-btn").onclick = () => $("at-meet-chat-files").click();
+    $("at-meet-chat-files").onchange = e => { const fs=Array.from(e.target.files||[]).slice(0,5); $("at-meet-chat-files-label").textContent=fs.map(f=>f.name).join(" · ")+(e.target.files.length>5?" · лише перші 5":""); applyMeetChatPermissions(currentMeet&&currentMeet.permissions); };
     $("at-meet-chat-input").addEventListener("keydown", e => { if (e.key === "Enter") sendMeetChat(); });
+    $("at-meet-chat").onclick = async e => { const b=e.target.closest("[data-meet-pin]"); if(!b||!currentMeet)return; try{await api("globerMeetChatPin",{meetingId:currentMeet.meetingId,messageId:b.dataset.meetPin,pinned:b.dataset.pinned!=="true"});await loadMeetChat();}catch(er){toast(er.message);} };
+    $("at-meet-permissions").onclick = openMeetPermissions;
+    $("at-iframe-demo").onclick = shareMeetIframe;
+    $("at-meet-admins").onclick = () => { const el=$("at-meet-people"); if(el.classList.contains("hidden"))el.classList.remove("hidden"); renderMeetPeople(); el.scrollIntoView({behavior:"smooth",block:"nearest"}); };
     return root;
   }
   function makeMeetLink(id) {
@@ -6145,12 +6229,18 @@
     try {
       const credentials = await api("globerMeetToken", { meetingId:id });
       currentMeet.isMine = !!credentials.isCreator;
+      currentMeet.isCreator = !!credentials.isCreator;
       currentMeet.scope = credentials.scope; currentMeet.scopeId = credentials.scopeId;
       currentMeet.createdAt = credentials.createdAt || new Date().toISOString();
       currentMeet.creatorId = credentials.creatorId || "";
       currentMeet.isModerator = !!credentials.isModerator;
+      currentMeet.permissions = credentials.permissions || {allowGif:true,allowPhoto:true,allowVideo:true,allowFile:true,allowText:true};
+      currentMeet.adminIds = credentials.adminIds || {};
       currentMeet.roomName = credentials.roomName || "";
+      $("at-meet-permissions").classList.toggle("hidden", !currentMeet.isModerator);
+      $("at-meet-admins").classList.toggle("hidden", !currentMeet.isCreator);
       currentMeet.title = credentials.title || currentMeet.title;
+      const nameData = await api("globerMeetNames", { meetingId:id }); meetNameMap = nameData.names || {}; currentMeet.adminIds = nameData.adminIds || currentMeet.adminIds || {};
       meetStartedAt = Date.now(); handRaised = false;
       if ($("at-hand")) $("at-hand").textContent = "✋ Підняти руку";
       if ($("at-mute-all")) $("at-mute-all").classList.toggle("hidden", !currentMeet.isModerator);
@@ -6162,8 +6252,8 @@
       const room = new LK.Room({ adaptiveStream:true, dynacast:true }); liveRoom = room;
       room.on(LK.RoomEvent.TrackSubscribed, (track, publication, participant) => addParticipantTrack(track, participant, false));
       room.on(LK.RoomEvent.TrackUnsubscribed, (track, publication, participant) => removeParticipantTrack(track, participant));
-      room.on(LK.RoomEvent.ParticipantConnected, participant => { addParticipantTile(participant, false); updateMeetCount(); });
-      room.on(LK.RoomEvent.ParticipantDisconnected, participant => { removeParticipantTile(participant); updateMeetCount(); });
+      room.on(LK.RoomEvent.ParticipantConnected, participant => { addParticipantTile(participant, false); updateMeetCount(); renderMeetPeople(); });
+      room.on(LK.RoomEvent.ParticipantDisconnected, participant => { removeParticipantTile(participant); updateMeetCount(); renderMeetPeople(); });
       if (LK.RoomEvent.TrackMuted) room.on(LK.RoomEvent.TrackMuted, (publication, participant) => refreshModeratorButton(participant));
       if (LK.RoomEvent.TrackUnmuted) room.on(LK.RoomEvent.TrackUnmuted, (publication, participant) => refreshModeratorButton(participant));
       room.on(LK.RoomEvent.LocalTrackPublished, (publication, participant) => { if (publication.track) addParticipantTrack(publication.track, participant, true); });
@@ -6183,16 +6273,21 @@
       $("at-meet-state").textContent = "Підключено · камера та мікрофон вимкнені, доки ви їх не ввімкнете.";
       room.remoteParticipants.forEach(p => { addParticipantTile(p, false); p.trackPublications.forEach(pub => { if (pub.track) addParticipantTrack(pub.track, p, false); }); });
       updateMeetCount();
+      await refreshMeetDevices();
+      applyMeetPrefs();
       // Keep permissions explicit: joining a meeting never silently turns on the camera or microphone.
       await room.localParticipant.setMicrophoneEnabled(false);
       await room.localParticipant.setCameraEnabled(false);
       addParticipantTile(room.localParticipant, true);
+      await loadMeetChat();
+      if(meetChatTimer)clearInterval(meetChatTimer);
+      meetChatTimer=setInterval(()=>{ if(currentMeet&&liveRoom)loadMeetChat().catch(()=>{}); },5000);
       if(meetStateTimer)clearInterval(meetStateTimer);
       meetStateTimer=setInterval(async()=>{
         const activeId=currentMeet&&currentMeet.meetingId;if(!activeId)return;
         updateMeetCount();
         try{const st=await api("globerMeetState",{meetingId:activeId});if(st.status!=="active"&&currentMeet&&currentMeet.meetingId===activeId){toast("Зустріч завершена.");await leaveMeeting();}}
-        catch(err){if(String(err.message||"").includes("більше не маєте доступу")&&currentMeet&&currentMeet.meetingId===activeId){toast("Доступ до зустрічі втрачено.");await leaveMeeting();}}
+        catch(err){const msg=String(err.message||"");if((msg.includes("більше не маєте доступу")||msg.includes("заблоковано"))&&currentMeet&&currentMeet.meetingId===activeId){toast(msg.includes("заблоковано")?"Адміністратор заборонив доступ до цієї зустрічі.":"Доступ до зустрічі втрачено.");await leaveMeeting();}}
       },5000);
       toast("Ви приєдналися до ArTesolymp Meet.");
     } catch(e) {
@@ -6201,6 +6296,14 @@
       if (liveRoom) { try { await liveRoom.disconnect(); } catch(_){} liveRoom=null; }
     }
   }
+  function meetParticipantName(participant) {
+    const identity = String(participant && participant.identity || "");
+    const uid = identity.replace(/^at_/, "");
+    const mapped = meetNameMap[uid] || "";
+    const raw = String(participant && participant.name || "").trim();
+    if (mapped && (!raw || /^(?:учасник|participant|user)(?:\s|$)/i.test(raw) || raw.endsWith(uid.slice(-5)))) return mapped;
+    return raw || mapped || "Учасник";
+  }
   function addParticipantTile(participant, local, keyOverride) {
     const key = keyOverride || String(participant.identity || (local ? "me" : "participant"));
     if (remoteEls.has(key)) return remoteEls.get(key);
@@ -6208,7 +6311,7 @@
     wrap.dataset.participant = key;
     const placeholder = document.createElement("div"); placeholder.className="text-slate-400 text-sm"; placeholder.textContent=key.endsWith(":screen")?"Очікування демонстрації екрана…":local?"Ви · камера вимкнена":"Учасник підключився"; wrap.appendChild(placeholder);
     const label = document.createElement("div"); label.className="absolute bottom-2 left-2 rounded-lg bg-black/60 px-2 py-1 text-[11px]";
-    label.textContent=key.endsWith(":screen")?((participant.name||"Учасник")+" · екран"):local?"Ви":(participant.name||("Учасник "+String(participant.identity||"").slice(-5)));
+    label.textContent=key.endsWith(":screen")?(meetParticipantName(participant)+" · екран"):local?"Ви":meetParticipantName(participant);
     wrap.appendChild(label);
     if (key.endsWith(":screen")) {
       const full = document.createElement("button"); full.type = "button";
@@ -6216,14 +6319,24 @@
       full.textContent = "⛶ На весь екран";
       full.addEventListener("click", ev => { ev.stopPropagation(); openScreenFullscreen(wrap); });
       wrap.appendChild(full);
-    } else if (!local && currentMeet && currentMeet.isModerator) {
-      const mute = document.createElement("button"); mute.type = "button";
-      mute.className = "absolute top-2 right-2 z-20 rounded-lg bg-rose-700/90 hover:bg-rose-600 px-3 py-2 text-xs";
-      mute.dataset.moderatorMute = key; mute.textContent = "🔇 Вимкнути мікрофон";
-      mute.addEventListener("click", ev => { ev.stopPropagation(); moderatorMuteParticipant(participant); });
-      wrap.appendChild(mute);
+    } else if (local) {
+      const bgBtn = document.createElement("button"); bgBtn.type = "button";
+      bgBtn.className = "absolute top-2 right-2 z-20 rounded-lg bg-black/70 hover:bg-black px-3 py-2 text-xs";
+      bgBtn.textContent = "🎨 Фон"; bgBtn.addEventListener("click", ev => { ev.stopPropagation(); showBackgroundPicker(); }); wrap.appendChild(bgBtn);
+      wrap.addEventListener("click", ev => { if (!ev.target.closest("button")) showBackgroundPicker(); });
+    } else if (currentMeet && currentMeet.isModerator && (currentMeet.isCreator || (String(participant.identity||"").replace(/^at_/,"") !== String(currentMeet.creatorId||"") && !(currentMeet.adminIds && currentMeet.adminIds[String(participant.identity||"").replace(/^at_/,"")])))) {
+      const manage = document.createElement("button"); manage.type = "button";
+      manage.className = "absolute top-2 right-2 z-20 rounded-lg bg-black/80 hover:bg-black px-3 py-2 text-xs";
+      manage.textContent = "⋯"; manage.title = "Керувати учасником";
+      const menu = document.createElement("div"); menu.className = "hidden absolute top-12 right-2 z-30 min-w-44 rounded-xl border border-slate-600 bg-slate-950 p-1 shadow-xl"; menu.dataset.meetManageMenu = "1";
+      const targetUid=String(participant.identity||"").replace(/^at_/,""),isAdmin=!!(currentMeet.adminIds&&currentMeet.adminIds[targetUid]);
+      menu.innerHTML = '<button data-meet-action="mute" class="block w-full text-left px-3 py-2 rounded-lg text-xs hover:bg-slate-800">🔇 Вимкнути мікрофон</button><button data-meet-action="kick" class="block w-full text-left px-3 py-2 rounded-lg text-xs hover:bg-slate-800">🚪 Викинути із зустрічі</button><button data-meet-action="ban" class="block w-full text-left px-3 py-2 rounded-lg text-xs text-rose-300 hover:bg-slate-800">⛔ Викинути й заборонити вхід</button>'+(currentMeet.isCreator?`<button data-meet-admin-toggle="${esc(targetUid)}" data-enabled="${isAdmin?"false":"true"}" class="block w-full text-left px-3 py-2 rounded-lg text-xs text-amber-300 hover:bg-slate-800">${isAdmin?"♛ Зняти роль адміністратора":"👑 Призначити адміністратором"}</button>`:"");
+      const muteAction=menu.querySelector('[data-meet-action="mute"]');if(muteAction)muteAction.dataset.moderatorMute=key;
+      manage.addEventListener("click", ev => { ev.stopPropagation(); menu.classList.toggle("hidden"); });
+      menu.addEventListener("click", async ev => { ev.stopPropagation(); const admin=ev.target.closest("[data-meet-admin-toggle]"); if(admin){menu.classList.add("hidden");return toggleMeetAdmin(admin.dataset.meetAdminToggle,admin.dataset.enabled==="true");}const action=ev.target.closest("[data-meet-action]"); if(!action)return; menu.classList.add("hidden"); if(action.dataset.meetAction==="mute")return moderatorMuteParticipant(participant); return moderatorRemoveParticipant(participant, action.dataset.meetAction==="ban"); });
+      wrap.append(manage, menu);
     }
-    $("at-meet-videos").appendChild(wrap); remoteEls.set(key, wrap); return wrap;
+    $("at-meet-videos").appendChild(wrap); remoteEls.set(key, wrap); renderMeetPeople(); return wrap;
   }
   function trackTileKey(track,participant) {
     const id=String(participant.identity||"participant"), src=String(track&&track.source||"").toLowerCase();
@@ -6259,16 +6372,18 @@
   async function toggleMic() {
     if(!liveRoom)return;const next=!(liveRoom.localParticipant.isMicrophoneEnabled);
     try{
-      await liveRoom.localParticipant.setMicrophoneEnabled(next, { echoCancellation:true, noiseSuppression:true, autoGainControl:true });
-      $("at-mic").textContent=next?"🔇 Вимкнути мікрофон":"🎤 Увімкнути мікрофон";
+      const deviceId=$("at-mic-device")&&$("at-mic-device").value || "";
+      await liveRoom.localParticipant.setMicrophoneEnabled(next, { echoCancellation:true, noiseSuppression:true, autoGainControl:true, ...(deviceId?{deviceId}: {}) });
+      $("at-mic").textContent=next?"🔇 Вимкнути мікрофон":"🎤 Увімкнути мікрофон"; await refreshMeetDevices();
     }catch(e){toast("Мікрофон: "+e.message);}
   }
   async function toggleCam() {
     if(!liveRoom)return;const next=!(liveRoom.localParticipant.isCameraEnabled);
     try{
-      await liveRoom.localParticipant.setCameraEnabled(next);
-      $("at-cam").textContent=next?"📷 Вимкнути камеру":"📷 Увімкнути камеру";
-      if(!next){bgProcessor=null;window.__atBlurOn=false;$("at-blur").textContent="🌫 Розмити фон";}
+      const deviceId=$("at-cam-device")&&$("at-cam-device").value || "";
+      await liveRoom.localParticipant.setCameraEnabled(next, deviceId?{deviceId}:{});
+      $("at-cam").textContent=next?"📷 Вимкнути камеру":"📷 Увімкнути камеру"; await refreshMeetDevices();
+      if(!next){bgProcessor=null;window.__atBlurOn=false;}
     }catch(e){toast("Камера: "+e.message);}
   }
   async function toggleScreen() {
@@ -6286,6 +6401,67 @@
       }
     }catch(e){toast("Демонстрація екрана: "+e.message);}
   }
+  async function refreshMeetDevices() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      meetDevices = { audioinput:devices.filter(x=>x.kind==="audioinput"), videoinput:devices.filter(x=>x.kind==="videoinput"), audiooutput:devices.filter(x=>x.kind==="audiooutput") };
+      const configs = [["at-mic-device","audioinput","Мікрофон"],["at-cam-device","videoinput","Камера"],["at-speaker-device","audiooutput","Динаміки"]];
+      configs.forEach(([id,kind,label])=>{ const el=$(id);if(!el)return;const saved=localStorage.getItem("atMeetDevice:"+kind)||el.value;el.innerHTML=`<option value="">${kind==="audioinput"?"Системний мікрофон за замовчуванням":kind==="videoinput"?"Системна камера за замовчуванням":"Системні динаміки за замовчуванням"}</option>`+meetDevices[kind].map((d,i)=>`<option value="${esc(d.deviceId)}">${esc(d.label||label+" "+(i+1))}</option>`).join("");if(saved&&meetDevices[kind].some(d=>d.deviceId===saved))el.value=saved;});
+    } catch(e) { /* enumeration is optional until the user grants media permissions */ }
+  }
+  async function setMeetDevice(kind, deviceId) {
+    try {
+      localStorage.setItem("atMeetDevice:"+kind, String(deviceId||""));
+      if (!liveRoom || !deviceId) return;
+      const ok=await liveRoom.switchActiveDevice(kind, deviceId);
+      if (ok===false) toast("Пристрій буде вибрано після наступного ввімкнення медіа.");
+      else toast("Пристрій змінено.");
+    } catch(e) { toast("Не вдалося змінити пристрій: "+e.message); }
+  }
+  function meetPrefRead() {
+    try { return JSON.parse(localStorage.getItem("atMeetInterfacePrefs")||"{}"); } catch(_) { return {}; }
+  }
+  function applyMeetPrefs() {
+    const root=$("at-meet-modal"); if(!root)return;
+    meetPrefs=Object.assign({theme:"default",density:"comfortable",chat:true,grid:true},meetPrefRead());
+    root.dataset.meetTheme=meetPrefs.theme;root.dataset.meetDensity=meetPrefs.density;root.classList.toggle("at-hide-chat",!meetPrefs.chat);
+    meetGridMode=meetPrefs.grid!==false;
+    const grid=$("at-meet-videos");if(grid)grid.className=meetGridMode?"grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 content-start":"grid grid-cols-1 gap-3 content-start";
+    const btn=$("at-layout");if(btn)btn.textContent=meetGridMode?"▦ Сітка":"▣ Один стовпець";
+  }
+  function openMeetSettings() {
+    const old=$("at-meet-settings-modal");if(old)old.remove();
+    meetPrefs=Object.assign({theme:"default",density:"comfortable",chat:true,grid:true},meetPrefRead());
+    const box=document.createElement("div");box.id="at-meet-settings-modal";box.className="fixed inset-0 z-[220] bg-black/70 flex items-center justify-center p-3";
+    box.innerHTML=`<div class="w-full max-w-md rounded-2xl border border-slate-600 bg-slate-900 text-slate-100 p-4 space-y-3"><div class="flex items-center"><b class="flex-1">🎨 Мій інтерфейс Meet</b><button data-pref-close class="px-2 py-1">✕</button></div><label class="block text-xs">Тема<select id="at-pref-theme" class="w-full mt-1 p-2 rounded-lg bg-slate-800 border border-slate-600"><option value="default">Темна синя</option><option value="violet">Фіолетова</option><option value="emerald">Зелена</option><option value="rose">Рожева</option><option value="light">Світла</option></select></label><label class="block text-xs">Розмір елементів<select id="at-pref-density" class="w-full mt-1 p-2 rounded-lg bg-slate-800 border border-slate-600"><option value="comfortable">Зручний</option><option value="compact">Компактний</option></select></label><label class="flex gap-2 items-center text-xs"><input id="at-pref-chat" type="checkbox"> Показувати чат постійно</label><label class="flex gap-2 items-center text-xs"><input id="at-pref-grid" type="checkbox"> Сітка відео (інакше один стовпець)</label><div class="flex gap-2"><button data-pref-save class="flex-1 rounded-xl bg-sky-700 p-2 text-sm font-bold">Зберегти</button><button data-pref-reset class="rounded-xl border border-slate-600 p-2 text-sm">Скинути</button></div><p class="text-[10px] text-slate-400">Налаштування зберігаються лише в цьому браузері та стосуються вашого вигляду зустрічі.</p></div>`;
+    document.body.appendChild(box);
+    $("at-pref-theme").value=meetPrefs.theme;$("at-pref-density").value=meetPrefs.density;$("at-pref-chat").checked=!!meetPrefs.chat;$("at-pref-grid").checked=!!meetPrefs.grid;
+    box.addEventListener("click",ev=>{if(ev.target===box||ev.target.closest("[data-pref-close]"))box.remove();const save=ev.target.closest("[data-pref-save]");if(save){meetPrefs={theme:$("at-pref-theme").value,density:$("at-pref-density").value,chat:$("at-pref-chat").checked,grid:$("at-pref-grid").checked};localStorage.setItem("atMeetInterfacePrefs",JSON.stringify(meetPrefs));applyMeetPrefs();box.remove();}const reset=ev.target.closest("[data-pref-reset]");if(reset){localStorage.removeItem("atMeetInterfacePrefs");applyMeetPrefs();box.remove();}});
+  }
+  function showBackgroundPicker() {
+    if(!liveRoom)return;
+    const old=$("at-meet-bg-picker");if(old)old.remove();
+    const box=document.createElement("div");box.id="at-meet-bg-picker";box.className="fixed inset-0 z-[225] bg-black/70 flex items-center justify-center p-3";
+    box.innerHTML=`<div class="w-full max-w-sm rounded-2xl border border-slate-600 bg-slate-900 text-slate-100 p-4 space-y-2"><div class="font-bold">🎨 Ваш фон</div><button data-bg-blur class="w-full text-left p-3 rounded-xl bg-slate-800">🌫 Розмити фон</button><button data-bg-image class="w-full text-left p-3 rounded-xl bg-slate-800">🖼 Вибрати власне зображення</button><button data-bg-clear class="w-full text-left p-3 rounded-xl bg-slate-800">🚫 Прибрати ефект</button><button data-bg-close class="w-full p-2 text-xs text-slate-400">Закрити</button></div>`;
+    document.body.appendChild(box);
+    box.addEventListener("click",async ev=>{if(ev.target===box||ev.target.closest("[data-bg-close]")){box.remove();return;}if(ev.target.closest("[data-bg-blur]")){box.remove();return setBlurBackground();}if(ev.target.closest("[data-bg-image]")){box.remove();$("at-bg-file").click();}if(ev.target.closest("[data-bg-clear]")){box.remove();return clearMeetBackground();}});
+  }
+  function renderMeetPeople() {
+    const host=$("at-meet-people");if(!host||!liveRoom)return;
+    const people=[{identity:liveRoom.localParticipant.identity,name:"Ви",local:true},...Array.from(liveRoom.remoteParticipants.values()).map(p=>({identity:p.identity,name:meetParticipantName(p),local:false}))];
+    host.innerHTML=`<div class="font-bold text-sm">👥 Учасники (${people.length})</div>`+people.map(p=>{const uid=String(p.identity||"").replace(/^at_/,""),isAdmin=!!(currentMeet&&currentMeet.adminIds&&currentMeet.adminIds[uid]);return `<div class="flex flex-wrap items-center gap-2 text-xs py-1 border-b border-slate-700/60"><span class="flex-1 min-w-0 truncate">${esc(p.name)}</span>${p.local?'<span class="text-slate-400">Ви · творець/учасник</span>':`<button data-meet-profile="${esc(uid)}" class="rounded-lg border border-slate-600 px-2 py-1">Профіль</button>${currentMeet&&currentMeet.isCreator?`<button data-meet-admin-toggle="${esc(uid)}" data-enabled="${isAdmin?"false":"true"}" class="rounded-lg border border-amber-600/60 px-2 py-1">${isAdmin?"Зняти адміна":"👑 Зробити адміном"}</button>`:isAdmin?'<span class="text-amber-300">👑 Адмін Meet</span>':""}`}</div>`;}).join("");
+    host.querySelectorAll("[data-meet-profile]").forEach(b=>b.onclick=()=>{if(window.openProfile){window.openProfile(b.dataset.meetProfile);setTimeout(()=>{const modal=$("pf-modal");if(modal)modal.style.zIndex="240";},0);}});
+    host.querySelectorAll("[data-meet-admin-toggle]").forEach(b=>b.onclick=()=>toggleMeetAdmin(b.dataset.meetAdminToggle,b.dataset.enabled==="true"));
+  }
+  async function moderatorRemoveParticipant(participant, ban) {
+    if(!currentMeet||!currentMeet.isModerator||!participant)return;
+    const identity=String(participant.identity||""), name=meetParticipantName(participant);
+    if(!confirm(ban?`Викинути ${name} і заборонити повторний вхід у цю зустріч? Розбан доступний в профілі користувача.`:`Викинути ${name} із поточної зустрічі?`))return;
+    try{await api("globerMeetModerateParticipant",{meetingId:currentMeet.meetingId,identity,mode:ban?"ban":"kick",reason:ban?"Рішення модератора зустрічі":""});toast(ban?`${name}: доступ до цієї зустрічі заборонено.`:`${name} видалено із зустрічі.`);}
+    catch(e){toast(e.message);}
+  }
+
   async function toggleMeetFullscreen() {
     const root=$("at-meet-modal"); if(!root)return;
     try {
@@ -6307,6 +6483,7 @@
     const grid=$("at-meet-videos"); if(!grid)return;
     grid.className=meetGridMode ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 content-start" : "grid grid-cols-1 gap-3 content-start";
     $("at-layout").textContent=meetGridMode?"▦ Сітка":"▣ Один стовпець";
+    meetPrefs=Object.assign({},meetPrefRead(),{grid:meetGridMode});try{localStorage.setItem("atMeetInterfacePrefs",JSON.stringify(meetPrefs));}catch(_){}
   }
   function updateMeetCount() {
     if(!liveRoom)return;
@@ -6387,38 +6564,116 @@
     if(pkg.supportsBackgroundProcessors&&!pkg.supportsBackgroundProcessors())throw new Error("Браузер не підтримує обробку фону.");
     bgProcessor=pkg.BackgroundProcessor({mode:"background-blur",blurRadius:12});return bgProcessor;
   }
-  async function toggleBlur() {
+  async function setBlurBackground() {
     if(!liveRoom)return toast("Спочатку підключіться до зустрічі.");
     try{
-      if(!(liveRoom.localParticipant.isCameraEnabled)) await liveRoom.localParticipant.setCameraEnabled(true);
+      if(!liveRoom.localParticipant.isCameraEnabled)await liveRoom.localParticipant.setCameraEnabled(true, ( $("at-cam-device")&&$("at-cam-device").value )?{deviceId:$("at-cam-device").value}:{});
       const track=await cameraTrack();if(!track||!track.setProcessor)throw new Error("Обробка фону недоступна у цьому браузері.");
-      const p=await ensureBackgroundProcessor();
-      if(window.__atBlurOn){if(p.switchTo)await p.switchTo({mode:"disabled"});window.__atBlurOn=false;$("at-blur").textContent="🌫 Розмити фон";}
-      else{await track.setProcessor(p);if(p.switchTo)await p.switchTo({mode:"background-blur",blurRadius:12});window.__atBlurOn=true;$("at-blur").textContent="🌫 Прибрати розмиття";}
+      const p=await ensureBackgroundProcessor();await track.setProcessor(p);if(p.switchTo)await p.switchTo({mode:"background-blur",blurRadius:12});window.__atBlurOn=true;toast("Розмиття фону увімкнено.");
     }catch(e){toast("Розмиття фону недоступне: "+e.message);}
   }
+  async function clearMeetBackground() {
+    try{const track=await cameraTrack();if(bgProcessor&&track&&track.setProcessor){if(bgProcessor.switchTo)await bgProcessor.switchTo({mode:"disabled"});}window.__atBlurOn=false;toast("Ефект фону вимкнено.");}
+    catch(e){toast("Не вдалося прибрати ефект: "+e.message);}
+  }
+  async function toggleBlur() { return setBlurBackground(); }
   async function useVirtualBackground(ev) {
     const file=ev.target.files&&ev.target.files[0];ev.target.value="";if(!file||!liveRoom)return;
     if(!/^image\/(png|jpeg|webp)$/i.test(file.type)||file.size>8*1024*1024)return toast("Оберіть JPG, PNG або WebP до 8 МБ.");
     try{
-      if(!liveRoom.localParticipant.isCameraEnabled)await liveRoom.localParticipant.setCameraEnabled(true);
+      if(!liveRoom.localParticipant.isCameraEnabled)await liveRoom.localParticipant.setCameraEnabled(true, ($("at-cam-device")&&$("at-cam-device").value)?{deviceId:$("at-cam-device").value}:{});
       const track=await cameraTrack();if(!track||!track.setProcessor)throw new Error("Обробка фону недоступна.");
       const p=await ensureBackgroundProcessor();if(!bgObjectUrl)bgObjectUrl=URL.createObjectURL(file);else{URL.revokeObjectURL(bgObjectUrl);bgObjectUrl=URL.createObjectURL(file);}
       await track.setProcessor(p);if(p.switchTo)await p.switchTo({mode:"virtual-background",imagePath:bgObjectUrl});
-      window.__atBlurOn=true;$("at-blur").textContent="🌄 Віртуальний фон увімкнено";toast("Віртуальний фон застосовано.");
+      window.__atBlurOn=true;toast("Віртуальний фон застосовано.");
     }catch(e){toast("Не вдалося встановити фон: "+e.message);}
   }
+  async function loadMeetChat() {
+    if(!currentMeet || !liveRoom || meetChatLoading)return;
+    meetChatLoading=true;
+    try {
+      const r=await api("globerMeetChatList",{meetingId:currentMeet.meetingId});
+      currentMeet.permissions=r.permissions||currentMeet.permissions||{};currentMeet.adminIds=r.adminIds||currentMeet.adminIds||{};currentMeet.isModerator=!!r.canModerate;currentMeet.isCreator=!!r.isCreator;
+      const sig=(r.messages||[]).map(m=>m.messageId+":"+m.pinned+":"+m.text+":"+(m.attachments||[]).map(a=>a.id).join(",")).join("|");
+      if(sig!==meetChatSignature){meetChatSignature=sig;renderMeetChat(r.messages||[]);}
+      applyMeetChatPermissions(currentMeet.permissions);
+      $("at-meet-permissions").classList.toggle("hidden",!currentMeet.isModerator);
+      $("at-meet-admins").classList.toggle("hidden",!currentMeet.isCreator);
+    } finally { meetChatLoading=false; }
+  }
+  function applyMeetChatPermissions(p) {
+    p=p||{};const textAllowed=p.allowText!==false;
+    const input=$("at-meet-chat-input"),send=$("at-meet-chat-send");
+    const uploadAllowed=[p.allowGif,p.allowPhoto,p.allowVideo,p.allowFile].some(x=>x!==false);
+    if(input){input.disabled=!textAllowed;input.placeholder=textAllowed?"Повідомлення учасникам…":"Надсилання тексту вимкнено адміністратором";input.classList.toggle("opacity-50",!textAllowed);}
+    // A participant may still send attachment-only messages when text is disabled.
+    if(send){send.disabled=!(textAllowed||uploadAllowed);send.classList.toggle("opacity-50",!(textAllowed||uploadAllowed));}
+    const files=$("at-meet-chat-files-btn");if(files){files.disabled=!uploadAllowed;files.classList.toggle("opacity-40",!uploadAllowed);}
+  }
+  function renderMeetChat(messages) {
+    const log=$("at-meet-chat");if(!log)return;
+    const pinned=(messages||[]).find(m=>m.pinned),bar=$("at-meet-chat-pinned");
+    if(bar){bar.classList.toggle("hidden",!pinned);bar.textContent=pinned?"📌 Закріплено · "+pinned.name+": "+(pinned.text||((pinned.attachments||[]).length?"Вкладення":"")):"";}
+    log.innerHTML=(messages||[]).map(m=>`<div class="rounded-lg bg-slate-800 px-2 py-2 break-words"><div class="flex items-center gap-2 text-[11px] text-slate-400"><b class="flex-1">${esc(m.name||"Учасник")}</b>${m.pinned?"📌":""}${currentMeet&&currentMeet.isModerator?`<button data-meet-pin="${esc(m.messageId)}" data-pinned="${m.pinned?"true":"false"}" class="px-2 py-1 rounded border border-slate-600">${m.pinned?"Відкріпити":"📌 Закріпити"}</button>`:""}</div>${m.text?`<div class="whitespace-pre-wrap mt-1">${esc(m.text)}</div>`:""}${window.ATX&&window.ATX.renderAttachments?window.ATX.renderAttachments(m.attachments||[]):""}</div>`).join("")||"<div class='text-xs text-slate-500'>Повідомлень ще немає.</div>";
+    log.scrollTop=log.scrollHeight;
+    if(window.ATX&&window.ATX.hydrateInline)window.ATX.hydrateInline(log);
+  }
   async function sendMeetChat() {
-    const input=$("at-meet-chat-input"), text=String(input.value||"").trim();if(!text||!liveRoom)return;
-    try{await liveRoom.localParticipant.publishData(new TextEncoder().encode(text),{reliable:true,topic:"at-meet-chat"});addMeetChat("Ви",text);input.value="";}catch(e){toast("Не вдалося надіслати повідомлення: "+e.message);}
+    if(!currentMeet||!liveRoom)return;
+    const input=$("at-meet-chat-input"),typed=String(input.value||"").trim(),text=currentMeet.permissions&&currentMeet.permissions.allowText===false?"":typed,files=Array.from(( $("at-meet-chat-files")&&$("at-meet-chat-files").files )||[]).slice(0,5);
+    if(typed&&!text&&currentMeet.permissions&&currentMeet.permissions.allowText===false){toast("Адміністратор вимкнув надсилання тексту. Файли можна надіслати окремо.");input.value="";}
+    if(!text&&!files.length)return;
+    const send=$("at-meet-chat-send"),progress=$("at-meet-chat-progress");send.disabled=true;
+    try{
+      const ids=[];
+      for(const f of files){if(!window.ATX||!window.ATX.upload)throw new Error("Модуль завантаження файлів не готовий.");const up=await window.ATX.upload(f,"meet",currentMeet.meetingId,p=>{if(progress)progress.textContent=f.name+": "+Math.round(p*100)+"%";});ids.push(up.id);}
+      await api("globerMeetChatSend",{meetingId:currentMeet.meetingId,text,attach:ids});
+      input.value="";$("at-meet-chat-files").value="";$("at-meet-chat-files-label").textContent="";if(progress)progress.textContent="";
+      await loadMeetChat();try{await publishMeetSignal("at-meet-chat-refresh",{updated:true});}catch(_){}
+    }catch(e){toast("Не вдалося надіслати: "+e.message);}
+    finally{send.disabled=false;applyMeetChatPermissions(currentMeet&&currentMeet.permissions);}
+  }
+  async function openMeetPermissions() {
+    if(!currentMeet||!currentMeet.isModerator)return;
+    try {
+      const r=await api("globerMeetSettings",{meetingId:currentMeet.meetingId}),p=r.permissions||{};
+      const old=$("at-meet-permissions-modal");if(old)old.remove();
+      const wrap=document.createElement("div");wrap.id="at-meet-permissions-modal";wrap.className="fixed inset-0 z-[230] bg-black/70 flex items-center justify-center p-4";
+      wrap.innerHTML=`<div class="w-full max-w-md rounded-2xl border border-slate-600 bg-slate-900 text-slate-100 p-4 space-y-3"><div class="font-black text-lg">🛡 Права учасників у Meet</div><p class="text-xs text-slate-400">Ці дозволи діють для всіх учасників зустрічі. Зміни перевіряються сервером.</p><div class="space-y-2 text-sm">${[["allowGif","Завантажувати GIF"],["allowPhoto","Завантажувати фото"],["allowVideo","Завантажувати відео"],["allowFile","Завантажувати файли"],["allowText","Надсилання тексту"]].map(([k,label])=>`<label class="flex items-center gap-3 rounded-lg bg-slate-800 p-3"><input type="checkbox" data-meet-perm="${k}" ${p[k]!==false?"checked":""}><span>${label}</span></label>`).join("")}</div><div class="flex justify-end gap-2"><button data-meet-perm-close class="px-3 py-2 rounded-lg border border-slate-600 text-xs">Скасувати</button><button data-meet-perm-save class="px-3 py-2 rounded-lg bg-sky-700 text-xs font-bold">Зберегти</button></div></div>`;
+      document.body.appendChild(wrap);
+      wrap.onclick=async e=>{if(e.target===wrap||e.target.closest("[data-meet-perm-close]")){wrap.remove();return;}if(e.target.closest("[data-meet-perm-save]")){const b=e.target.closest("[data-meet-perm-save]"),permissions={};wrap.querySelectorAll("[data-meet-perm]").forEach(x=>permissions[x.dataset.meetPerm]=x.checked);b.disabled=true;try{const saved=await api("globerMeetSettingsUpdate",{meetingId:currentMeet.meetingId,permissions});currentMeet.permissions=saved.permissions;applyMeetChatPermissions(saved.permissions);toast("Права зустрічі збережено.");wrap.remove();}catch(er){toast(er.message);b.disabled=false;}}};
+    }catch(e){toast(e.message);}
+  }
+  async function toggleMeetAdmin(userId, enabled) {
+    if(!currentMeet||!currentMeet.isCreator)return;
+    try{const r=await api("globerMeetSetAdmin",{meetingId:currentMeet.meetingId,userId,enabled});currentMeet.adminIds=r.adminIds||{};renderMeetPeople();toast(enabled?"Призначено адміністратором Meet.":"Роль адміністратора знято.");}
+    catch(e){toast(e.message);}
+  }
+  async function shareMeetIframe() {
+    if(!liveRoom)return;
+    const raw=prompt("Вставте HTTPS-посилання на сторінку або форму, яку потрібно показати всім учасникам:");if(!raw)return;
+    let url;try{url=new URL(raw.trim());}catch(_){return toast("Некоректне посилання.");}
+    if(url.protocol!=="https:")return toast("Для демонстрації iframe дозволені лише HTTPS-посилання.");
+    const title=(prompt("Назва демонстрації:","Форма для проходження")||"Демонстрація iframe").slice(0,80);
+    const data={url:url.href,title};showMeetIframe("Ви",data.url,data.title);await publishMeetSignal("at-meet-iframe",data);
+  }
+  function showMeetIframe(name, rawUrl, title) {
+    let url;try{url=new URL(String(rawUrl||""));}catch(_){return;}if(url.protocol!=="https:")return;
+    const log=$("at-meet-chat");if(!log)return;
+    const card=document.createElement("div");card.className="rounded-xl border border-sky-700 bg-slate-800 p-2 space-y-2";
+    const head=document.createElement("div");head.className="text-xs font-bold";head.textContent="🧩 "+String(name||"Учасник")+" демонструє: "+String(title||"Iframe");
+    const frame=document.createElement("iframe");frame.src=url.href;frame.title=String(title||"Демонстрація");frame.loading="lazy";frame.referrerPolicy="no-referrer";frame.sandbox="allow-forms allow-scripts";frame.allow="fullscreen";frame.className="w-full rounded-lg bg-white";frame.style.height="min(55vh,420px)";
+    const link=document.createElement("a");link.href=url.href;link.target="_blank";link.rel="noopener noreferrer";link.className="text-xs text-sky-300 underline";link.textContent="Якщо сайт забороняє iframe — відкрити окремо";
+    card.append(head,frame,link);log.appendChild(card);log.scrollTop=log.scrollHeight;
   }
   function receiveMeetChat(payload, participant, topic) {
     let raw="";try{raw=new TextDecoder().decode(payload);}catch(_){return;}
-    const who="Учасник "+String(participant&&participant.identity||"").slice(-5);
+    const who=meetParticipantName(participant);
     if(topic==="at-meet-reaction") { try { const d=JSON.parse(raw); showMeetReaction(participant,d.emoji); } catch(_){} return; }
     if(topic==="at-meet-hand") { try { const d=JSON.parse(raw); addMeetChat(who,d.raised?"✋ Підняв руку":"Опустив руку"); } catch(_){} return; }
-    if(topic&&topic!=="at-meet-chat")return;
-    addMeetChat(who,raw);
+    if(topic === "at-meet-iframe") { try { const d=JSON.parse(raw); showMeetIframe(who,d.url,d.title); } catch(_){} return; }
+    if(topic === "at-meet-chat-refresh" || topic === "at-meet-chat") { loadMeetChat().catch(()=>{}); return; }
+    return;
   }
   function addMeetChat(name,text) {
     const log=$("at-meet-chat");if(!log)return;const row=document.createElement("div");row.className="rounded-lg bg-slate-800 px-2 py-1 break-words";
@@ -6426,15 +6681,17 @@
   }
   async function leaveMeeting() {
     if(meetStateTimer)clearInterval(meetStateTimer);meetStateTimer=null;
+    if(meetChatTimer)clearInterval(meetChatTimer);meetChatTimer=null;meetChatLoading=false;meetChatSignature="";
     const room=liveRoom;liveRoom=null;currentMeet=null;
     if(room){try{await room.disconnect();}catch(_){}}
     document.querySelectorAll("audio[data-lk-audio]").forEach(x=>x.remove());
     if($("at-audio-unlock"))$("at-audio-unlock").classList.add("hidden");
     if(bgObjectUrl){URL.revokeObjectURL(bgObjectUrl);bgObjectUrl=null;}bgProcessor=null;window.__atBlurOn=false;
-    handRaised=false;meetStartedAt=0;if($("at-hand"))$("at-hand").textContent="✋ Підняти руку";
+    handRaised=false;meetStartedAt=0;meetNameMap={};if($("at-hand"))$("at-hand").textContent="✋ Підняти руку";
     if($("at-mute-all"))$("at-mute-all").classList.add("hidden");
     if($("at-screen"))$("at-screen").textContent="🖥 Екран + звук";
     remoteEls.forEach(el=>{if(el&&el.remove)el.remove();});remoteEls.clear();
+    ["at-meet-settings-modal","at-meet-bg-picker"].forEach(id=>{const x=$(id);if(x)x.remove();});
     const root=$("at-meet-modal");if(root)root.classList.add("hidden");
   }
 
