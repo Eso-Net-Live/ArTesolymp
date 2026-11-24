@@ -6082,6 +6082,13 @@
         #at-meet-modal[data-meet-density="compact"] #at-meet-videos { gap:.35rem !important; }
         #at-meet-modal[data-meet-density="compact"] #at-meet-toolbar button { padding:.45rem .65rem !important; }
         #at-meet-modal.at-hide-chat #at-meet-chat-panel { display:none !important; }
+        #at-meet-layout { display:grid !important; grid-template-columns:minmax(0,1fr) minmax(280px,360px) !important; }
+        #at-meet-main { min-width:0; min-height:0; overflow-y:auto; }
+        #at-meet-chat-panel { min-width:0; min-height:0; height:100%; max-height:100%; }
+        #at-meet-chat-panel:fullscreen { width:100vw!important;height:100vh!important;max-height:none!important;background:#0f172a!important;padding:1rem!important;border:0!important;border-radius:0!important; }
+        #at-meet-chat-panel:fullscreen #at-meet-chat { max-height:none!important; }
+        #at-meet-stage iframe { width:100%;height:100%;min-height:60vh;border:0;border-radius:.75rem;background:#fff; }
+        @media(max-width:760px){#at-meet-layout{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) minmax(220px,38vh)!important}#at-meet-chat-panel{height:auto;max-height:38vh}#at-meet-main{overflow-y:auto}#at-meet-stage iframe{min-height:45vh}}
       `;
       document.head.appendChild(style);
     }
@@ -6095,8 +6102,8 @@
             <button id="at-meet-end" class="px-3 py-2 text-xs rounded-xl bg-rose-700 hover:bg-rose-600">Завершити</button>
             <button id="at-meet-close" class="px-3 py-2 text-xs rounded-xl border border-slate-600">Вийти ✕</button>
           </header>
-          <div id="at-meet-layout" class="flex-1 min-h-0 grid grid-cols-1">
-            <section class="min-h-0 flex flex-col p-3 gap-3 overflow-y-auto">
+          <div id="at-meet-layout" class="flex-1 min-h-0">
+            <section id="at-meet-main" class="min-h-0 flex flex-col p-3 gap-3 overflow-y-auto">
               <div id="at-meet-videos" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 content-start">
                 <div class="rounded-xl border border-slate-700 bg-slate-800 min-h-44 flex items-center justify-center text-slate-400 text-sm">Очікування учасників…</div>
               </div>
@@ -6136,14 +6143,15 @@
               </div>
               <input id="at-bg-file" type="file" accept="image/png,image/jpeg,image/webp" class="hidden">
               <div id="at-meet-people" class="hidden rounded-xl border border-slate-700 p-3 space-y-2"></div>
-              <div id="at-meet-chat-panel" class="rounded-xl border border-slate-700 p-3 flex-1 min-h-32 flex flex-col">
-                <div class="font-bold text-sm mb-2">💬 Чат зустрічі</div>
+              <div id="at-meet-stage" class="hidden rounded-xl border border-slate-600 bg-black p-2 space-y-2" aria-live="polite"></div>
+            </section>
+            <aside id="at-meet-chat-panel" class="rounded-xl border border-slate-700 p-3 m-3 ml-0 flex flex-col overflow-hidden">
+                <div class="flex items-center gap-2 mb-2"><div class="font-bold text-sm flex-1">💬 Чат зустрічі</div><button id="at-meet-chat-fullscreen" class="px-2 py-1 rounded-lg bg-slate-700 text-xs" title="Розгорнути чат на весь екран">⛶ На весь екран</button></div>
                 <div id="at-meet-chat-pinned" class="hidden rounded-lg border border-amber-500/50 bg-amber-500/10 p-2 text-xs mb-2"></div>
                 <div id="at-meet-chat" class="flex-1 min-h-20 max-h-64 overflow-y-auto space-y-2 text-sm"></div>
                 <div class="flex flex-wrap gap-2 mt-2 items-center"><input id="at-meet-chat-input" maxlength="500" class="min-w-0 flex-1 rounded-lg px-3 py-2 bg-slate-800 border border-slate-700 text-sm" placeholder="Повідомлення учасникам…"><button id="at-meet-chat-files-btn" class="px-3 py-2 rounded-lg border border-slate-700 text-xs">📎 Файли</button><input id="at-meet-chat-files" type="file" multiple accept="image/*,video/*,*/*" class="hidden"><button id="at-meet-chat-send" class="px-4 rounded-lg bg-sky-700 text-sm">➤</button></div>
                 <div id="at-meet-chat-files-label" class="text-[10px] text-slate-400 mt-1"></div><div id="at-meet-chat-progress" class="text-[10px] text-slate-400"></div>
-              </div>
-            </section>
+            </aside>
           </div>
         </div>
       </div>`);
@@ -6186,6 +6194,7 @@
     });
     $("at-bg-file").onchange = useVirtualBackground;
     $("at-meet-chat-send").onclick = sendMeetChat;
+    $("at-meet-chat-fullscreen").onclick = async () => { const panel=$("at-meet-chat-panel"); try { if(document.fullscreenElement===panel) await document.exitFullscreen(); else if(panel.requestFullscreen) await panel.requestFullscreen(); else toast("Повноекранний режим чату не підтримується цим браузером."); } catch(e) { toast("Не вдалося розгорнути чат: "+e.message); } };
     $("at-meet-chat-files-btn").onclick = () => $("at-meet-chat-files").click();
     $("at-meet-chat-files").onchange = e => { const fs=Array.from(e.target.files||[]).slice(0,5); $("at-meet-chat-files-label").textContent=fs.map(f=>f.name).join(" · ")+(e.target.files.length>5?" · лише перші 5":""); applyMeetChatPermissions(currentMeet&&currentMeet.permissions); };
     $("at-meet-chat-input").addEventListener("keydown", e => { if (e.key === "Enter") sendMeetChat(); });
@@ -6659,12 +6668,17 @@
   }
   function showMeetIframe(name, rawUrl, title) {
     let url;try{url=new URL(String(rawUrl||""));}catch(_){return;}if(url.protocol!=="https:")return;
-    const log=$("at-meet-chat");if(!log)return;
-    const card=document.createElement("div");card.className="rounded-xl border border-sky-700 bg-slate-800 p-2 space-y-2";
-    const head=document.createElement("div");head.className="text-xs font-bold";head.textContent="🧩 "+String(name||"Учасник")+" демонструє: "+String(title||"Iframe");
-    const frame=document.createElement("iframe");frame.src=url.href;frame.title=String(title||"Демонстрація");frame.loading="lazy";frame.referrerPolicy="no-referrer";frame.sandbox="allow-forms allow-scripts";frame.allow="fullscreen";frame.className="w-full rounded-lg bg-white";frame.style.height="min(55vh,420px)";
+    const stage=$("at-meet-stage");if(!stage)return;
+    stage.classList.remove("hidden");stage.replaceChildren();
+    const top=document.createElement("div");top.className="flex items-center gap-2 text-xs text-white";
+    const head=document.createElement("div");head.className="font-bold flex-1";head.textContent="🧩 "+String(name||"Учасник")+" демонструє: "+String(title||"Iframe");
+    const full=document.createElement("button");full.className="px-3 py-2 rounded-lg bg-slate-700";full.textContent="⛶ На весь екран";
+    const close=document.createElement("button");close.className="px-3 py-2 rounded-lg bg-slate-700";close.textContent="✕ Закрити";
+    const frame=document.createElement("iframe");frame.src=url.href;frame.title=String(title||"Демонстрація");frame.loading="eager";frame.referrerPolicy="no-referrer";frame.sandbox="allow-forms allow-scripts allow-same-origin allow-popups";frame.allow="fullscreen; autoplay; encrypted-media";frame.className="w-full rounded-lg bg-white";
     const link=document.createElement("a");link.href=url.href;link.target="_blank";link.rel="noopener noreferrer";link.className="text-xs text-sky-300 underline";link.textContent="Якщо сайт забороняє iframe — відкрити окремо";
-    card.append(head,frame,link);log.appendChild(card);log.scrollTop=log.scrollHeight;
+    full.onclick=async()=>{try{if(document.fullscreenElement===stage)await document.exitFullscreen();else await stage.requestFullscreen();}catch(e){toast("Не вдалося розгорнути демонстрацію: "+e.message);}};
+    close.onclick=()=>{frame.src="about:blank";stage.classList.add("hidden");stage.replaceChildren();};
+    top.append(head,full,close);stage.append(top,frame,link);stage.scrollIntoView({behavior:"smooth",block:"nearest"});
   }
   function receiveMeetChat(payload, participant, topic) {
     let raw="";try{raw=new TextDecoder().decode(payload);}catch(_){return;}
