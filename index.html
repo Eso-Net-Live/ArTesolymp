@@ -1115,7 +1115,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbzK1vFVPCI30VzZKd8nfCMdAy3260-fIVAdNm8Abr7kH04HgULJ_xS6kOak85biI8FI/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbzzcghOgJXJq-H04RYbQdVbfK4Bx24qSSx-gSQatyq81_vbwobM-_LVMrsmcsnGE5Bc/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -1469,7 +1469,7 @@
                     response = await fetch(API_URL, {
                         method: "POST",
                         headers: { "Content-Type": "text/plain;charset=utf-8" },
-                        body: JSON.stringify({ action, token: authToken, ...payload })
+                        body: JSON.stringify({ ...payload, action, token: authToken })
                     });
                 } catch (_) {
                     throw new Error("Не вдалося зв'язатися з Google Apps Script. Перевірте URL /exec, доступність Web App та інтернет-з'єднання.");
@@ -5223,7 +5223,7 @@
             <label class="block text-xs font-bold">Де створити зустріч<select id="meet-target" class="${inp} mt-1">${opts.map(x=>`<option value="${esc(x.value)}">${esc(x.label)}</option>`).join("")}</select></label>
             <input id="meet-title" class="${inp}" maxlength="100" placeholder="Назва зустрічі (необов'язково)">
             <button id="meet-create" class="${btn} theme-btn-primary" ${opts.length?"":"disabled"}>＋ Створити та підключитися</button>
-            
+
           </div>
           <section class="space-y-2"><div class="font-bold">Активні зустрічі, до яких у вас є доступ</div>${(active.meetings||[]).map(x=>`<div class="p-3 rounded-xl border theme-border flex flex-wrap gap-2 items-center"><div class="flex-1 min-w-[140px]"><b>${esc(x.title)}</b><div class="text-xs theme-text-secondary">${x.scope==="dm"?"Особиста зустріч":x.scope==="class"?"Клас":"Група / канал"} · створив ${esc(x.creator)}</div><div class="text-[10px] opacity-60">${fmtDt(x.createdAt)}</div></div><button data-meet-join="${esc(x.meetingId)}" class="${btn} theme-btn-primary">Приєднатися</button>${x.mine?`<button data-meet-end="${esc(x.meetingId)}" class="${btn} text-red-500">Завершити для всіх</button>`:""}</div>`).join("") || "<div class='text-xs theme-text-secondary'>Активних зустрічей немає.</div>"}</section>
         </div>`;
@@ -6077,8 +6077,8 @@
         const t=event.target.closest("[data-msg-action],[data-msg-react]");if(!t)return false;event.stopPropagation();
         const messageId=t.dataset.msgId,action=t.dataset.msgAction;
         try {
-          if(t.dataset.msgReact){await call("globerMessageFeature",{context,scopeId,messageId,action:"react",emoji:t.dataset.msgReact});if(refresh)await refresh();return true;}
-          if(action==="edit"){const text=prompt("Змінити текст повідомлення:",t.dataset.msgText||"");if(text===null)return true;await call("globerMessageFeature",{context,scopeId,messageId,action:"edit",text});toast("Повідомлення змінено.");if(refresh)await refresh();return true;}
+          if(t.dataset.msgReact){await call("globerMessageFeature",{context,scopeId,messageId,messageAction:"react",emoji:t.dataset.msgReact});if(refresh)await refresh();return true;}
+          if(action==="edit"){const text=prompt("Змінити текст повідомлення:",t.dataset.msgText||"");if(text===null)return true;await call("globerMessageFeature",{context,scopeId,messageId,messageAction:"edit",text});toast("Повідомлення змінено.");if(refresh)await refresh();return true;}
           if(action==="reply"){
             const text=prompt("Відповідь на повідомлення:\n«"+String(t.dataset.msgText||"").slice(0,180)+"»\n\nВаш текст:","");if(text===null||!text.trim())return true;
             const q={text:text.trim(),replyToId:messageId};
