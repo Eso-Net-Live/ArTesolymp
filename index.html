@@ -5402,6 +5402,13 @@
     }
     async function thread(id) {
         if (!soft) navSeq++; curThread = id;
+        let r;
+        try {
+            r = await call("globerDmThread", { withId: id });
+        } catch (e) {
+            toast(e && e.message ? e.message : "Не удалось открыть переписку.");
+            return;
+        }
         body().innerHTML = `<button id="th-back" class="${btn}">← Назад</button><div class="flex flex-wrap items-center gap-2"><div class="font-bold flex-1">${r.with ? who(r.with.id, r.with.name) : ""}</div><button id="th-notify-enable" class="${btn}" type="button">🔔 Системні сповіщення</button></div>
         <div class="flex flex-wrap gap-2"><button id="th-meet" class="${btn} theme-btn-primary">📹 Відеозустріч</button><button id="th-chess" class="${btn}">♟ Викликати на шахи · 15:00 кожному</button></div><div class="space-y-2">${r.messages.map(m => `<div class="${m.mine ? "ml-10 bg-sky-500/20" : "mr-10 theme-accent-bg-light"} p-2 rounded-xl break-words"><div class="whitespace-pre-wrap">${fmtAnchors(m.text)}</div>${m.edited?`<span class="text-[10px] opacity-50">(ред.)</span>`:""}${attHtml(m.attach)}${window.ATMessageUI.render("dm",id,m)}${!m.mine ? ` <button data-mrep="${esc(m.msgId)}" class="text-xs opacity-50" title="Поскаржитися">🚩</button>` : ""}</div>`).join("")}</div>
         <div class="flex gap-2"><input id="th-tx" class="${inp}" maxlength="1000"><button id="th-att" class="${btn}" title="Надіслати файл (до 10 МБ)">📎</button><input id="th-file" type="file" multiple accept="image/*,video/*,*/*" class="hidden"><button id="th-go" class="${btn} theme-btn-primary">➤</button></div><div id="th-prog" class="text-xs theme-text-secondary"></div>`;
