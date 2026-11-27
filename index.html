@@ -1116,7 +1116,7 @@
          * Інтеграція Google Apps Script:
          * Після оновлення серверного коду опублікуйте нову версію Web App.
          */
-        const API_URL = "https://script.google.com/macros/s/AKfycbxZaEL9n2zPuEDGZkVRm9AMypflQ30sGJyxHHdYe0wwxsxnNK7x2KvEHtUgUjpvSA/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbyWKN8Vc8bJlv2BP6ls_oMEuw-j73N574JgVykXape66nHm3hOR0YK90mBIdF149Ykr/exec";
         const DEMO_TEST_ID = "demo-olympiad-tabs";
         let authToken = localStorage.getItem("artesolymp_remember_token") || sessionStorage.getItem("artesolymp_token") || "";
         let currentTheme = 'light-blue';
@@ -4969,6 +4969,7 @@
     const LBL = { frame_gold: "Золота", frame_neon: "Неон", frame_olympian: "Олімпієць", frame_sysadmin: "Сисадмін", bg_sunset: "Захід", bg_ocean: "Океан", bg_forest: "Ліс", bg_space: "Космос", nc_red: "Червоний", nc_gold: "Золотий", nc_cyan: "Блакитний", nc_pink: "Рожевий", nc_lime: "Лаймовий" };
     let me = null, tab = "dm", duelTimer = null, curThread = null, curClass = null, curPost = null, curCommunity = null, curSub = "stream", navSeq = 0, soft = null, clTick = 0, cxPend = [], chessTo = null;
     let chessActive = false, chessGamesCache = null, chessListBusy = false;
+    let postFeedMode = "recommended";
     const cxc = {};   // кеш «показати зразу — оновити тихо»
     const call = async (a, p) => apiRequest(a, p || {});
     const toast = m => showNotification(m);
@@ -4982,11 +4983,11 @@
         <div id="hb-body" class="flex-1 overflow-y-auto p-3 text-sm space-y-3"></div>
       </div>
     </div>`);
-    const TABS = [["dm", "💬 ЛС"], ["communities", "👥 Групи / канали"], ["class", "🏫 Класи"], ["meet", "📹 Meet"], ["cards", "🎁 Картки"], ["league", "🏅 Ліга"], ["duel", "⚔️ Дуелі"], ["build", "🧠 Конструктор"], ["fb", "⭐ Відгуки / 🚩 Скарги"]];
+    const TABS = [["dm", "💬 ЛС"], ["posts", "📰 Пости"], ["communities", "👥 Групи / канали"], ["class", "🏫 Класи"], ["meet", "📹 Meet"], ["cards", "🎁 Картки"], ["league", "🏅 Ліга"], ["duel", "⚔️ Дуелі"], ["build", "🧠 Конструктор"], ["fb", "⭐ Відгуки / 🚩 Скарги"]];
     // «Шахи» показуються лише за наявності очікуваного виклику або незавершеної партії.
     const visibleTabs = () => {
         const tabs = TABS.slice();
-        if (chessActive || chessTo) tabs.splice(4, 0, ["chess", "♟ Шахи"]);
+        if (chessActive || chessTo) tabs.splice(5, 0, ["chess", "♟ Шахи"]);
         if (me && me.isAdmin) tabs.push(["admin", "🛡 Адмін-панель"]);
         return tabs;
     };
@@ -5063,6 +5064,55 @@
     }
     function card(p, extra) { return `<div class="rounded-2xl p-3 flex items-center gap-3" style="background:${BG[p.bg] || "transparent"};${BG[p.bg] ? "color:#fff" : ""}">${avatar(p)}<div class="min-w-0">${nameHtml(p)}${badgeHtml(p.badge)}<div class="text-xs opacity-80">${esc(p.role || "")}${extra || ""}</div></div></div>`; }
 
+    function postReactionsHtml(p) {
+        const r = p.reactions || {}, disabled = p.mine ? 'disabled title="На власні пости не можна реагувати"' : "";
+        return `<div class="flex flex-wrap items-center gap-2 pt-2">
+          <button ${disabled} data-post-react="👍" data-post-id="${esc(p.postId)}" class="${btn} ${r.mine === "👍" ? "theme-btn-primary" : ""}">👍 ${Number(r.up)||0}</button>
+          <button ${disabled} data-post-react="👎" data-post-id="${esc(p.postId)}" class="${btn} ${r.mine === "👎" ? "theme-btn-primary" : ""}">👎 ${Number(r.down)||0}</button>
+          <button data-post-comments-toggle="${esc(p.postId)}" class="${btn}">💬 Коментарі · ${Number(p.commentsCount)||0}</button>
+        </div>`;
+    }
+    function userPostHtml(p) {
+        const follow = p.mine ? "" : `<button data-follow-user="${esc(p.authorId)}" data-following="${p.isFollowing ? "1" : "0"}" class="${btn}">${p.isFollowing ? "✓ Стежите" : "+ Слідкувати"}</button>`;
+        const del = p.mine ? `<button data-post-delete="${esc(p.postId)}" class="${btn} text-red-500">🗑 Видалити</button>` : "";
+        const when = p.createdAt ? fmtDt(p.createdAt) : "";
+        return `<article data-user-post="${esc(p.postId)}" class="rounded-2xl border theme-border theme-bg-card p-3 space-y-2">
+          <header class="flex flex-wrap items-center gap-2">
+            ${avatar({name:p.authorName,avatarUrl:p.authorAvatarUrl,frame:p.authorFrame},40)}
+            <div class="min-w-0 flex-1"><div class="font-bold">${who(p.authorId,p.authorName)}</div><div class="text-[11px] theme-text-secondary">${esc(p.authorRole||"")} · ${esc(when)}</div><div class="text-[11px] theme-text-secondary">👥 ${Number(p.followersCount)||0} стежать</div></div>
+            ${follow}${del}
+          </header>
+          <h3 class="font-extrabold text-base break-words">${esc(p.title)}</h3>
+          <div class="whitespace-pre-wrap break-words leading-relaxed">${fmtAnchors(p.text || "")}</div>
+          ${postReactionsHtml(p)}
+          <div data-post-comments-box="${esc(p.postId)}" class="hidden border-t theme-border pt-2 space-y-2"></div>
+        </article>`;
+    }
+    function userCommentHtml(c, postId, isReply) {
+        const r = c.reactions || {}, hidden = !!c.hidden;
+        const reactions = `<div class="flex items-center gap-1 mt-1">
+          <button ${c.mine ? 'disabled title="Не можна реагувати на власний коментар"' : ""} data-comment-react="👍" data-comment-id="${esc(c.commentId)}" data-post-id="${esc(postId)}" class="${btn} ${r.mine === "👍" ? "theme-btn-primary" : ""}">👍 ${Number(r.up)||0}</button>
+          <button ${c.mine ? 'disabled title="Не можна реагувати на власний коментар"' : ""} data-comment-react="👎" data-comment-id="${esc(c.commentId)}" data-post-id="${esc(postId)}" class="${btn} ${r.mine === "👎" ? "theme-btn-primary" : ""}">👎 ${Number(r.down)||0}</button>
+        </div>`;
+        if (isReply) return `<div class="ml-4 pl-3 border-l-2 theme-border py-1"><div class="text-xs font-bold">${who(c.authorId,c.authorName)} <span class="font-normal theme-text-secondary">· ${esc(fmtDt(c.createdAt))}</span></div><div class="whitespace-pre-wrap break-words">${fmtAnchors(c.text||"")}</div>${reactions}</div>`;
+        const manage = c.canManage ? `<div class="flex flex-wrap gap-1 mt-1"><button data-thread-action="hide" data-comment-id="${esc(c.commentId)}" data-enabled="${hidden ? "0" : "1"}" class="${btn}">${hidden ? "Показати гілку" : "🙈 Приховати гілку"}</button><button data-thread-action="close" data-comment-id="${esc(c.commentId)}" data-enabled="${c.closed ? "0" : "1"}" class="${btn}">${c.closed ? "Відкрити відповіді" : "🔒 Закрити відповіді"}</button></div>` : "";
+        const reply = !hidden && !c.closed ? `<button data-reply-root="${esc(c.commentId)}" class="${btn} mt-1">↳ Відповісти</button>` : "";
+        return `<div class="rounded-xl border theme-border p-2 space-y-1" data-root-comment="${esc(c.commentId)}">
+          <div class="text-xs font-bold">${who(c.authorId,c.authorName)} <span class="font-normal theme-text-secondary">· ${esc(fmtDt(c.createdAt))}</span></div>
+          <div class="whitespace-pre-wrap break-words">${hidden ? "<span class='theme-text-secondary italic'>Коментар і гілку приховано.</span>" : fmtAnchors(c.text||"")}</div>
+          ${reactions}${manage}${reply}
+          ${!hidden && c.replies && c.replies.length ? `<div class="space-y-1 mt-2">${c.replies.map(x=>userCommentHtml(x,postId,true)).join("")}</div>` : ""}
+          ${!hidden && !c.closed ? `<div data-reply-form="${esc(c.commentId)}" class="hidden mt-2 flex gap-2"><textarea data-reply-text="${esc(c.commentId)}" rows="2" maxlength="1000" class="${inp} flex-1" placeholder="Ваша відповідь…"></textarea><button data-reply-send="${esc(c.commentId)}" data-post-id="${esc(postId)}" class="${btn} theme-btn-primary self-end">Надіслати</button></div>` : ""}
+        </div>`;
+    }
+    async function loadUserPostComments(postId, box) {
+        const r = await call("globerUserPostComments", { postId });
+        box.innerHTML = (r.comments || []).map(c => userCommentHtml(c, postId, false)).join("") +
+          (r.commentsClosed ? "<div class='text-xs text-amber-600'>Автор закрив коментарі.</div>" : `<div class="flex gap-2 pt-2"><textarea data-post-comment-text="${esc(postId)}" rows="2" maxlength="1000" class="${inp} flex-1" placeholder="Написати коментар…"></textarea><button data-post-comment-send="${esc(postId)}" class="${btn} theme-btn-primary self-end">Надіслати</button></div>`) +
+          (!r.comments.length ? "<div class='text-xs theme-text-secondary'>Коментарів поки немає.</div>" : "");
+        box.classList.remove("hidden"); box.dataset.loaded = "1";
+    }
+
     /* ===== перегляд профілю будь-якого користувача (дуелі, ЛС, класи, ліга, автор олімпіади, результати…) ===== */
     (function () { const st = document.createElement("style"); st.textContent = ".pf-link{cursor:pointer}.pf-link:hover{text-decoration:underline;color:#0ea5e9}.pf-link:focus-visible{outline:2px solid #0ea5e9;border-radius:4px}#tests-grid>div{content-visibility:auto;contain-intrinsic-size:auto 280px}"+'.bdg{--c:#64748b;display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:1px 8px;border-radius:999px;border:2px solid var(--c);color:var(--c);background:color-mix(in srgb,var(--c) 13%,transparent);font-size:11px;font-weight:800;line-height:1.5;position:relative;cursor:help;vertical-align:middle;transition:transform .2s,box-shadow .25s;outline:none}\n.bdg .bi{display:inline-block}\n.bdg:hover,.bdg:focus{transform:translateY(-1px);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 28%,transparent),0 0 14px color-mix(in srgb,var(--c) 55%,transparent)}\n.bdg::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 8px);width:max-content;max-width:230px;padding:8px 10px;border-radius:12px;background:#0f172a;color:#f8fafc;border:1px solid var(--c);font-size:11px;font-weight:600;line-height:1.35;white-space:normal;text-align:left;text-transform:none;opacity:0;pointer-events:none;transform:translateY(-4px);transition:opacity .15s,transform .15s;z-index:140;box-shadow:0 8px 24px rgba(0,0,0,.35)}\n.bdg:hover::after,.bdg:focus::after{opacity:1;transform:none;transition:opacity .25s ease 1.2s,transform .25s ease 1.2s}\n.bdg-guest{--c:#06b6d4}.bdg-admin{--c:#ef4444}.bdg-teacher{--c:#3b82f6}.bdg-banned{--c:#6b7280}.bdg-warn{--c:#eab308}.bdg-active{--c:#22c55e}.bdg-winner{--c:#f97316}.bdg-tester{--c:#a855f7}\n.bdg-guest:hover .bi{animation:bdgFlip 1s linear infinite}.bdg-admin:hover{animation:bdgPulse 1s ease-in-out infinite}.bdg-teacher:hover .bi{animation:bdgBounce .6s ease-in-out infinite}\n.bdg-banned:hover{animation:bdgShake .4s linear infinite}.bdg-warn:hover .bi{animation:bdgBlink .6s steps(2) infinite}.bdg-active:hover .bi{animation:bdgZap .5s ease-in-out infinite}\n.bdg-winner:hover .bi{animation:bdgWobble .8s ease-in-out infinite}.bdg-tester:hover .bi{animation:bdgBubble .7s ease-in-out infinite}\n@keyframes bdgFlip{to{transform:rotateY(360deg)}}@keyframes bdgPulse{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--c) 25%,transparent),0 0 20px var(--c)}}\n@keyframes bdgBounce{50%{transform:translateY(-4px)}}@keyframes bdgShake{25%{transform:translateX(-2px)}75%{transform:translateX(2px)}}\n@keyframes bdgBlink{50%{opacity:.2}}@keyframes bdgZap{50%{transform:scale(1.5) rotate(-12deg)}}@keyframes bdgWobble{25%{transform:rotate(-18deg)}75%{transform:rotate(18deg)}}@keyframes bdgBubble{50%{transform:translateY(-3px) scale(1.25)}}\n@media (prefers-reduced-motion:reduce){.bdg,.bdg *{animation:none!important}}'; document.head.appendChild(st); })();
     const who = (id, name) => id ? `<span data-uid="${esc(id)}" role="link" tabindex="0" class="pf-link">${esc(name)}</span>` : esc(name);
@@ -5089,6 +5139,17 @@
                 try {
                     await call("globerMeetUnbanUser", { meetingId:a.dataset.meetId, userId:u.userId });
                     delete PF.cache["u:" + u.userId]; toast("Бан на зустріч знято."); await openProfile(u.userId);
+                } catch (err) { a.disabled = false; toast(err.message); }
+                return;
+            }
+            if (k === "follow" || k === "unfollow") {
+                a.disabled = true;
+                try {
+                    const enabled = k === "follow";
+                    await call("globerSocRelation", { userId:u.userId, kind:"follow", enabled });
+                    delete PF.cache["u:" + u.userId];
+                    toast(enabled ? "Ви стежите за профілем." : "Підписку скасовано.");
+                    await openProfile(u.userId, true);
                 } catch (err) { a.disabled = false; toast(err.message); }
                 return;
             }
@@ -5131,15 +5192,19 @@
         const stats = isT ? stat(s.olympiads || 0, "олімпіад") + stat(s.tests || 0, "тестів") : stat(s.attempts || 0, "робіт") + stat(s.avgPct == null ? "—" : s.avgPct + "%", "середній") + stat((s.gems || 0) + " 💎", "гемів");
         const soc = Object.keys(u.socials || {});
         const socialManage = !u.isMe ? `<button data-pf="${u.blockedByMe ? "unblock" : "block"}" class="${btn}">${u.blockedByMe ? "🔓 Розблокувати" : "⛔ Заблокувати"}</button><button data-pf="${u.ignoredByMe ? "unignore" : "ignore"}" class="${btn}">${u.ignoredByMe ? "Показувати знову" : "🙈 Ігнорувати"}</button>` : "";
-        const acts = (u.canDm ? `<button data-pf="dm" class="${btn} theme-btn-primary">💬 Написати</button><button data-pf="meet" class="${btn}">📹 Зустріч</button>` : "") + (!u.isMe && !u.blockedByMe && !u.blockedMe ? `<button data-pf="duel" class="${btn}">⚔️ Дуель</button>` : "") + (!u.isMe && u.socials && u.socials.chess ? `<button data-pf="chess" class="${btn}">♟ Шаховий виклик</button>` : "") + (u.canCard ? `<button data-pf="card" class="${btn}">🎁 Картка</button>` : "") + socialManage;
+        const followAction = !u.isMe && !u.blockedByMe && !u.blockedMe ? `<button data-pf="${u.isFollowing ? "unfollow" : "follow"}" class="${btn} theme-btn-primary">${u.isFollowing ? "✓ Стежите" : "+ Слідкувати"}</button>` : "";
+        const acts = followAction + (u.canDm ? `<button data-pf="dm" class="${btn} theme-btn-primary">💬 Написати</button><button data-pf="meet" class="${btn}">📹 Зустріч</button>` : "") + (!u.isMe && !u.blockedByMe && !u.blockedMe ? `<button data-pf="duel" class="${btn}">⚔️ Дуель</button>` : "") + (!u.isMe && u.socials && u.socials.chess ? `<button data-pf="chess" class="${btn}">♟ Шаховий виклик</button>` : "") + (u.canCard ? `<button data-pf="card" class="${btn}">🎁 Картка</button>` : "") + socialManage;
         const meetBanHtml = (u.meetBans && u.meetBans.length) ? `<section class="rounded-xl border border-rose-500/40 p-3 space-y-2"><b class="text-rose-500">⛔ Блокування у Meet</b>${u.meetBans.map(x => `<div class="flex flex-wrap items-center gap-2 text-xs"><span class="flex-1 min-w-0">${esc(x.title)}${x.reason ? `<span class="block opacity-60">${esc(x.reason)}</span>` : ""}</span><button data-pf="meet-unban" data-meet-id="${esc(x.meetingId)}" class="${btn}">🔓 Розбанити</button></div>`).join("")}</section>` : "";
         $("pf-body").innerHTML = (PF.hist.length ? `<button data-pf="back" class="${btn}">← Назад</button>` : "") +
             card(u, (u.titles && u.titles.length ? " · 🏆 " + esc(u.titles.join(", ")) : "") + (u.className ? " · 🏫 " + esc(u.className) : "") + (u.isMe ? " · це ви" : "")) +
             `<div class="flex gap-2">${stats}</div>` +
+            `<div class="text-xs theme-text-secondary">👥 ${Number(u.followersCount)||0} стежать · ${Number(u.followingCount)||0} підписок</div>` +
             (acts ? `<div class="flex flex-wrap gap-2">${acts}</div>` : (!u.isMe ? "<div class='text-xs theme-text-secondary'>Користувач обмежив особисті повідомлення.</div>" : "")) +
+            (u.description ? `<div class="rounded-xl border theme-border p-3"><b>Про себе</b><div class="whitespace-pre-wrap break-words mt-1">${fmtAnchors(u.description)}</div></div>` : "") +
             (soc.length ? `<div class="flex flex-wrap gap-2">${soc.map(k => `<a class="${btn}" target="_blank" rel="noopener noreferrer" href="${esc(u.socials[k])}">${esc(k)}</a>`).join("")}</div>` : "") +
             (u.contactText ? `<div class="rounded-xl border theme-border p-3"><b>Контакт для зв’язку</b><div class="whitespace-pre-wrap break-words mt-1">${fmtAnchors(u.contactText)}</div></div>` : "") +
-            (u.achievements && u.achievements.length ? `<div>🎖 ${u.achievements.map(esc).join(" · ")}</div>` : "") + meetBanHtml +
+            (u.achievements && u.achievements.length ? `<div>🎖 ${u.achievements.map(esc).join(" · ")}</div>` : "") +
+            `<section class="space-y-2"><div class="font-bold text-base">📰 Пости користувача</div>${u.posts && u.posts.length ? u.posts.map(userPostHtml).join("") : "<div class='text-xs theme-text-secondary'>Користувач ще не публікував постів.</div>"}</section>` + meetBanHtml +
             (isT ? `<div class="font-bold">Стіна привітань</div>${u.cards && u.cards.length ? u.cards.map(c => `<div class="p-2 rounded-xl border theme-border"><b>${who(c.fromId, c.from)}</b> · ${c.gems} 💎<div class="break-words">${fmtAnchors(c.text)}</div></div>`).join("") : "<div class='theme-text-secondary'>Поки порожньо.</div>"}` : "");
     }
     async function gotoHub(t, after) {
@@ -5261,6 +5326,95 @@
         body().onclick=async e=>{const a=e.target.closest("[data-ch-accept],[data-ch-decline],[data-ch-open]");if(!a)return;try{if(a.dataset.chAccept){await call("globerChessAccept",{gameId:a.dataset.chAccept});chessGamesCache=null;await refreshChessActivity(false);return window.ATChess.open(a.dataset.chAccept);}if(a.dataset.chDecline){await call("globerChessDecline",{gameId:a.dataset.chDecline});chessGamesCache=null;await refreshChessActivity(false);return chess();}if(a.dataset.chOpen)return window.ATChess.open(a.dataset.chOpen);}catch(er){toast(er.message);}};
     }
 
+
+    async function posts() {
+        const r = await call("globerUserPostFeed", { mode:postFeedMode });
+        body().innerHTML = `<div class="flex flex-wrap items-center justify-between gap-2">
+          <div><div class="font-extrabold text-lg">📰 Пости спільноти</div><div class="text-xs theme-text-secondary">Рекомендації дописів користувачів ArTesolymp.</div></div>
+          <div class="flex gap-2"><button data-feed-mode="recommended" class="${btn} ${postFeedMode === "recommended" ? "theme-btn-primary" : ""}">✨ Для вас</button><button data-feed-mode="following" class="${btn} ${postFeedMode === "following" ? "theme-btn-primary" : ""}">👥 Підписки</button></div>
+        </div>
+        ${(r.posts || []).map(userPostHtml).join("") || `<div class="rounded-xl border theme-border p-4 text-center theme-text-secondary">${postFeedMode === "following" ? "У стрічці підписок поки порожньо. Підпишіться на цікаві профілі." : "Поки немає публікацій. Завітайте в профілі користувачів або створіть власний пост у своєму профілі."}</div>`}`;
+    }
+    async function refreshUserPostSurface(postId) {
+        const pfModalEl = $("pf-modal");
+        if (pfModalEl && !pfModalEl.classList.contains("hidden") && PF.user) {
+            const id = PF.user.userId; delete PF.cache["u:" + id]; await openProfile(id, true); return;
+        }
+        const ownProfile = $("section-profile");
+        if (ownProfile && !ownProfile.classList.contains("hidden")) { await mountProfile(); return; }
+        const hub = $("hb-modal");
+        if (hub && !hub.classList.contains("hidden") && tab === "posts") { await posts(); return; }
+        if (postId && hub && !hub.classList.contains("hidden")) {
+            const article = body().querySelector(`[data-user-post="${CSS.escape(String(postId))}"]`);
+            const box = article && article.querySelector("[data-post-comments-box]");
+            if (box && !box.classList.contains("hidden")) await loadUserPostComments(postId, box);
+        }
+    }
+    document.addEventListener("click", async e => {
+        const el = e.target.closest && e.target.closest("[data-feed-mode],[data-follow-user],[data-post-delete],[data-post-react],[data-post-comments-toggle],[data-post-comment-send],[data-reply-root],[data-reply-send],[data-comment-react],[data-thread-action]");
+        if (!el) return;
+        try {
+            if (el.dataset.feedMode) { postFeedMode = el.dataset.feedMode; await posts(); return; }
+            if (el.dataset.followUser) {
+                el.disabled = true;
+                const enabled = el.dataset.following !== "1";
+                await call("globerSocRelation", { userId:el.dataset.followUser, kind:"follow", enabled });
+                toast(enabled ? "Ви стежите за профілем." : "Підписку скасовано.");
+                await refreshUserPostSurface(); return;
+            }
+            if (el.dataset.postDelete) {
+                if (!confirm("Видалити цей пост разом із коментарями?")) return;
+                await call("globerUserPostDelete", { postId:el.dataset.postDelete });
+                toast("Пост видалено."); await refreshUserPostSurface(); return;
+            }
+            if (el.dataset.postReact) {
+                await call("globerUserPostReact", { postId:el.dataset.postId, emoji:el.dataset.postReact, targetType:"post" });
+                await refreshUserPostSurface(el.dataset.postId); return;
+            }
+            if (el.dataset.postCommentsToggle) {
+                const article = el.closest("[data-user-post]"), box = article && article.querySelector("[data-post-comments-box]");
+                if (!box) return;
+                if (!box.classList.contains("hidden")) { box.classList.add("hidden"); return; }
+                if (box.dataset.loaded === "1") { box.classList.remove("hidden"); return; }
+                box.innerHTML = "<div class='theme-text-secondary'>Завантаження коментарів…</div>";
+                await loadUserPostComments(el.dataset.postCommentsToggle, box); return;
+            }
+            if (el.dataset.postCommentSend) {
+                const postId = el.dataset.postCommentSend, article = el.closest("[data-user-post]");
+                const input = article && article.querySelector(`[data-post-comment-text="${CSS.escape(postId)}"]`);
+                if (!input || !input.value.trim()) return;
+                el.disabled = true;
+                await call("globerUserPostComment", { postId, text:input.value });
+                await refreshUserPostSurface(postId); return;
+            }
+            if (el.dataset.replyRoot) {
+                const rootId = el.dataset.replyRoot, root = el.closest("[data-root-comment]");
+                const form = root && root.querySelector(`[data-reply-form="${CSS.escape(rootId)}"]`);
+                if (form) { form.classList.toggle("hidden"); const input = form.querySelector("textarea"); if (!form.classList.contains("hidden")) input.focus(); }
+                return;
+            }
+            if (el.dataset.replySend) {
+                const rootId = el.dataset.replySend, postId = el.dataset.postId, article = el.closest("[data-user-post]");
+                const form = article && article.querySelector(`[data-reply-form="${CSS.escape(rootId)}"]`);
+                const input = form && form.querySelector("textarea");
+                if (!input || !input.value.trim()) return;
+                el.disabled = true;
+                await call("globerUserPostComment", { postId, parentId:rootId, text:input.value });
+                await refreshUserPostSurface(postId); return;
+            }
+            if (el.dataset.commentReact) {
+                await call("globerUserPostReact", { commentId:el.dataset.commentId, emoji:el.dataset.commentReact, targetType:"comment" });
+                await refreshUserPostSurface(el.dataset.postId); return;
+            }
+            if (el.dataset.threadAction) {
+                const postId = el.closest("[data-user-post]")?.dataset.userPost;
+                await call("globerUserPostThread", { commentId:el.dataset.commentId, action:el.dataset.threadAction, enabled:el.dataset.enabled === "1" });
+                const article = el.closest("[data-user-post]"), box = article && article.querySelector("[data-post-comments-box]");
+                if (box) await loadUserPostComments(postId, box);
+                return;
+            }
+        } catch (err) { toast(err.message || "Не вдалося виконати дію."); }
+    });
     async function render() {
         navSeq++; curThread = null; curClass = null; curPost = null;
         if (!me) await load(); if (!me) return;
@@ -5268,7 +5422,7 @@
         if (tab === "chess" && !chessActive && !chessTo) tab = "dm";
         if (tab === "admin" && !me.isAdmin) tab = "dm";
         setTabs();
-        const f = { dm, communities, cards, class:cls, meet, chess, league, duel, build, fb, admin }[tab];
+        const f = { dm, posts, communities, cards, class:cls, meet, chess, league, duel, build, fb, admin }[tab];
         body().innerHTML = "<div class='theme-text-secondary'>Завантаження…</div>";
         try { await f(); } catch (e) { body().innerHTML = `<div class="text-red-500">${esc(e.message)}</div>`; }
         walTxt();
@@ -5282,7 +5436,7 @@
     async function softRender() {
         if (softBusy) return; softBusy = true; soft = { seq: navSeq, done: false, snap: null };
         try {
-            const f = tab === "dm" ? (curThread ? () => thread(curThread) : () => dm()) : tab === "communities" ? (curCommunity ? () => openCommunity(curCommunity) : communities) : tab === "class" ? (curClass ? (curPost ? () => openPost(curClass, curPost) : (curSub === "chat" ? () => loadClassChat(curClass) : () => openClass(curClass))) : cls) : tab === "duel" ? duel : tab === "league" ? league : null;
+            const f = tab === "posts" ? posts : tab === "dm" ? (curThread ? () => thread(curThread) : () => dm()) : tab === "communities" ? (curCommunity ? () => openCommunity(curCommunity) : communities) : tab === "class" ? (curClass ? (curPost ? () => openPost(curClass, curPost) : (curSub === "chat" ? () => loadClassChat(curClass) : () => openClass(curClass))) : cls) : tab === "duel" ? duel : tab === "league" ? league : null;
             if (f) { await f(); const snap = soft && soft.snap; soft = null; try { restoreEl(body(), snap); } catch (_) {} }
         } catch (_) { /* тиха помилка мережі — повторимо через 5 с */ }
         finally { soft = null; softBusy = false; }
@@ -5315,9 +5469,11 @@
     
     async function profile() {
         const p = me.profile, s = p.socials || {}, root = body();
+        let ownPosts = [], ownFollowers = 0, ownFollowing = 0;
+        try { const pub = await call("globerSocUser", { userId:p.userId }); ownPosts = pub.user && pub.user.posts || []; ownFollowers = pub.user && pub.user.followersCount || 0; ownFollowing = pub.user && pub.user.followingCount || 0; } catch (_) {}
         const src = { tiktok: "TikTok (tiktok.com/@…)", youtube: "YouTube (youtube.com/@… або youtu.be/…)", chess: "Chess.com (chess.com/member/…)", facebook: "Facebook (facebook.com/…)", telegram: "Telegram (t.me/…)" };
         body().innerHTML = card(p, me.tempUntil ? " · 🕒 тимчасовий учитель" : "") + `
-        <div class="space-y-2"><div class="font-bold">Аватар</div>
+        <div class="space-y-2"><div class="font-bold">Опис профілю</div><textarea id="pf-desc" maxlength="1000" rows="3" class="${inp}" placeholder="Розкажіть про себе…">${esc(p.description || "")}</textarea><div class="font-bold">Аватар</div>
           <div class="flex gap-2"><input id="pf-av" class="${inp}" placeholder="Посилання ImgBB / Cloudinary" value="${esc(p.avatarUrl)}"><button id="pf-up" class="${btn}">Завантажити фото</button><input id="pf-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden"></div><div id="pf-upload-status" class="text-xs theme-text-secondary" role="status" aria-live="polite"></div>
           <div class="font-bold">Звання</div><select id="pf-title" class="${inp}"><option value="">— без звання —</option>${me.titles.map(t => `<option ${p.title === t ? "selected" : ""}>${esc(t)}</option>`).join("")}</select>
           <div class="font-bold">Соцмережі (лише з білого списку)</div>${Object.keys(src).map(k => `<input data-soc="${k}" class="${inp}" placeholder="${src[k]}" value="${esc(s[k] || "")}">`).join("")}
@@ -5327,12 +5483,26 @@
           ${p.role === "Учитель" ? `<div class="font-bold">Дата народження (для привітання о 00:00)</div><input id="pf-bd" type="date" class="${inp}" value="${esc(p.birthDate)}">` : ""}
           <button id="pf-save" class="${btn} theme-btn-primary">Зберегти</button>
           ${p.role !== "Учитель" ? `<div class="pt-2 border-t theme-border"><div class="font-bold">Режим «тимчасовий учитель»</div><div class="text-xs theme-text-secondary">12 годин створення олімпіад — 200 💎. ${me.tempUntil ? "Активний до " + new Date(me.tempUntil).toLocaleString() : ""}</div><button id="pf-temp" class="${btn} mt-1">Активувати (200 💎)</button></div>` : ""}
-        </div>`;
+        </div>
+         <section class="rounded-2xl border theme-border p-4 mt-4 space-y-3">
+           <div class="flex flex-wrap items-center justify-between gap-2"><div><h3 class="font-extrabold">📰 Мої пости</h3><p class="text-xs theme-text-secondary">👥 ${ownFollowers} стежать за вами · ви стежите за ${ownFollowing}</p></div><span class="text-xs theme-text-secondary">${ownPosts.length} публікацій</span></div>
+           <label class="block text-xs font-bold">Назва поста (один рядок)<input id="pf-post-title" maxlength="120" class="${inp} mt-1" placeholder="Наприклад: Мій проєкт"></label>
+           <label class="block text-xs font-bold">Опис / інформація<textarea id="pf-post-text" maxlength="5000" rows="4" class="${inp} mt-1" placeholder="Пишіть скільки потрібно — можна з нового рядка…"></textarea></label>
+           <button id="pf-post-create" class="${btn} theme-btn-primary">＋ Опублікувати пост</button>
+           <div class="space-y-2">${ownPosts.map(userPostHtml).join("") || "<div class='text-xs theme-text-secondary'>Поки що у вас немає постів.</div>"}</div>
+         </section>`;
         $("pf-dm").value = p.dmPrivacy;
         $("pf-save").onclick = async () => {
             const socials = {}; root.querySelectorAll("[data-soc]").forEach(i => socials[i.dataset.soc] = i.value.trim());
-            const pl = { avatarUrl: $("pf-av").value.trim(), title: $("pf-title").value, socials, dmPrivacy: $("pf-dm").value, contactText: $("pf-contact").value.trim(), allowGroupAdd: $("pf-allow-add").checked }; if ($("pf-bd")) pl.birthDate = $("pf-bd").value;
+            const pl = { avatarUrl: $("pf-av").value.trim(), title: $("pf-title").value, socials, description:$("pf-desc").value, dmPrivacy: $("pf-dm").value, contactText: $("pf-contact").value.trim(), allowGroupAdd: $("pf-allow-add").checked }; if ($("pf-bd")) pl.birthDate = $("pf-bd").value;
             try { await call("globerSocSave", pl); toast("Профіль збережено."); await mountProfile(); } catch (e) { toast(e.message); }
+        };
+        if ($("pf-post-create")) $("pf-post-create").onclick = async () => {
+            const title = $("pf-post-title").value.trim(), text = $("pf-post-text").value.trim();
+            if (!title || !text) { toast("Заповніть назву й опис поста."); return; }
+            const btnPost = $("pf-post-create"); btnPost.disabled = true;
+            try { await call("globerUserPostCreate", { title, text }); toast("Пост опубліковано."); await mountProfile(); }
+            catch (e) { toast(e.message); btnPost.disabled = false; }
         };
         $("pf-up").onclick = () => $("pf-file").click();
         $("pf-file").onchange = async ev => {
@@ -5532,13 +5702,13 @@
     async function cls() {
         const [r, bd] = await Promise.all([call("globerClassList"), call("globerClassBoard")]);
         body().innerHTML = `<div class="flex flex-wrap gap-2"><input id="cl-code" class="${inp} flex-1" placeholder="Код класу"><button id="cl-join" class="${btn} theme-btn-primary">Приєднатися</button></div>
-        ${r.canCreate ? `<div class="flex flex-wrap gap-2"><input id="cl-name" class="${inp} flex-1" placeholder="Назва класу (8-А)"><button id="cl-new" class="${btn}">＋ Створити клас</button></div>` : ""}
+        ${r.canCreate ? `<div class="rounded-xl border theme-border p-3 space-y-2"><div class="font-bold">＋ Створити клас</div><div class="flex flex-wrap gap-2"><input id="cl-name" class="${inp} flex-1" placeholder="Назва класу (8-А)"><button id="cl-new" class="${btn} theme-btn-primary">Створити</button></div><label class="flex items-center gap-2 text-xs"><input id="cl-comp" type="checkbox"> Приймати участь у суперництві класів</label><input id="cl-subject" maxlength="60" class="${inp}" placeholder="Предмет / напрям суперництва (необов’язково)"><p class="text-[11px] theme-text-secondary">Якщо вимкнено, клас не відображатиметься в таблиці лідерів і не братиме участі в місячному бонусі.</p></div>` : ""}
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${r.classes.map(c => `<div data-open="${esc(c.classId)}" class="rounded-2xl border theme-border overflow-hidden cursor-pointer hover:shadow-lg transition">
           <div style="background:${clColor(c.name)};color:#fff" class="p-3 h-20 flex flex-col justify-between"><div class="font-extrabold text-base truncate">${esc(c.name)}</div><div class="text-xs opacity-90 truncate">${who(c.ownerId, c.owner)}${c.isOwner ? " · ви вчитель" : ""}</div></div>
           <div class="p-2 text-xs theme-text-secondary flex justify-between"><span>👥 ${c.members} уч.</span>${c.isOwner ? `<span>Код: <code>${esc(c.code)}</code></span>` : "<span>Відкрити →</span>"}</div></div>`).join("") || "<div class='theme-text-secondary sm:col-span-2'>Ви ще не в жодному класі. Введіть код від вчителя" + (r.canCreate ? " або створіть власний клас." : ".") + "</div>"}</div>
-        <details class="pt-1"><summary class="font-bold cursor-pointer">🏅 Рейтинг класів</summary><div class="space-y-1 pt-2">${bd.board.map((c, i) => `<div class="p-2 rounded-xl border theme-border">${i + 1}. <b>${esc(c.name)}</b> · ${c.members} уч. · скарбничка ${c.vault} 💎 · цього місяця ${c.month}</div>`).join("") || "<div class='theme-text-secondary'>Класів поки немає.</div>"}<div class="text-xs theme-text-secondary">Щомісяця переможний клас отримує бонус 💎 для кожного учасника.</div></div></details>`;
+        <details class="pt-1"><summary class="font-bold cursor-pointer">🏅 Рейтинг класів</summary><div class="space-y-1 pt-2">${bd.board.map((c, i) => `<div class="p-2 rounded-xl border theme-border">${i + 1}. <b>${esc(c.name)}</b>${c.subject ? ` · ${esc(c.subject)}` : ""} · ${c.members} уч. · скарбничка ${c.vault} 💎 · цього місяця ${c.month}</div>`).join("") || "<div class='theme-text-secondary'>Немає класів, які беруть участь у суперництві.</div>"}<div class="text-xs theme-text-secondary">У рейтинг потрапляють лише класи, де вчитель увімкнув участь у суперництві.</div></div></details>`;
         $("cl-join").onclick = async () => { try { const j = await call("globerClassJoin", { code: $("cl-code").value }); toast("Ви у класі " + j.joined); curSub = "stream"; openClass(j.classId); } catch (e) { toast(e.message); } };
-        if ($("cl-new")) $("cl-new").onclick = async () => { try { const j = await call("globerClassCreate", { name: $("cl-name").value }); toast("Клас створено. Код: " + j.code); render(); } catch (e) { toast(e.message); } };
+        if ($("cl-new")) $("cl-new").onclick = async () => { try { const j = await call("globerClassCreate", { name: $("cl-name").value, competitionEnabled:$("cl-comp").checked, competitionSubject:$("cl-subject").value }); toast("Клас створено. Код: " + j.code); render(); } catch (e) { toast(e.message); } };
         body().onclick = e => { const o = e.target.closest("[data-open]"); if (o) { curSub = "stream"; openClass(o.dataset.open); } };
     }
     async function openClass(id) {
@@ -5604,7 +5774,7 @@
         if (curSub === "work") main = works.length ? works.map(card).join("") : "<div class='theme-text-secondary'>Завдань поки немає.</div>";
         else if (curSub === "grades") main = `<div id="cl-grades" class="space-y-2"><div class="theme-text-secondary">Завантаження журналу…</div></div>`;
         else if (curSub === "chat") main = `<div id="cl-chat-root" class="space-y-2"><div class="theme-text-secondary">Завантаження чату…</div></div>`;
-        else if (curSub === "settings" && c.isOwner) main = `<div class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-bold">⚙ Налаштування класу</div><label class="block text-xs font-bold">Назва класу<input id="cl-edit-name" maxlength="50" class="${inp} mt-1" value="${esc(c.name)}"></label><label class="flex items-center gap-2 text-xs"><input id="cl-regen-code" type="checkbox"> Створити новий код приєднання (старий перестане працювати)</label><button id="cl-save-class" class="${btn} theme-btn-primary">Зберегти зміни</button><p class="text-[11px] theme-text-secondary">Редагувати клас може лише його творець.</p></div>`;
+        else if (curSub === "settings" && c.isOwner) main = `<div class="rounded-2xl border theme-border p-3 space-y-2"><div class="font-bold">⚙ Налаштування класу</div><label class="block text-xs font-bold">Назва класу<input id="cl-edit-name" maxlength="50" class="${inp} mt-1" value="${esc(c.name)}"></label><label class="flex items-center gap-2 text-xs"><input id="cl-edit-comp" type="checkbox" ${c.competitionEnabled ? "checked" : ""}> Приймати участь у суперництві класів</label><label class="block text-xs font-bold">Предмет / напрям<input id="cl-edit-subject" maxlength="60" class="${inp} mt-1" value="${esc(c.competitionSubject || "")}" placeholder="Наприклад, математика"></label><p class="text-[11px] theme-text-secondary">Якщо вимкнути участь, клас зникне з таблиці лідерів і не отримає бонус суперництва.</p><label class="flex items-center gap-2 text-xs"><input id="cl-regen-code" type="checkbox"> Створити новий код приєднання (старий перестане працювати)</label><button id="cl-save-class" class="${btn} theme-btn-primary">Зберегти зміни</button><p class="text-[11px] theme-text-secondary">Редагувати клас може лише його творець.</p></div>`;
         else if (curSub === "people") main = `<div class="text-xl font-extrabold pb-1 border-b" style="color:${col};border-color:${col}">Вчителі</div>
           <div class="flex items-center gap-2 py-2">${circ(col, ini(c.owner))}<b class="flex-1">${who(c.ownerId, c.owner)}</b><span class="text-xs theme-text-secondary">власник</span></div>
           ${r.teachers.map(t => `<div class="flex items-center gap-2 py-1">${circ(col, ini(t.name))}<span class="flex-1">${who(t.userId, t.name)}</span><span class="text-xs theme-text-secondary">співвикладач</span>${c.isOwner ? `<button data-tdel="${esc(t.userId)}" class="px-2 text-red-500" title="Прибрати">✕</button>` : ""}</div>`).join("")}
@@ -5613,12 +5783,12 @@
           ${r.students.map(st => `<div class="flex items-center gap-2 py-1.5">${circ("#64748b", ini(st.name))}<span class="flex-1">${who(st.userId, st.name)}</span><span class="text-xs theme-text-secondary">${st.gems} 💎</span>${T ? `<button data-sdel="${esc(st.userId)}" data-sname="${esc(st.name)}" class="px-2 text-red-500" title="Видалити з класу">✕</button>` : ""}</div>`).join("") || "<div class='theme-text-secondary'>Учнів поки немає.</div>"}`;
         else main = composer + (r.posts.length ? r.posts.map(card).join("") : "<div class='theme-text-secondary'>У стрічці поки порожньо.</div>");
         body().innerHTML = `<div class="flex flex-wrap gap-2"><button id="cl-back" class="${btn}">← Усі класи</button><button id="cl-meet" class="${btn} theme-btn-primary">📹 Зустріч класу</button>${!c.isOwner ? `<button id="cl-rep" class="${btn}" title="Поскаржитися на клас">🚩 Скарга</button>` : ""}</div>
-        <div class="rounded-2xl p-4 text-white" style="background:${col}"><div class="text-2xl font-extrabold break-words">${esc(c.name)}</div><div class="text-sm opacity-90">${who(c.ownerId, c.owner)}</div>${T ? `<div class="text-xs mt-2 opacity-90">Код класу: <code class="bg-white/20 px-1.5 py-0.5 rounded">${esc(c.code)}</code></div>` : ""}</div>
+        <div class="rounded-2xl p-4 text-white" style="background:${col}"><div class="text-2xl font-extrabold break-words">${esc(c.name)}</div><div class="text-sm opacity-90">${who(c.ownerId, c.owner)}</div>${c.competitionEnabled ? `<div class="text-xs opacity-90 mt-1">🏆 Учасник суперництва${c.competitionSubject ? " · " + esc(c.competitionSubject) : ""}</div>` : ""}${T ? `<div class="text-xs mt-2 opacity-90">Код класу: <code class="bg-white/20 px-1.5 py-0.5 rounded">${esc(c.code)}</code></div>` : ""}</div>
         <div class="flex flex-wrap gap-1 border-b theme-border">${[["stream", "Стрічка"], ["chat", "💬 Загальний чат"], ["work", "Завдання"], ["grades", "Оцінки"], ["people", "Учасники"], ...(c.isOwner ? [["settings", "⚙ Налаштування"]] : [])].map(t => `<button data-sub="${t[0]}" class="px-3 py-2 text-xs font-bold" style="${curSub === t[0] ? `color:${col};border-bottom:3px solid ${col}` : ""}">${t[1]}</button>`).join("")}</div>
         <div class="space-y-3">${main}</div>${c.isOwner ? `<button id="cl-delclass" class="${btn} text-red-500">🗑 Видалити клас</button>` : `<button id="cl-leave" class="${btn} text-red-500">Покинути клас</button>`}`;
         $("cl-back").onclick = () => render();
         if ($("cl-meet")) $("cl-meet").onclick = () => window.ATMeet && window.ATMeet.start("class", id, c.name + " — класна зустріч");
-        if ($("cl-save-class")) $("cl-save-class").onclick = async () => { try { await call("globerCxClassUpdate", { classId:id, name:$ ("cl-edit-name").value, regenerateCode:$ ("cl-regen-code").checked }); delete cxc["c:" + id]; toast("Клас оновлено."); curSub="settings"; openClass(id); } catch(e) { toast(e.message); } };
+        if ($("cl-save-class")) $("cl-save-class").onclick = async () => { try { await call("globerCxClassUpdate", { classId:id, name:$("cl-edit-name").value, competitionEnabled:$("cl-edit-comp").checked, competitionSubject:$("cl-edit-subject").value, regenerateCode:$("cl-regen-code").checked }); delete cxc["c:" + id]; toast("Клас оновлено."); curSub="settings"; openClass(id); } catch(e) { toast(e.message); } };
         if (curSub === "chat") loadClassChat(id);
         if ($("cl-rep")) $("cl-rep").onclick = () => ATX.report("class", id, c.name);
         if ($("cl-leave")) $("cl-leave").onclick = async () => { if (!confirm("Покинути клас " + c.name + "?")) return; try { await call("globerClassLeave", { classId: id }); toast("Ви покинули клас."); } catch (e) { toast(e.message); } render(); };
